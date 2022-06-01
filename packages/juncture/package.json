@@ -1,0 +1,29 @@
+{
+  "name": "@codecarvings/juncture",
+  "version": "0.1.0",
+  "description": "Composable State Management for JS Apps",
+  "author": {
+    "name": "Sergio Turolla",
+    "url": "https://codecarvings.com"
+  },
+  "homepage": "https://codecarvings.com",
+  "keywords": [
+    "composable",
+    "state",
+    "management"
+  ],
+  "license": "MIT",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "tsc": "rimraf ./dist && tsc -p ./tsconfig.build.json",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^28.1.0",
+    "@jest/types": "^28.1.0",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^28.0.3",
+    "typescript": "^4.7.2"
+  }
+}

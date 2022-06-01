@@ -1,0 +1,9 @@
+{
+	"folders": [{
+		"name": "juncture-monorepo",
+		"path": "."
+	}, {
+		"name": "juncture",
+		"path": "./packages/juncture"
+	}]
+}
