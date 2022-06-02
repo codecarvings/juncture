@@ -18,7 +18,7 @@ export interface Definition<K extends string = any,
 }
 
 export function createDefinition<K extends string, F extends (...args: any) => any>(
-  kind: K, fn: F) {
+  kind: K, fn: F): Definition<K, F> {
   const result: Definition<K, F> = {
     [jSymbols.definitionKind]: kind,
     [jSymbols.definitionFn]: fn
@@ -43,5 +43,4 @@ export function isDefinition(obj: any, kind?: string): obj is Definition {
     }
   }
   return true;
-  return obj && obj[jSymbols.definitionKind] !== undefined && typeof obj[jSymbols.definitionFn] === 'function';
 }

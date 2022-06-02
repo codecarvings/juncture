@@ -15,7 +15,7 @@ function escapePathFragmentString(fragment: string): string {
     .replace(/\//g, '\\/');
 }
 
-export function pathFragmentToString(fragment: PathFragment) {
+export function pathFragmentToString(fragment: PathFragment): string {
   const fragmentType = typeof fragment;
   switch (fragmentType) {
     case 'number':
@@ -30,12 +30,12 @@ export function pathFragmentToString(fragment: PathFragment) {
   }
 }
 
-export function formatPath(path: Path, absolute = true) {
+export function formatPath(path: Path, absolute = true): string {
   const result = path.map(fragment => pathFragmentToString(fragment)).join('/');
   return `[${absolute ? '/' : ''}${result}]`;
 }
 
-export function isSameOrDescendantPath(path1: Path, path2: Path) {
+export function isSameOrDescendantPath(path1: Path, path2: Path): boolean {
   const len1 = path1.length;
   const len2 = path2.length;
   if (len2 < len1) {
