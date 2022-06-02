@@ -8,13 +8,16 @@
 
 const definitionKind = Symbol('definitionKind');
 const definitionFn = Symbol('definitionFn');
+const selectorDefinitionSubkind = Symbol('selectorDefinitionSubkind');
 
 export interface JSymbols {
   readonly definitionKind: typeof definitionKind;
   readonly definitionFn: typeof definitionFn;
+  readonly selectorDefinitionSubkind: typeof selectorDefinitionSubkind;
 }
 
 export const jSymbols: JSymbols = {
   definitionKind,
-  definitionFn
+  definitionFn,
+  selectorDefinitionSubkind
 };

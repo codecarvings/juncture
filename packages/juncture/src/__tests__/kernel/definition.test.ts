@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDefinition, Definition, isDefinition } from '../../kernel/definition';
+import { createDefinition } from '../../kernel/definition';
 import { jSymbols } from '../../symbols';
 
 describe('createDefinition', () => {
@@ -19,22 +19,22 @@ describe('createDefinition', () => {
   });
 });
 
-describe('isDefinition', () => {
-  let kind: string;
-  let fn: (...args: any) => any;
-  let definition: Definition;
+// describe('isDefinition', () => {
+//   let kind: string;
+//   let fn: (...args: any) => any;
+//   let definition: Definition;
 
-  beforeEach(() => {
-    kind = 'my-definition-type';
-    fn = () => undefined;
-    definition = createDefinition(kind, fn);
-  });
+//   beforeEach(() => {
+//     kind = 'my-definition-type';
+//     fn = () => undefined;
+//     definition = createDefinition(kind, fn);
+//   });
 
-  test('should check if an object is a Definition', () => {
-    expect(isDefinition(definition)).toBe(true);
-  });
+//   test('should check if an object is a Definition', () => {
+//     expect(isDefinition(definition)).toBe(true);
+//   });
 
-  test('should check if an object is a specific Definition', () => {
-    expect(isDefinition(definition, kind)).toBe(true);
-  });
-});
+//   test('should check if an object is a specific Definition', () => {
+//     expect(isDefinition(definition, kind)).toBe(true);
+//   });
+// });

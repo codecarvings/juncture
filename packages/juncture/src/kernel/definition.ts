@@ -8,8 +8,8 @@
 
 import { jSymbols } from '../symbols';
 
-export interface Definition<K extends string = any,
- F extends (...args: any) => any = (...args: any) => any> {
+export interface Definition<K extends string = string,
+ F extends (...args: any) => any = (...args: unknown[]) => unknown> {
   readonly [jSymbols.definitionKind]: K;
   readonly [jSymbols.definitionFn]: F;
 }
@@ -24,9 +24,9 @@ export function createDefinition<K extends string, F extends (...args: any) => a
   return result;
 }
 
-export function isDefinition(obj: any, kind?: string): obj is Definition {
-  if (kind !== undefined) {
-    return obj && obj[jSymbols.definitionKind] === kind && typeof obj[jSymbols.definitionFn] === 'function';
-  }
-  return obj && obj[jSymbols.definitionKind] !== undefined && typeof obj[jSymbols.definitionFn] === 'function';
-}
+// export function isDefinition(obj: any, kind?: string): obj is Definition {
+//   if (kind !== undefined) {
+//     return obj && obj[jSymbols.definitionKind] === kind && typeof obj[jSymbols.definitionFn] === 'function';
+//   }
+//   return obj && obj[jSymbols.definitionKind] !== undefined && typeof obj[jSymbols.definitionFn] === 'function';
+// }

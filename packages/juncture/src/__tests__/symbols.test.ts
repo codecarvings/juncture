@@ -16,4 +16,8 @@ describe('jSymbols', () => {
   test('should contain the definitionFn symbol', () => {
     expect(typeof jSymbols.definitionFn).toBe('symbol');
   });
+
+  test('should contain the directSelectorDefinitionTag symbol', () => {
+    expect(typeof jSymbols.selectorDefinitionSubkind).toBe('symbol');
+  });
 });
