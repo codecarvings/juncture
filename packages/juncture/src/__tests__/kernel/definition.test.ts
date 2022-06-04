@@ -10,19 +10,27 @@ import { createDefinition, Definition, isDefinition } from '../../kernel/definit
 import { jSymbols } from '../../symbols';
 
 describe('createDefinition', () => {
-  test('should create a definition by passing kind and fn', () => {
+  test('should create a definition by passing kind and a function payload', () => {
     const kind = 'my-definition-type';
-    const fn = () => undefined;
-    const definition = createDefinition(kind, fn);
+    const payload = () => undefined;
+    const definition = createDefinition(kind, payload);
     expect(definition[jSymbols.definitionKind]).toBe(kind);
-    expect(definition[jSymbols.definitionFn]).toBe(fn);
+    expect(definition[jSymbols.definitionPayload]).toBe(payload);
+  });
+
+  test('should create a definition by passing kind and a value as payload', () => {
+    const kind = 'my-definition-type';
+    const payload = { val: 123 };
+    const definition = createDefinition(kind, payload);
+    expect(definition[jSymbols.definitionKind]).toBe(kind);
+    expect(definition[jSymbols.definitionPayload]).toBe(payload);
   });
 });
 
 describe('isDefinition', () => {
   let kind: string;
   let fn: (...args: any) => any;
-  let definition: Definition;
+  let definition: Definition<any, any>;
 
   beforeEach(() => {
     kind = 'my-definition-type';

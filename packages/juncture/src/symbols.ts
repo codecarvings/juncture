@@ -7,17 +7,26 @@
  */
 
 const definitionKind = Symbol('definitionKind');
-const definitionFn = Symbol('definitionFn');
-const selectorDefinitionSubkind = Symbol('selectorDefinitionSubkind');
+const definitionPayload = Symbol('definitionPayload');
+const handledValue = Symbol('handledValue');
+const paramSelectorTag = Symbol('paramSelectorTag');
+const createDriver = Symbol('createDriver');
+const createFrame = Symbol('createFrame');
 
 export interface JSymbols {
   readonly definitionKind: typeof definitionKind;
-  readonly definitionFn: typeof definitionFn;
-  readonly selectorDefinitionSubkind: typeof selectorDefinitionSubkind;
+  readonly definitionPayload: typeof definitionPayload;
+  readonly handledValue: typeof handledValue;
+  readonly paramSelectorTag: typeof paramSelectorTag;
+  readonly createDriver: typeof createDriver;
+  readonly createFrame: typeof createFrame;
 }
 
 export const jSymbols: JSymbols = {
   definitionKind,
-  definitionFn,
-  selectorDefinitionSubkind
+  definitionPayload,
+  handledValue,
+  paramSelectorTag,
+  createDriver,
+  createFrame
 };

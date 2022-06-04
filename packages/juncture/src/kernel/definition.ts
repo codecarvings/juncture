@@ -8,33 +8,25 @@
 
 import { jSymbols } from '../symbols';
 
-export interface DefinitionTag<K extends string = any> {
+export interface Definition<K extends string, P> {
   readonly [jSymbols.definitionKind]: K;
+  readonly [jSymbols.definitionPayload]: P;
 }
 
-export interface Definition<K extends string = any,
- F extends (...args: any) => any = (...args: any) => any> extends DefinitionTag<K> {
-  readonly [jSymbols.definitionFn]: F;
-}
-
-export function createDefinition<K extends string, F extends (...args: any) => any>(
-  kind: K, fn: F): Definition<K, F> {
-  const result: Definition<K, F> = {
+export function createDefinition<K extends string, P>(kind: K, payload: P): Definition<K, P> {
+  const result: Definition<K, P> = {
     [jSymbols.definitionKind]: kind,
-    [jSymbols.definitionFn]: fn
+    [jSymbols.definitionPayload]: payload
   };
 
   return result;
 }
 
-export function isDefinition(obj: any, kind?: string): obj is Definition {
+export function isDefinition(obj: any, kind?: string): obj is Definition<any, any> {
   if (typeof obj !== 'object') {
     return false;
   }
   if (obj === null) {
-    return false;
-  }
-  if (typeof obj[jSymbols.definitionFn] !== 'function') {
     return false;
   }
   if (kind !== undefined) {

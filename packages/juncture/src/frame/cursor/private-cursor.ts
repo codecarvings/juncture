@@ -6,8 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../../juncture';
+import { Juncture, ValueOf } from '../../juncture';
 import { PrivateSelectBin } from '../bin/select-bin';
+import { FrameHost } from '../frame';
 
 // --- Symbols
 const privateCursorSymbol = Symbol('privateCursor');
@@ -23,6 +24,7 @@ const privateCursorSymbols: PrivateCursorSymbols = {
 export interface PrivateCursorRole {
   readonly [privateCursorSymbols.privateCursor]: true;
 }
-export interface PrivateCursor<J extends Juncture = any> extends PrivateCursorRole {
+export interface PrivateCursor<J extends Juncture> extends PrivateCursorRole, FrameHost<J> {
   readonly $SELECT: PrivateSelectBin<J>;
+  readonly $VALUE: ValueOf<J>;
 }

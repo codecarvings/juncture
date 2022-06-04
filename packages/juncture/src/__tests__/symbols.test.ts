@@ -13,11 +13,23 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.definitionKind).toBe('symbol');
   });
 
-  test('should contain the definitionFn symbol', () => {
-    expect(typeof jSymbols.definitionFn).toBe('symbol');
+  test('should contain the definitionPayload symbol', () => {
+    expect(typeof jSymbols.definitionPayload).toBe('symbol');
   });
 
-  test('should contain the directSelectorDefinitionTag symbol', () => {
-    expect(typeof jSymbols.selectorDefinitionSubkind).toBe('symbol');
+  test('should contain the handledValue symbol', () => {
+    expect(typeof jSymbols.handledValue).toBe('symbol');
+  });
+
+  test('should contain the paramSelectorTag symbol', () => {
+    expect(typeof jSymbols.paramSelectorTag).toBe('symbol');
+  });
+
+  test('should contain the createDriver symbol', () => {
+    expect(typeof jSymbols.createDriver).toBe('symbol');
+  });
+
+  test('should contain the createFrame symbol', () => {
+    expect(typeof jSymbols.createFrame).toBe('symbol');
   });
 });

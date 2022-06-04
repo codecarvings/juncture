@@ -7,21 +7,17 @@
  */
 
 import {
-  DirectSelectorDefinition, notASelectorDefinition, ParamSelectorDefinition, SelectorDefinitionTag
+  notASelectorDefinition, SelectorDefinition
 } from '../../kernel/selector';
-import { JSymbols } from '../../symbols';
 
 type SelectBinItem<S> =
-  S extends DirectSelectorDefinition<any> ?
-    ReturnType<ReturnType<S[JSymbols['definitionFn']]>> :
-    S extends ParamSelectorDefinition<any> ?
-      ReturnType<S[JSymbols['definitionFn']]> :
-      typeof notASelectorDefinition;
+    S extends SelectorDefinition<infer Y> ? Y : typeof notASelectorDefinition;
 
 export type SelectBin<J> = {
-  readonly [K in keyof J as J[K] extends SelectorDefinitionTag ? K : never]: SelectBinItem<J[K]>;
+  readonly [K in keyof J as J[K] extends SelectorDefinition<any> ? K : never]: SelectBinItem<J[K]>;
 };
 
 export type PrivateSelectBin<J> = {
-  readonly [K in keyof J]: SelectBinItem<J[K]>;
+  // readonly [K in keyof J as J[K] extends SelectorDefinition<any> ? K : never]: SelectBinItem<J[K]>;
+  readonly [K in keyof J as K extends string ? K : never]: SelectBinItem<J[K]>;
 };

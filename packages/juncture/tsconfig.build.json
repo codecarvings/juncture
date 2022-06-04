@@ -7,8 +7,7 @@
     "outDir": "./dist",                               /* Specify an output folder for all emitted files. */
   },
   "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test@ts.ts",
+    "src/__tests__/**/*.ts",
     "__utils__"
   ]
 }

@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../../juncture';
+import { Juncture, ValueOf } from '../../juncture';
 import { SelectBin } from '../bin/select-bin';
 
-export interface Cursor<J extends Juncture = any> {
+export interface Cursor<J extends Juncture> {
   readonly $SELECT: SelectBin<J>;
+  readonly $VALUE: ValueOf<J>;
 }
