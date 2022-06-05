@@ -12,8 +12,8 @@ import { jSymbols } from '../symbols';
 import { createDefinition, Definition, isDefinition } from './definition';
 
 // #region Selector
-interface Selector<Y> {
-  (_: PrivateCursorRole): Y;
+interface Selector<B> {
+  (_: PrivateCursorRole): B;
 }
 // #endregion
 
@@ -23,8 +23,8 @@ export const notASelectorDefinition = 'NOT-A-SELECTOR';
 type SelectorDefinitionKind = 'selector';
 export const selectorDefinitionKind: SelectorDefinitionKind = 'selector';
 
-export interface SelectorDefinition<Y> extends Definition<SelectorDefinitionKind, Selector<Y>> { }
-export function createSelectorDefinition<Y>(selectorFn: Selector<Y>): SelectorDefinition<Y> {
+export interface SelectorDefinition<B> extends Definition<SelectorDefinitionKind, Selector<B>> { }
+export function createSelectorDefinition<B>(selectorFn: Selector<B>): SelectorDefinition<B> {
   const result: any = createDefinition(selectorDefinitionKind, selectorFn);
   return result;
 }
@@ -38,11 +38,11 @@ export type SelectorsOf<O> = {
 };
 
 // --- ParamSelector
-interface ParamSelectorDefinition<Y extends (...args: any) => any> extends SelectorDefinition<Y> {
+interface ParamSelectorDefinition<B extends (...args: any) => any> extends SelectorDefinition<B> {
   readonly [jSymbols.paramSelectorTag]: true;
 }
-export function createParamSelectorDefinition<Y extends (...args: any) => any>(
-  selectorFn: Selector<Y>): ParamSelectorDefinition<Y> {
+export function createParamSelectorDefinition<B extends (...args: any) => any>(
+  selectorFn: Selector<B>): ParamSelectorDefinition<B> {
   const result: any = createSelectorDefinition(selectorFn);
   result[jSymbols.paramSelectorTag] = true;
   return result;
@@ -64,17 +64,17 @@ export function isDirectSelectorDefinition(obj: any): obj is SelectorDefinition<
 // #endregion
 
 // #region Composer
-export function selector<J extends Juncture, Y>(juncture: J, selectorFn: (_: PrivateCursorOf<J>) => Y)
-  : SelectorDefinition<Y> {
+export function selector<J extends Juncture, B>(juncture: J, selectorFn: (_: PrivateCursorOf<J>) => B)
+  : SelectorDefinition<B> {
   return createSelectorDefinition(selectorFn as any);
 }
 
-export function paramSelector<J extends Juncture, Y extends (
+export function paramSelector<J extends Juncture, B extends (
   ...args: any) => any>(
   juncture: J,
-  selectorFn: (_: PrivateCursorOf<J>) => Y
+  selectorFn: (_: PrivateCursorOf<J>) => B
 )
-  : ParamSelectorDefinition<Y> {
+  : ParamSelectorDefinition<B> {
   return createParamSelectorDefinition(selectorFn as any);
 }
 // #endregion
