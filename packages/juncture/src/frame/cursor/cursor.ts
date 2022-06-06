@@ -7,9 +7,11 @@
  */
 
 import { Juncture, ValueOf } from '../../juncture';
+import { DispatchBin } from '../bin/dispatch-bin';
 import { SelectBin } from '../bin/select-bin';
 
 export interface Cursor<J extends Juncture> {
-  readonly $SELECT: SelectBin<J>;
   readonly $VALUE: ValueOf<J>;
+  readonly $SELECT: SelectBin<J>;
+  readonly $DISPATCH: DispatchBin<J>;
 }

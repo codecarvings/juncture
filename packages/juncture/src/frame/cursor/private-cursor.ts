@@ -7,6 +7,7 @@
  */
 
 import { Juncture, ValueOf } from '../../juncture';
+import { PrivateDispatchBin } from '../bin/dispatch-bin';
 import { PrivateSelectBin } from '../bin/select-bin';
 import { FrameHost } from '../frame';
 
@@ -25,6 +26,7 @@ export interface PrivateCursorRole {
   readonly [privateCursorSymbols.privateCursor]: true;
 }
 export interface PrivateCursor<J extends Juncture> extends PrivateCursorRole, FrameHost<J> {
-  readonly $SELECT: PrivateSelectBin<J>;
   readonly $VALUE: ValueOf<J>;
+  readonly $SELECT: PrivateSelectBin<J>;
+  readonly $DISPATCH: PrivateDispatchBin<J>;
 }

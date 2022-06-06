@@ -27,7 +27,19 @@ describe('reducer composer', () => {
 
       prova = 21;
 
-      myReactor = reducer(this, () => (str: string) => str);
+      myReactor = reducer(this, () => {
+        function fn(str: string): string;
+        function fn(str: string, len?: number): string;
+        function fn(str: string, len?: number) {
+          return str as any + len as any;
+        }
+        return fn;
+      });
+
+      myReactor2 = reducer(this, _ => () => {
+        _.$DISPATCH.myReactor('');
+        return _.$VALUE;
+      });
     }
     const myJuncture = new MyJuncture();
     expect(isReactorDefinition(myJuncture.myReactor)).toBe(true);
