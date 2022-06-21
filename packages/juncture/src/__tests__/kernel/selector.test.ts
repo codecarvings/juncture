@@ -117,7 +117,7 @@ describe('selector composer', () => {
 
       [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
-      prova = 21;
+      aValue = 21;
 
       mySelector = selector(this, _ => _.$SELECT.value);
     }

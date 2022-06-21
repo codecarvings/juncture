@@ -63,7 +63,7 @@ describe('Juncture', () => {
         expect(juncture).toBeInstanceOf(MyJuncture);
       });
 
-      test('should return always the same instance', () => {
+      test('should always return the same instance', () => {
         const juncture1 = Juncture.getInstance(MyJuncture);
         const juncture2 = Juncture.getInstance(MyJuncture);
         expect(juncture1).toBe(juncture2);

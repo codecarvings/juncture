@@ -25,7 +25,7 @@ describe('reducer composer', () => {
 
       [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
-      prova = 21;
+      aValue = 21;
 
       myReactor = reducer(this, () => {
         function fn(str: string): string;
