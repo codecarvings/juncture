@@ -11,7 +11,7 @@ import { Frame, FrameConfig } from '../frame/frame';
 import { Juncture } from '../juncture';
 import { Driver } from '../kernel/driver';
 import { createSchemaDefinition, Schema } from '../kernel/schema';
-import { isDirectSelectorDefinition } from '../kernel/selector';
+import { isDirectSelectorDefinition, selector } from '../kernel/selector';
 import { jSymbols } from '../symbols';
 
 describe('Juncture', () => {
@@ -73,7 +73,9 @@ describe('Juncture', () => {
         const juncture = Juncture.getInstance(MyJuncture);
         expect(juncture).toBeInstanceOf(MyJuncture);
 
-        class MyJuncture2 extends MyJuncture { }
+        class MyJuncture2 extends MyJuncture {
+          sel1 = selector(this, ({ select }) => select());
+        }
 
         const juncture2A = Juncture.getInstance(MyJuncture2);
         const juncture2B = Juncture.getInstance(MyJuncture2);

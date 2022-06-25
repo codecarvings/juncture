@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateCursorRole } from '../frame/cursor/private-cursor';
-import { Juncture, PrivateCursorOf } from '../juncture';
+import { PrivateContextRole, SelectorContext } from '../context/private-context';
+import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 import { createDefinition, Definition, isDefinition } from './definition';
 
 // #region Selector
 interface Selector<B> {
-  (_: PrivateCursorRole): B;
+  ($: PrivateContextRole): B;
 }
 // #endregion
 
@@ -64,7 +64,7 @@ export function isDirectSelectorDefinition(obj: any): obj is SelectorDefinition<
 // #endregion
 
 // #region Composer
-export function selector<J extends Juncture, B>(juncture: J, selectorFn: (_: PrivateCursorOf<J>) => B)
+export function selector<J extends Juncture, B>(juncture: J, selectorFn: ($: SelectorContext<J>) => B)
   : SelectorDefinition<B> {
   return createSelectorDefinition(selectorFn as any);
 }
@@ -72,7 +72,7 @@ export function selector<J extends Juncture, B>(juncture: J, selectorFn: (_: Pri
 export function paramSelector<J extends Juncture, B extends (
   ...args: any) => any>(
   juncture: J,
-  selectorFn: (_: PrivateCursorOf<J>) => B
+  selectorFn: ($: SelectorContext<J>) => B
 )
   : ParamSelectorDefinition<B> {
   return createParamSelectorDefinition(selectorFn as any);

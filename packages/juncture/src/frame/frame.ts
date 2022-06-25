@@ -7,18 +7,8 @@
  */
 
 import { Juncture } from '../juncture';
-import { Cursor } from './cursor/cursor';
-import { PrivateCursor } from './cursor/private-cursor';
+import { Cursor } from './cursor';
 import { Path } from './path';
-
-// --- Symbols
-const frameSymbol = Symbol('frame');
-interface FrameSymbols {
-  readonly frame: typeof frameSymbol;
-}
-const frameSymbols: FrameSymbols = {
-  frame: frameSymbol
-};
 
 export interface FrameLayout {
   readonly parent: Frame<any> | null;
@@ -38,17 +28,5 @@ export abstract class Frame<J extends Juncture> {
     this.layout = config.layout;
   }
 
-  readonly cursor!: Cursor<J>;
-
-  readonly privateCursor!: PrivateCursor<J>;
-
-  // #region Static
-  static get<F extends FrameHost<any>>(host: F) {
-    return host[frameSymbols.frame];
-  }
-  // #endregion
-}
-
-export interface FrameHost<J extends Juncture> {
-  readonly [frameSymbols.frame]: Frame<J>;
+  readonly _!: Cursor<this>;
 }

@@ -8,7 +8,7 @@
 
 import {
   notASelectorDefinition, SelectorDefinition
-} from '../../kernel/selector';
+} from '../kernel/selector';
 
 type SelectBinItem<S> =
     S extends SelectorDefinition<infer B> ? B : typeof notASelectorDefinition;

@@ -6,13 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateCursorRole } from '../frame/cursor/private-cursor';
-import { HandledValueOf, Juncture, PrivateCursorOf } from '../juncture';
+import { PrivateContextRole, ReactorContext } from '../context/private-context';
+import { HandledValueOf, Juncture } from '../juncture';
 import { createDefinition, Definition, isDefinition } from './definition';
 
 // #region Reactor
 interface Reducer<B extends (...args: any) => any> {
-  (_: PrivateCursorRole): B;
+  ($: PrivateContextRole): B;
 }
 // #endregion
 
@@ -42,7 +42,7 @@ export type ReactorsOf<O> = {
 export function reducer<J extends Juncture, B extends (
   ...args: any) => HandledValueOf<J>>(
   juncture: J,
-  reducerFn: (_: PrivateCursorOf<J>) => B
+  reducerFn: ($: ReactorContext<J>) => B
 )
   : ReactorDefinition<B> {
   return createReactorDefinition(reducerFn as any);

@@ -8,8 +8,8 @@
 
 import {
   notAReactorDefinition, ReactorDefinition
-} from '../../kernel/reactor';
-import { OverloadParameters } from '../../util/overloaed-function-types';
+} from '../kernel/reactor';
+import { OverloadParameters } from '../util/overloaed-function-types';
 
 type DispatchBinItem<S> =
   S extends ReactorDefinition<infer B> ? (...args : OverloadParameters<B>) => void : typeof notAReactorDefinition;

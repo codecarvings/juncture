@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
 import { Driver } from './kernel/driver';
 import { SchemaDefinition, SchemaOfDefinition } from './kernel/schema';
@@ -36,7 +37,7 @@ export abstract class Juncture {
 
   readonly defaultValue = selector(this, () => undefined as ValueOf<this>); // TODO: Impement this
 
-  readonly path = selector(this, _ => Frame.get(_).layout.path);
+  readonly path = selector(this, ({ _ }) => getFrame(_).layout.path);
 
   readonly isAttached = selector(this, () => true); // TODO: Impement this
 
@@ -73,8 +74,7 @@ export abstract class Juncture {
 
 // ---  Derivations
 export type FrameOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>;
-export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['cursor'];
-export type PrivateCursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['privateCursor'];
+export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['_'];
 
 export type SchemaOf<J extends Juncture> = SchemaOfDefinition<J['schema']>;
 export type ValueOf<J extends Juncture> = SchemaOfDefinition<J['schema']>['defaultValue'];

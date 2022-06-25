@@ -119,7 +119,7 @@ describe('selector composer', () => {
 
       aValue = 21;
 
-      mySelector = selector(this, _ => _.$SELECT.value);
+      mySelector = selector(this, ({ value }) => value());
     }
     const myJuncture = new MyJuncture();
     expect(isDirectSelectorDefinition(myJuncture.mySelector)).toBe(true);

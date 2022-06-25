@@ -36,10 +36,7 @@ describe('reducer composer', () => {
         return fn;
       });
 
-      myReactor2 = reducer(this, _ => () => {
-        _.$DISPATCH.myReactor('');
-        return _.$VALUE;
-      });
+      myReactor2 = reducer(this, ({ value }) => () => value());
     }
     const myJuncture = new MyJuncture();
     expect(isReactorDefinition(myJuncture.myReactor)).toBe(true);
