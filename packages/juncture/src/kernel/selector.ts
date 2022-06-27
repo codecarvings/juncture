@@ -18,7 +18,7 @@ interface Selector<B> {
 // #endregion
 
 // #region Definition
-export const notASelectorDefinition = 'NOT-A-SELECTOR';
+export const notASelectorDefinition = '!!NOT-A-SELECTOR!!';
 
 type SelectorDefinitionKind = 'selector';
 export const selectorDefinitionKind: SelectorDefinitionKind = 'selector';

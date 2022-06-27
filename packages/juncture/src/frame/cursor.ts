@@ -17,15 +17,15 @@ const cursorSymbols: CursorSymbols = {
   frame: cursorSymbol
 };
 
-export interface Cursor<F extends Frame<any>> {
+export interface Cursor<F extends Frame<any> = any> {
   readonly [cursorSymbols.frame]: F;
 }
 
-export function getFrame<C extends Cursor<any>>(_: C) {
+export function getFrame<C extends Cursor>(_: C) {
   return _[cursorSymbols.frame];
 }
 
 // ---  Derivations
-export type FrameOfCursor<C extends Cursor<any>> = C[CursorSymbols['frame']];
-export type JunctureOfCursor<C extends Cursor<any>> = C[CursorSymbols['frame']]['juncture'];
+export type FrameOfCursor<C extends Cursor> = C[CursorSymbols['frame']];
+export type JunctureOfCursor<C extends Cursor> = C[CursorSymbols['frame']]['juncture'];
 // #endregion

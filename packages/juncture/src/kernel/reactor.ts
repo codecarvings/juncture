@@ -17,7 +17,7 @@ interface Reducer<B extends (...args: any) => any> {
 // #endregion
 
 // #region Definition
-export const notAReactorDefinition = 'NOT-A-REACTOR';
+export const notAReactorDefinition = '!!NOT-A-REACTOR!!';
 
 type ReactorDefinitionKind = 'reactor';
 export const reactorDefinitionKind: ReactorDefinitionKind = 'reactor';

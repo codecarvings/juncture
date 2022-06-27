@@ -8,7 +8,7 @@
 
 import { Cursor, JunctureOfCursor } from '../frame/cursor';
 import { CursorOf, Juncture, ValueOf } from '../juncture';
-import { PrivateSelectBin } from './select-bin';
+import { PrivateSelectBin, SelectBin } from './select-bin';
 
 // --- Symbols
 const privateContextSymbol = Symbol('privateContext');
@@ -24,16 +24,19 @@ export interface PrivateContextRole {
   readonly [privateContextSymbols.privateContext]: true;
 }
 
-interface PrivateContext<J extends Juncture> extends PrivateContextRole {
-  readonly _: CursorOf<J>;
+export interface PrivateContext<J extends Juncture> extends PrivateContextRole {
+  readonly _ : CursorOf<J>;
 
   value(): ValueOf<J>;
-  value<C extends Cursor<any>>(_: C): ValueOf<JunctureOfCursor<C>>;
+  value<C extends Cursor>(_: C): ValueOf<JunctureOfCursor<C>>;
 
   select(): PrivateSelectBin<J>;
-  select<C extends Cursor<any>>(_: C): PrivateSelectBin<JunctureOfCursor<C>>;
+  select(_: this['_']): PrivateSelectBin<J>;
+  select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
 }
 
-export interface SelectorContext<J extends Juncture> extends PrivateContext<J> { }
+// export interface SelectorContext<J extends Juncture> extends PrivateContext<J> { }
+export type SelectorContext<J extends Juncture> = PrivateContext<J>;
 
-export interface ReactorContext<J extends Juncture> extends PrivateContext<J> { }
+// export interface ReactorContext<J extends Juncture> extends PrivateContext<J> { }
+export type ReactorContext<J extends Juncture> = PrivateContext<J>;

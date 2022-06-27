@@ -111,7 +111,7 @@ describe('selector composer', () => {
         super('');
       }
     }
-    class MyFrame extends Frame<MyJuncture> { }
+    class MyFrame<J extends MyJuncture> extends Frame<J> { }
     class MyJuncture extends Juncture {
       schema = createSchemaDefinition(() => new MySchema());
 
@@ -133,7 +133,7 @@ describe('paramSelector composer', () => {
         super('');
       }
     }
-    class MyFrame extends Frame<MyJuncture> { }
+    class MyFrame<J extends MyJuncture> extends Frame<J> { }
     class MyJuncture extends Juncture {
       schema = createSchemaDefinition(() => new MySchema());
 

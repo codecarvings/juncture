@@ -10,14 +10,14 @@ import {
   notASelectorDefinition, SelectorDefinition
 } from '../kernel/selector';
 
-type SelectBinItem<S> =
-    S extends SelectorDefinition<infer B> ? B : typeof notASelectorDefinition;
+type SelectBinItem<S> = S extends SelectorDefinition<infer B> ? B : typeof notASelectorDefinition;
 
 export type SelectBin<J> = {
   readonly [K in keyof J as J[K] extends SelectorDefinition<any> ? K : never]: SelectBinItem<J[K]>;
 };
 
-export type PrivateSelectBin<J> = {
+// Conditional type required as a workoaround for problems with key remapping
+export type PrivateSelectBin<J> = J extends any ? {
   // readonly [K in keyof J as J[K] extends SelectorDefinition<any> ? K : never]: SelectBinItem<J[K]>;
   readonly [K in keyof J as K extends string ? K : never]: SelectBinItem<J[K]>;
-};
+} : never;

@@ -19,7 +19,7 @@ describe('Driver', () => {
       super('');
     }
   }
-  class MyFrame extends Frame<MyJuncture> { }
+  class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
     schema = createSchemaDefinition(() => new MySchema());
 

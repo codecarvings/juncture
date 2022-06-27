@@ -17,7 +17,7 @@ describe('Frame class', () => {
       super('');
     }
   }
-  class MyFrame extends Frame<MyJuncture> { }
+  class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
     schema = createSchemaDefinition(() => new MySchema());
 
@@ -39,7 +39,7 @@ describe('Frame class', () => {
   });
 
   describe('instance', () => {
-    let frame: MyFrame;
+    let frame: MyFrame<MyJuncture>;
     beforeEach(() => {
       frame = new MyFrame(juncture, config);
     });
