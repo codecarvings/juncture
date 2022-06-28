@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Cursor, JunctureOfCursor } from '../frame/cursor';
+import { Cursor, JunctureOfCursor, ValueOfCursor } from '../frame/cursor';
 import { CursorOf, Juncture, ValueOf } from '../juncture';
-import { PrivateSelectBin, SelectBin } from './select-bin';
+import { PrivateReactBin, ReactBin } from './bin/react-bin';
+import { PrivateSelectBin, SelectBin } from './bin/select-bin';
 
 // --- Symbols
 const privateContextSymbol = Symbol('privateContext');
@@ -35,8 +36,10 @@ export interface PrivateContext<J extends Juncture> extends PrivateContextRole {
   select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
 }
 
-// export interface SelectorContext<J extends Juncture> extends PrivateContext<J> { }
-export type SelectorContext<J extends Juncture> = PrivateContext<J>;
+export interface SelectorContext<J extends Juncture> extends PrivateContext<J> { }
 
-// export interface ReactorContext<J extends Juncture> extends PrivateContext<J> { }
-export type ReactorContext<J extends Juncture> = PrivateContext<J>;
+export interface ReducerContext<J extends Juncture> extends PrivateContext<J> {
+  react(): PrivateReactBin<J, ValueOf<J>>;
+  react(_: this['_']): PrivateReactBin<J, ValueOf<J>>;
+  react<C extends Cursor>(_: C): ReactBin<JunctureOfCursor<C>, ValueOfCursor<C>>;
+}

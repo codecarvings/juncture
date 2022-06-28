@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateContextRole, ReactorContext } from '../context/private-context';
+import { PrivateContextRole, ReducerContext } from '../context/private-context';
 import { HandledValueOf, Juncture } from '../juncture';
 import { createDefinition, Definition, isDefinition } from './definition';
 
@@ -42,7 +42,7 @@ export type ReactorsOf<O> = {
 export function reducer<J extends Juncture, B extends (
   ...args: any) => HandledValueOf<J>>(
   juncture: J,
-  reducerFn: ($: ReactorContext<J>) => B
+  reducerFn: ($: ReducerContext<J>) => B
 )
   : ReactorDefinition<B> {
   return createReactorDefinition(reducerFn as any);

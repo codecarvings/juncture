@@ -27,7 +27,7 @@ describe('reducer composer', () => {
 
       aValue = 21;
 
-      myReactor = reducer(this, () => {
+      myReducer = reducer(this, () => {
         function fn(str: string): string;
         function fn(str: string, len?: number): string;
         function fn(str: string, len?: number) {
@@ -36,9 +36,9 @@ describe('reducer composer', () => {
         return fn;
       });
 
-      myReactor2 = reducer(this, ({ value }) => () => value());
+      myRedeucer2 = reducer(this, ({ react }) => (val: string) => react().myReducer(val));
     }
     const myJuncture = new MyJuncture();
-    expect(isReactorDefinition(myJuncture.myReactor)).toBe(true);
+    expect(isReactorDefinition(myJuncture.myReducer)).toBe(true);
   });
 });

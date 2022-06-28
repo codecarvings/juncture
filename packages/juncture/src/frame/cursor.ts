@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { ValueOf } from '../juncture';
 import { Frame } from './frame';
 
 // --- Symbols
@@ -28,4 +29,5 @@ export function getFrame<C extends Cursor>(_: C) {
 // ---  Derivations
 export type FrameOfCursor<C extends Cursor> = C[CursorSymbols['frame']];
 export type JunctureOfCursor<C extends Cursor> = C[CursorSymbols['frame']]['juncture'];
+export type ValueOfCursor<C extends Cursor> = ValueOf<C[CursorSymbols['frame']]['juncture']>;
 // #endregion
