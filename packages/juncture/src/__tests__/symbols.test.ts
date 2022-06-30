@@ -25,6 +25,10 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.paramSelectorTag).toBe('symbol');
   });
 
+  test('should contain the mixReducerTag symbol', () => {
+    expect(typeof jSymbols.mixReducerTag).toBe('symbol');
+  });
+
   test('should contain the createDriver symbol', () => {
     expect(typeof jSymbols.createDriver).toBe('symbol');
   });

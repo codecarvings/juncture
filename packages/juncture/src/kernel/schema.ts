@@ -11,7 +11,7 @@ import { createDefinition, Definition } from './definition';
 
 // #region Schema
 export abstract class Schema<V extends HV = any, HV = V> {
-  // TYPE PLACEHOLDER: Return type of a reactor(for an object juncture can be Partial...)
+  // TYPE PLACEHOLDER: Return type of a readucer(for an object juncture can be Partial...)
   readonly [jSymbols.handledValue]!: HV;
 
   // Constructor is protected to allow safe Juncture inheritance

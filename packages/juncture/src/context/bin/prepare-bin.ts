@@ -7,18 +7,20 @@
  */
 
 import {
+  Action,
   notAReducerDefinition, ReducerDefinition
 } from '../../kernel/reducer';
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
-type DispatchBinItem<S> =
-  S extends ReducerDefinition<infer B> ? (...args : OverloadParameters<B>) => void : typeof notAReducerDefinition;
+type PrepareBinItem<S> =
+  S extends ReducerDefinition<infer B>
+    ? (...args : OverloadParameters<B>) => Action : typeof notAReducerDefinition;
 
-export type DispatchBin<J> = {
-  readonly [K in keyof J as J[K] extends ReducerDefinition<any> ? K : never]: DispatchBinItem<J[K]>;
+export type PrepareBin<J> = {
+  readonly [K in keyof J as J[K] extends ReducerDefinition<any> ? K : never]: PrepareBinItem<J[K]>;
 };
 
 // Conditional type required as a workoaround for problems with key remapping
-export type PrivateDispatchBin<J> = J extends any ? {
-  readonly [K in keyof J as K extends string ? K : never]: DispatchBinItem<J[K]>;
+export type PrivatePrepareBin<J> = J extends any ? {
+  readonly [K in keyof J as K extends string ? K : never]: PrepareBinItem<J[K]>;
 } : never;

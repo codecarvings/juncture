@@ -24,6 +24,7 @@ type SelectorDefinitionKind = 'selector';
 export const selectorDefinitionKind: SelectorDefinitionKind = 'selector';
 
 export interface SelectorDefinition<B> extends Definition<SelectorDefinitionKind, Selector<B>> { }
+
 export function createSelectorDefinition<B>(selectorFn: Selector<B>): SelectorDefinition<B> {
   const result: any = createDefinition(selectorDefinitionKind, selectorFn);
   return result;
@@ -41,6 +42,7 @@ export type SelectorsOf<O> = {
 interface ParamSelectorDefinition<B extends (...args: any) => any> extends SelectorDefinition<B> {
   readonly [jSymbols.paramSelectorTag]: true;
 }
+
 export function createParamSelectorDefinition<B extends (...args: any) => any>(
   selectorFn: Selector<B>): ParamSelectorDefinition<B> {
   const result: any = createSelectorDefinition(selectorFn);

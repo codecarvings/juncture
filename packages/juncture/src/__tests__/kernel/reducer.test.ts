@@ -8,12 +8,12 @@
 
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { isReactorDefinition, reducer } from '../../kernel/reactor';
+import { isReducerDefinition, reducer } from '../../kernel/reducer';
 import { createSchemaDefinition, Schema } from '../../kernel/schema';
 import { jSymbols } from '../../symbols';
 
 describe('reducer composer', () => {
-  test('should create a ReducerReactorDefinition by passing a Juncture instance and a reducer', () => {
+  test('should create a ReducerDefinition by passing a Juncture instance and a reducer', () => {
     class MySchema extends Schema<string> {
       constructor() {
         super('');
@@ -36,9 +36,9 @@ describe('reducer composer', () => {
         return fn;
       });
 
-      myRedeucer2 = reducer(this, ({ react }) => (val: string) => react().myReducer(val));
+      myRedeucer2 = reducer(this, ({ reduce }) => (val: string) => reduce().myReducer(val));
     }
     const myJuncture = new MyJuncture();
-    expect(isReactorDefinition(myJuncture.myReducer)).toBe(true);
+    expect(isReducerDefinition(myJuncture.myReducer)).toBe(true);
   });
 });

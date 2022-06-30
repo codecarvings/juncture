@@ -8,7 +8,8 @@
 
 import { Cursor, JunctureOfCursor, ValueOfCursor } from '../frame/cursor';
 import { CursorOf, Juncture, ValueOf } from '../juncture';
-import { PrivateReactBin, ReactBin } from './bin/react-bin';
+import { PrepareBin, PrivatePrepareBin } from './bin/prepare-bin';
+import { PrivateReduceBin, ReduceBin } from './bin/reduce-bin';
 import { PrivateSelectBin, SelectBin } from './bin/select-bin';
 
 // --- Symbols
@@ -39,7 +40,13 @@ export interface PrivateContext<J extends Juncture> extends PrivateContextRole {
 export interface SelectorContext<J extends Juncture> extends PrivateContext<J> { }
 
 export interface ReducerContext<J extends Juncture> extends PrivateContext<J> {
-  react(): PrivateReactBin<J, ValueOf<J>>;
-  react(_: this['_']): PrivateReactBin<J, ValueOf<J>>;
-  react<C extends Cursor>(_: C): ReactBin<JunctureOfCursor<C>, ValueOfCursor<C>>;
+  reduce(): PrivateReduceBin<J, ValueOf<J>>;
+  reduce(_: this['_']): PrivateReduceBin<J, ValueOf<J>>;
+  reduce<C extends Cursor>(_: C): ReduceBin<JunctureOfCursor<C>, ValueOfCursor<C>>;
+}
+
+export interface MixReducerContext<J extends Juncture> extends ReducerContext<J> {
+  prepare(): PrivatePrepareBin<J>;
+  prepare(_: this['_']): PrivatePrepareBin<J>;
+  prepare<C extends Cursor>(_: C): PrepareBin<JunctureOfCursor<C>>;
 }
