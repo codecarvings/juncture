@@ -26,7 +26,7 @@ describe('selectorDefinitionKind', () => {
 
 describe('createSelectorDefinition', () => {
   test('should create a direct SelectorDefinition by passing a selector', () => {
-    const mySelector = () => () => undefined;
+    const mySelector = () => undefined;
     const definition = createSelectorDefinition(mySelector);
     expect(definition[jSymbols.definitionKind]).toBe(selectorDefinitionKind);
     expect(definition[jSymbols.definitionPayload]).toBe(mySelector);
@@ -51,7 +51,7 @@ describe('isSelectorDefinition', () => {
     expect(isSelectorDefinition(definition)).toBe(true);
   });
 
-  test('should return true if an object is a param SelectorDefinition', () => {
+  test('should return true if an object is a ParamSelectorDefinition', () => {
     const mySelector = () => () => undefined;
     const definition = createParamSelectorDefinition(mySelector);
     expect(isSelectorDefinition(definition)).toBe(true);
@@ -71,7 +71,7 @@ describe('isDirectSelectorDefinition', () => {
     expect(isDirectSelectorDefinition(definition)).toBe(true);
   });
 
-  test('should return false if an object is a param SelectorDefinition', () => {
+  test('should return false if an object is a ParamSelectorDefinition', () => {
     const mySelector = () => () => undefined;
     const definition = createParamSelectorDefinition(mySelector);
     expect(isDirectSelectorDefinition(definition)).toBe(false);
@@ -85,7 +85,7 @@ describe('isDirectSelectorDefinition', () => {
 });
 
 describe('isParamSelectorDefinition', () => {
-  test('should return true if an object is a param SelectorDefinition', () => {
+  test('should return true if an object is a ParamSelectorDefinition', () => {
     const mySelector = () => () => undefined;
     const definition = createParamSelectorDefinition(mySelector);
     expect(isParamSelectorDefinition(definition)).toBe(true);
@@ -127,7 +127,7 @@ describe('selector composer', () => {
 });
 
 describe('paramSelector composer', () => {
-  test('should create a param SelectorDefinition by passing a Juncture instance and a selector', () => {
+  test('should create a ParamSelectorDefinition by passing a Juncture instance and a selector', () => {
     class MySchema extends Schema<string> {
       constructor() {
         super('');

@@ -70,7 +70,7 @@ export function isMixReducerDefinition(obj: any): obj is MixReducerDefinition<an
 }
 
 export function isPlainReducerDefinition(obj: any): obj is ReducerDefinition<any> {
-  if (!isReducerDefinition) {
+  if (!isReducerDefinition(obj)) {
     return false;
   }
   return !isMixReducerDefinition(obj);
