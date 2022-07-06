@@ -5,5 +5,11 @@
 	}, {
 		"name": "juncture",
 		"path": "./packages/juncture"
-	}]
+	}, {
+                "name": "react-juncture",
+                "path": "./packages/react-juncture"
+        }, {
+                "name": "react-playground",
+                "path": "./packages/react-playground"
+        }]
 }
