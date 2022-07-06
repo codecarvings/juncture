@@ -30,6 +30,7 @@ module.exports = {
     'import/no-cycle': 'off',
     'import/prefer-default-export': 'off',
     'max-classes-per-file': 'off',
+    'react/react-in-jsx-scope': 'off',
     'max-len': [
       'error',
       {
