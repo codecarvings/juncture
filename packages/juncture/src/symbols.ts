@@ -8,8 +8,8 @@
 
 const definitionKind = Symbol('definitionKind');
 const definitionPayload = Symbol('definitionPayload');
+const definitionOptions = Symbol('definitionOptions');
 const handledValue = Symbol('handledValue');
-const paramSelectorTag = Symbol('paramSelectorTag');
 const mixReducerTag = Symbol('mixReducerTag');
 const createDriver = Symbol('createDriver');
 const createFrame = Symbol('createFrame');
@@ -17,8 +17,8 @@ const createFrame = Symbol('createFrame');
 export interface JSymbols {
   readonly definitionKind: typeof definitionKind;
   readonly definitionPayload: typeof definitionPayload;
+  readonly definitionOptions: typeof definitionOptions;
   readonly handledValue: typeof handledValue;
-  readonly paramSelectorTag: typeof paramSelectorTag;
   readonly mixReducerTag: typeof mixReducerTag;
   readonly createDriver: typeof createDriver;
   readonly createFrame: typeof createFrame;
@@ -27,8 +27,8 @@ export interface JSymbols {
 export const jSymbols: JSymbols = {
   definitionKind,
   definitionPayload,
+  definitionOptions,
   handledValue,
-  paramSelectorTag,
   mixReducerTag,
   createDriver,
   createFrame

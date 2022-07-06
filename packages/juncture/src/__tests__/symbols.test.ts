@@ -17,12 +17,12 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.definitionPayload).toBe('symbol');
   });
 
-  test('should contain the handledValue symbol', () => {
-    expect(typeof jSymbols.handledValue).toBe('symbol');
+  test('should contain the definitionOptions symbol', () => {
+    expect(typeof jSymbols.definitionOptions).toBe('symbol');
   });
 
-  test('should contain the paramSelectorTag symbol', () => {
-    expect(typeof jSymbols.paramSelectorTag).toBe('symbol');
+  test('should contain the handledValue symbol', () => {
+    expect(typeof jSymbols.handledValue).toBe('symbol');
   });
 
   test('should contain the mixReducerTag symbol', () => {
