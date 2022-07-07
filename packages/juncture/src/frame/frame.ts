@@ -28,5 +28,7 @@ export abstract class Frame<J extends Juncture> {
     this.layout = config.layout;
   }
 
-  readonly _!: Cursor<this>;
+  readonly privateCursor!: Cursor<this>;
+
+  readonly cursor!: Cursor<this>;
 }

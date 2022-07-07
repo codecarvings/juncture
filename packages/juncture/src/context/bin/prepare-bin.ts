@@ -13,11 +13,11 @@ import {
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
 type PrepareBinItem<S> =
-  S extends ReducerDefinition<infer B>
+  S extends ReducerDefinition<any, infer B>
     ? (...args : OverloadParameters<B>) => Action : typeof notAReducerDefinition;
 
 export type PrepareBin<J> = {
-  readonly [K in keyof J as J[K] extends ReducerDefinition<any> ? K : never]: PrepareBinItem<J[K]>;
+  readonly [K in keyof J as J[K] extends ReducerDefinition<any, any> ? K : never]: PrepareBinItem<J[K]>;
 };
 
 // Conditional type required as a workoaround for problems with key remapping

@@ -10,7 +10,7 @@ import {
   notASelectorDefinition, SelectorDefinition
 } from '../../kernel/selector';
 
-type SelectBinItem<S> = S extends SelectorDefinition<infer B, any> ? B : typeof notASelectorDefinition;
+type SelectBinItem<S> = S extends SelectorDefinition<any, infer B> ? B : typeof notASelectorDefinition;
 
 export type SelectBin<J> = {
   readonly [K in keyof J as J[K] extends SelectorDefinition<any, any> ? K : never]: SelectBinItem<J[K]>;

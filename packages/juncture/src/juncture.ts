@@ -74,7 +74,8 @@ export abstract class Juncture {
 
 // ---  Derivations
 export type FrameOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>;
-export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['_'];
+export type PrivateCursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['privateCursor'];
+export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['cursor'];
 
 export type SchemaOf<J extends Juncture> = SchemaOfDefinition<J['schema']>;
 export type ValueOf<J extends Juncture> = SchemaOfDefinition<J['schema']>['defaultValue'];

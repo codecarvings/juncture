@@ -7,7 +7,7 @@
  */
 
 import { jSymbols } from '../symbols';
-import { createDefinition, Definition } from './definition';
+import { createDefinition, Definition, DefinitionKind } from './definition';
 
 // #region Schema
 export abstract class Schema<V extends HV = any, HV = V> {
@@ -20,12 +20,10 @@ export abstract class Schema<V extends HV = any, HV = V> {
 // #endregion
 
 // #region Definition
-type SchemaDefinitionKind = 'schema';
-export const schemaDefinitionKind: SchemaDefinitionKind = 'schema';
-export type SchemaDefinition<X extends Schema> = Definition<SchemaDefinitionKind, () => X>;
+export type SchemaDefinition<X extends Schema> = Definition<DefinitionKind.schema, () => X>;
 
 export function createSchemaDefinition<X extends Schema>(schemaFactory: () => X): SchemaDefinition<X> {
-  return createDefinition(schemaDefinitionKind, schemaFactory);
+  return createDefinition(DefinitionKind.schema, schemaFactory);
 }
 
 // ---  Derivations

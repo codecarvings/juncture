@@ -9,8 +9,8 @@
 import { Juncture, SchemaOf } from '../juncture';
 import { jSymbols } from '../symbols';
 import { mappedAssign } from '../util/object';
-import { isDefinition } from './definition';
-import { selectorDefinitionKind, SelectorsOf } from './selector';
+import { isDefinition, DefinitionKind } from './definition';
+import { SelectorsOf } from './selector';
 
 export class Driver<J extends Juncture> {
   readonly schema: SchemaOf<J>;
@@ -29,7 +29,7 @@ export class Driver<J extends Juncture> {
     this.selectorKeys = selectors.keys;
   }
 
-  protected getDefinitions(junctureKeys: string[], kind: string): { map: any, keys: string[] } {
+  protected getDefinitions(junctureKeys: string[], kind: DefinitionKind): { map: any, keys: string[] } {
     const juncture = this.juncture as any;
     const keys = junctureKeys.filter(key => isDefinition(juncture[key], kind));
     const map = mappedAssign({}, keys, key => juncture[key]);
@@ -37,6 +37,6 @@ export class Driver<J extends Juncture> {
   }
 
   protected getSelectors(junctureKeys: string[]) {
-    return this.getDefinitions(junctureKeys, selectorDefinitionKind);
+    return this.getDefinitions(junctureKeys, DefinitionKind.selector);
   }
 }

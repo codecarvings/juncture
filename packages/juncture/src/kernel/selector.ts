@@ -6,42 +6,33 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateContextRole, SelectorContext } from '../context/private-context';
+import { PrivateContextRoleConsumer, SelectorContext } from '../context/private-context';
 import { Juncture } from '../juncture';
-import { jSymbols } from '../symbols';
-import { createDefinition, Definition, isDefinition } from './definition';
-
-// #region Selector
-interface Selector<B> {
-  ($: PrivateContextRole): B;
-}
-// #endregion
+import {
+  createIntegratedDefinition, DefinitionKind, IntegratedDefinition, isIntegratedDefinition
+} from './definition';
 
 // #region Definition
 export const notASelectorDefinition = '!!NOT-A-SELECTOR!!';
 
-type SelectorDefinitionKind = 'selector';
-export const selectorDefinitionKind: SelectorDefinitionKind = 'selector';
-
-export enum SelectorMode {
+export enum SelectorDefinitionSubKind {
   direct = 'direct',
   param = 'param'
 }
-interface SelectorDefinitionOtions {
-  readonly mode: SelectorMode;
-}
 
-interface SelectorDefinition<B, O extends SelectorDefinitionOtions>
-  extends Definition<SelectorDefinitionKind, Selector<B>, O> { }
+export interface SelectorDefinition<T extends SelectorDefinitionSubKind, B>
+  extends IntegratedDefinition<DefinitionKind.selector, T, PrivateContextRoleConsumer<B>> { }
 
-function createSelectorDefinition
-  <B, O extends SelectorDefinitionOtions>(selectorFn: Selector<B>, options: O): SelectorDefinition<B, O> {
-  const result: any = createDefinition(selectorDefinitionKind, selectorFn, options);
+function createSelectorDefinition<T extends SelectorDefinitionSubKind, B>(
+  subKind: T,
+  selectorFn: PrivateContextRoleConsumer<B>
+): SelectorDefinition<T, B> {
+  const result: any = createIntegratedDefinition(DefinitionKind.selector, subKind, selectorFn);
   return result;
 }
 
-function isSelectorDefinition(obj: any): obj is SelectorDefinition<any, any> {
-  return isDefinition(obj, selectorDefinitionKind);
+function isSelectorDefinition(obj: any, subKind?: SelectorDefinitionSubKind): obj is SelectorDefinition<any, any> {
+  return isIntegratedDefinition(obj, DefinitionKind.selector, subKind);
 }
 
 export type SelectorsOf<O> = {
@@ -49,37 +40,29 @@ export type SelectorsOf<O> = {
 };
 
 // --- Direct
-interface DirectSelectorDefinition<B, O extends { mode: SelectorMode.direct }>
-  extends SelectorDefinition<B, O> { }
+export interface DirectSelectorDefinition<B>
+  extends SelectorDefinition<SelectorDefinitionSubKind.direct, B> { }
 
 export function createDirectSelectorDefinition
-  <B, O extends { mode: SelectorMode.direct }>(selectorFn: Selector<B>, options?: O): DirectSelectorDefinition<B, O> {
-  return createSelectorDefinition(selectorFn, options ?? { mode: SelectorMode.direct } as O);
+  <B>(selectorFn: PrivateContextRoleConsumer<B>): DirectSelectorDefinition<B> {
+  return createSelectorDefinition(SelectorDefinitionSubKind.direct, selectorFn);
 }
 
-export function isDirectSelectorDefinition(obj: any): obj is DirectSelectorDefinition<any, any> {
-  if (!isSelectorDefinition) {
-    return false;
-  }
-  const options = (obj as any)[jSymbols.definitionOptions];
-  return options ? options.mode === SelectorMode.direct : false;
+export function isDirectSelectorDefinition(obj: any): obj is DirectSelectorDefinition<any> {
+  return isSelectorDefinition(obj, SelectorDefinitionSubKind.direct);
 }
 
 // --- ParamSelector
-interface ParamSelectorDefinition<B extends (...args: any) => any>
-  extends SelectorDefinition<B, { mode: SelectorMode.param }> { }
+export interface ParamSelectorDefinition<B extends (...args: any) => any>
+  extends SelectorDefinition<SelectorDefinitionSubKind.param, B> { }
 
 export function createParamSelectorDefinition<B extends (...args: any) => any>(
-  selectorFn: Selector<B>): ParamSelectorDefinition<B> {
-  return createSelectorDefinition(selectorFn, { mode: SelectorMode.param });
+  selectorFn: PrivateContextRoleConsumer<B>): ParamSelectorDefinition<B> {
+  return createSelectorDefinition(SelectorDefinitionSubKind.param, selectorFn);
 }
 
 export function isParamSelectorDefinition(obj: any): obj is ParamSelectorDefinition<any> {
-  if (!isSelectorDefinition(obj)) {
-    return false;
-  }
-  const options = (obj as any)[jSymbols.definitionOptions];
-  return options ? options.mode === SelectorMode.param : false;
+  return isSelectorDefinition(obj, SelectorDefinitionSubKind.param);
 }
 // #endregion
 

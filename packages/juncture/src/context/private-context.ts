@@ -7,7 +7,7 @@
  */
 
 import { Cursor, JunctureOfCursor, ValueOfCursor } from '../frame/cursor';
-import { CursorOf, Juncture, ValueOf } from '../juncture';
+import { Juncture, PrivateCursorOf, ValueOf } from '../juncture';
 import { PrepareBin, PrivatePrepareBin } from './bin/prepare-bin';
 import { PrivateReduceBin, ReduceBin } from './bin/reduce-bin';
 import { PrivateSelectBin, SelectBin } from './bin/select-bin';
@@ -22,12 +22,16 @@ const privateContextSymbols: PrivateContextSymbols = {
   privateContext: privateContextSymbol
 };
 
-export interface PrivateContextRole {
+interface PrivateContextRole {
   readonly [privateContextSymbols.privateContext]: true;
 }
 
+export interface PrivateContextRoleConsumer<B> {
+  ($: PrivateContextRole): B;
+}
+
 export interface PrivateContext<J extends Juncture> extends PrivateContextRole {
-  readonly _ : CursorOf<J>;
+  readonly _ : PrivateCursorOf<J>;
 
   value(): ValueOf<J>;
   value<C extends Cursor>(_: C): ValueOf<JunctureOfCursor<C>>;

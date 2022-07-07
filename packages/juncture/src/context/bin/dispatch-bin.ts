@@ -12,10 +12,10 @@ import {
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
 type DispatchBinItem<S> =
-  S extends ReducerDefinition<infer B> ? (...args : OverloadParameters<B>) => void : typeof notAReducerDefinition;
+  S extends ReducerDefinition<any, infer B> ? (...args : OverloadParameters<B>) => void : typeof notAReducerDefinition;
 
 export type DispatchBin<J> = {
-  readonly [K in keyof J as J[K] extends ReducerDefinition<any> ? K : never]: DispatchBinItem<J[K]>;
+  readonly [K in keyof J as J[K] extends ReducerDefinition<any, any> ? K : never]: DispatchBinItem<J[K]>;
 };
 
 // Conditional type required as a workoaround for problems with key remapping

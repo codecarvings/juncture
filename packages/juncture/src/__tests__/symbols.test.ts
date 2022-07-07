@@ -9,24 +9,12 @@
 import { jSymbols } from '../symbols';
 
 describe('jSymbols', () => {
-  test('should contain the definitionKind symbol', () => {
-    expect(typeof jSymbols.definitionKind).toBe('symbol');
-  });
-
   test('should contain the definitionPayload symbol', () => {
     expect(typeof jSymbols.definitionPayload).toBe('symbol');
   });
 
-  test('should contain the definitionOptions symbol', () => {
-    expect(typeof jSymbols.definitionOptions).toBe('symbol');
-  });
-
   test('should contain the handledValue symbol', () => {
     expect(typeof jSymbols.handledValue).toBe('symbol');
-  });
-
-  test('should contain the mixReducerTag symbol', () => {
-    expect(typeof jSymbols.mixReducerTag).toBe('symbol');
   });
 
   test('should contain the createDriver symbol', () => {
