@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { MixReducerContext, PrivateContextRoleConsumer, ReducerContext } from '../context/private-context';
+import { PrivateContextRoleConsumer } from '../context/private-context';
 import { Path } from '../frame/path';
-import { HandledValueOf, Juncture } from '../juncture';
-import { createDef, Def, DefKind, isDef } from './def';
+import {
+  createDef, Def, DefKind, isDef
+} from './def';
 
 export interface Action {
   readonly target: Path; // TODO | FrameRef;
@@ -43,8 +44,8 @@ export type ReducerDefsOf<O> = {
 };
 
 // --- PlainReducer
-interface PlainReducerDef<B extends (...args: any) => any>
-  extends ReducerDef<ReducerDefSubKind.plain, B> { }
+export interface PlainReducerDef<P extends (...args: any) => any>
+  extends ReducerDef<ReducerDefSubKind.plain, P> { }
 
 export function createPlainReducerDef<B extends (...args: any) => any>(
   reducerFn: PrivateContextRoleConsumer<B>): PlainReducerDef<B> {
@@ -57,7 +58,7 @@ export function isPlainReducerDef(obj: any): obj is PlainReducerDef<any> {
 // #endregion
 
 // --- MixReducer
-interface MixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>
+export interface MixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>
   extends ReducerDef<ReducerDefSubKind.mix, B> { }
 
 export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
@@ -67,25 +68,5 @@ export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Ac
 
 export function isMixReducerDef(obj: any): obj is MixReducerDef<any> {
   return isReducerDef(obj, ReducerDefSubKind.mix);
-}
-// #endregion
-
-// #region Composer
-export function reducer<J extends Juncture, B extends (
-  ...args: any) => HandledValueOf<J>>(
-  juncture: J,
-  reducerFn: ($: ReducerContext<J>) => B
-)
-  : PlainReducerDef<B> {
-  return createPlainReducerDef(reducerFn as any);
-}
-
-export function mixReducer<J extends Juncture, B extends (
-  ...args: any) => ReadonlyArray<Action>>(
-  juncture: J,
-  reducerFn: ($: MixReducerContext<J>) => B
-)
-  : MixReducerDef<B> {
-  return createMixReducerDef(reducerFn as any);
 }
 // #endregion

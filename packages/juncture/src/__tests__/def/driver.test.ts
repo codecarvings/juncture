@@ -6,11 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Driver } from '../../def/driver';
+import { createSchemaDef, Schema } from '../../def/schema';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { Driver } from '../../kernel/driver';
-import { createSchemaDef, Schema } from '../../kernel/schema';
-import { selector } from '../../kernel/selector';
 import { jSymbols } from '../../symbols';
 
 describe('Driver', () => {
@@ -25,7 +24,7 @@ describe('Driver', () => {
 
     [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
-    mySelector = selector(this, () => 0);
+    mySelector = this.DEF.selector(() => 0);
   }
 
   let juncture: MyJuncture;

@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateContextRoleConsumer, SelectorContext } from '../context/private-context';
-import { Juncture } from '../juncture';
-import { createDef, Def, DefKind, isDef } from './def';
+import { PrivateContextRoleConsumer } from '../context/private-context';
+import {
+  createDef, Def, DefKind, isDef
+} from './def';
 
 // #region Def
 export const notASelectorDef = '!!NOT-A-SELECTOR!!';
@@ -61,21 +62,5 @@ export function createParamSelectorDef<B extends (...args: any) => any>(
 
 export function isParamSelectorDef(obj: any): obj is ParamSelectorDef<any> {
   return isSelectorDef(obj, SelectorDefSubKind.param);
-}
-// #endregion
-
-// #region Composer
-export function selector<J extends Juncture, B>(juncture: J, selectorFn: ($: SelectorContext<J>) => B)
-  : DirectSelectorDef<B> {
-  return createDirectSelectorDef(selectorFn as any);
-}
-
-export function paramSelector<J extends Juncture, B extends (
-  ...args: any) => any>(
-  juncture: J,
-  selectorFn: ($: SelectorContext<J>) => B
-)
-  : ParamSelectorDef<B> {
-  return createParamSelectorDef(selectorFn as any);
 }
 // #endregion

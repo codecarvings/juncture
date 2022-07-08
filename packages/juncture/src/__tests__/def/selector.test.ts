@@ -6,17 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Frame, FrameConfig } from '../../frame/frame';
-import { Juncture } from '../../juncture';
-import { createDef, DefKind } from '../../kernel/def';
-import { createSchemaDef, Schema } from '../../kernel/schema';
+import { createDef, DefKind } from '../../def/def';
 import {
   createDirectSelectorDef,
   createParamSelectorDef,
   isDirectSelectorDef,
   isParamSelectorDef,
-  paramSelector, selector, SelectorDefSubKind
-} from '../../kernel/selector';
+  SelectorDefSubKind
+} from '../../def/selector';
 import { jSymbols } from '../../symbols';
 
 describe('createDirectSelectorDef', () => {
@@ -78,47 +75,5 @@ describe('isParamSelectorDef', () => {
     expect(isParamSelectorDef(null)).toBe(false);
     expect(isParamSelectorDef(undefined)).toBe(false);
     expect(isParamSelectorDef('dummy')).toBe(false);
-  });
-});
-
-describe('selector composer', () => {
-  test('should create a DirectSelectorDef by passing a Juncture instance and a selector', () => {
-    class MySchema extends Schema<string> {
-      constructor() {
-        super('');
-      }
-    }
-    class MyFrame<J extends MyJuncture> extends Frame<J> { }
-    class MyJuncture extends Juncture {
-      schema = createSchemaDef(() => new MySchema());
-
-      [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
-
-      aValue = 21;
-
-      mySelector = selector(this, ({ value }) => value());
-    }
-    const myJuncture = new MyJuncture();
-    expect(isDirectSelectorDef(myJuncture.mySelector)).toBe(true);
-  });
-});
-
-describe('paramSelector composer', () => {
-  test('should create a ParamSelectorDef by passing a Juncture instance and a selector', () => {
-    class MySchema extends Schema<string> {
-      constructor() {
-        super('');
-      }
-    }
-    class MyFrame<J extends MyJuncture> extends Frame<J> { }
-    class MyJuncture extends Juncture {
-      schema = createSchemaDef(() => new MySchema());
-
-      [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
-
-      mySelector = paramSelector(this, () => (val: string) => val.length);
-    }
-    const myJuncture = new MyJuncture();
-    expect(isParamSelectorDef(myJuncture.mySelector)).toBe(true);
   });
 });

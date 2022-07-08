@@ -7,7 +7,9 @@
  */
 
 import { jSymbols } from '../symbols';
-import { createDef, Def, DefKind, isDef } from './def';
+import {
+  createDef, Def, DefKind, isDef
+} from './def';
 
 // #region Schema
 export abstract class Schema<V extends HV = any, HV = V> {

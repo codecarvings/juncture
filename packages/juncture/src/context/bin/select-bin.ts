@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateSuffix } from '../../kernel/private';
-import { notASelectorDef, SelectorDef } from '../../kernel/selector';
+import { PrivateSuffix } from '../../def/private';
+import { notASelectorDef, SelectorDef } from '../../def/selector';
 
 type SelectBinItem<S> = S extends SelectorDef<any, infer B> ? B : typeof notASelectorDef;
 
 export type SelectBin<J> = {
   readonly [K in keyof J as
-    J[K] extends PrivateSuffix ? never :
+  J[K] extends PrivateSuffix ? never :
     J[K] extends SelectorDef<any, any> ? K : never
   ]: SelectBinItem<J[K]>;
 };

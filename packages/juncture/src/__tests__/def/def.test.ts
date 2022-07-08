@@ -6,7 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDef, Def, DefKind, isDef } from '../../kernel/def';
+import {
+  createDef, Def, DefKind, isDef
+} from '../../def/def';
 import { jSymbols } from '../../symbols';
 
 describe('DefKind', () => {

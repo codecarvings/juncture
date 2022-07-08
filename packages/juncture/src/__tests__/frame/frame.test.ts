@@ -6,9 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { createSchemaDef, Schema } from '../../def/schema';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { createSchemaDef, Schema } from '../../kernel/schema';
 import { jSymbols } from '../../symbols';
 
 describe('Frame class', () => {

@@ -7,11 +7,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { DefComposer } from '../def/composer';
+import { Driver } from '../def/driver';
+import { createSchemaDef, Schema } from '../def/schema';
+import { isDirectSelectorDef } from '../def/selector';
 import { Frame, FrameConfig } from '../frame/frame';
 import { Juncture } from '../juncture';
-import { Driver } from '../kernel/driver';
-import { createSchemaDef, Schema } from '../kernel/schema';
-import { isDirectSelectorDef } from '../kernel/selector';
 import { jSymbols } from '../symbols';
 
 describe('Juncture', () => {
@@ -37,6 +38,10 @@ describe('Juncture', () => {
 
     beforeEach(() => {
       juncture = new MyJuncture();
+    });
+
+    test('should contain the DEF composer', () => {
+      expect((juncture as any).DEF).toBeInstanceOf(DefComposer);
     });
 
     test('should contain a "defaultValue" direct selector', () => {

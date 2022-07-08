@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateSuffix } from '../../kernel/private';
-import { Action, notAReducerDef, ReducerDef } from '../../kernel/reducer';
+import { PrivateSuffix } from '../../def/private';
+import { Action, notAReducerDef, ReducerDef } from '../../def/reducer';
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
 type PrepareBinItem<S> =
@@ -16,7 +16,7 @@ type PrepareBinItem<S> =
 
 export type PrepareBin<J> = {
   readonly [K in keyof J as
-    J[K] extends PrivateSuffix ? never :
+  J[K] extends PrivateSuffix ? never :
     J[K] extends ReducerDef<any, any> ? K : never
   ]: PrepareBinItem<J[K]>;
 };

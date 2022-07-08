@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { DefComposer } from './def/composer';
+import { Driver } from './def/driver';
+import { SchemaDef, SchemaOfSchemaDef } from './def/schema';
 import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
-import { Driver } from './kernel/driver';
-import { SchemaDef, SchemaOfSchemaDef } from './kernel/schema';
-import { selector } from './kernel/selector';
 import { jSymbols, JSymbols } from './symbols';
 
 // --- Symbols
@@ -33,15 +33,17 @@ export abstract class Juncture {
 
   abstract [jSymbols.createFrame](config: FrameConfig): Frame<any>;
 
+  protected readonly DEF: DefComposer<this> = new DefComposer(this);
+
   readonly abstract schema: SchemaDef<any>;
 
-  readonly defaultValue = selector(this, () => undefined as ValueOf<this>); // TODO: Impement this
+  readonly defaultValue = this.DEF.selector(() => undefined as ValueOf<this>); // TODO: Impement this
 
-  readonly path = selector(this, ({ _ }) => getFrame(_).layout.path);
+  readonly path = this.DEF.selector(({ _ }) => getFrame(_).path);
 
-  readonly isMounted = selector(this, () => true); // TODO: Impement this
+  readonly isMounted = this.DEF.selector(() => true); // TODO: Impement this
 
-  readonly value = selector(this, () => undefined as ValueOf<this>);// TODO: Impement this
+  readonly value = this.DEF.selector(() => undefined as ValueOf<this>);// TODO: Impement this
 
   static getInstance<JT extends JunctureType>(Type: JT): InstanceType<JT> {
     if ((Type as any)[junctureSymbols.instance]) {

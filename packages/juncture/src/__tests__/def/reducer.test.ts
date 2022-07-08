@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Frame, FrameConfig } from '../../frame/frame';
-import { Juncture } from '../../juncture';
-import { createDef, DefKind } from '../../kernel/def';
-import { createMixReducerDef, createPlainReducerDef, isMixReducerDef, isPlainReducerDef, mixReducer, reducer, ReducerDefSubKind } from '../../kernel/reducer';
-import { createSchemaDef, Schema } from '../../kernel/schema';
+import { createDef, DefKind } from '../../def/def';
+import {
+  createMixReducerDef, createPlainReducerDef, isMixReducerDef, isPlainReducerDef,
+  ReducerDefSubKind
+} from '../../def/reducer';
 import { jSymbols } from '../../symbols';
 
 describe('createPlainReducerDef', () => {
@@ -28,7 +28,7 @@ describe('createMixRedicerDef', () => {
     const myReducer = () => () => [];
     const def = createMixReducerDef(myReducer);
     expect(def.defKind).toBe(DefKind.reducer);
-    expect(def.defSubKind).toBe(ReducerDefSubKind.mix);   
+    expect(def.defSubKind).toBe(ReducerDefSubKind.mix);
     expect(def[jSymbols.defPayload]).toBe(myReducer);
   });
 });
@@ -72,47 +72,5 @@ describe('isMixReducerDef', () => {
     expect(isMixReducerDef(null)).toBe(false);
     expect(isMixReducerDef(undefined)).toBe(false);
     expect(isMixReducerDef('dummy')).toBe(false);
-  });
-});
-
-describe('reducer composer', () => {
-  test('should create a PlainReducerDef by passing a Juncture instance and a reducer', () => {
-    class MySchema extends Schema<string> {
-      constructor() {
-        super('');
-      }
-    }
-    class MyFrame<J extends MyJuncture> extends Frame<J> { }
-    class MyJuncture extends Juncture {
-      schema = createSchemaDef(() => new MySchema());
-
-      [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
-
-      aValue = 21;
-
-      myReducer = reducer(this, ({ value }) => () => value());
-    }
-    const myJuncture = new MyJuncture();
-    expect(isPlainReducerDef(myJuncture.myReducer)).toBe(true);
-  });
-});
-
-describe('mixReducer composer', () => {
-  test('should create a MixReducerDef by passing a Juncture instance and a selector', () => {
-    class MySchema extends Schema<string> {
-      constructor() {
-        super('');
-      }
-    }
-    class MyFrame<J extends MyJuncture> extends Frame<J> { }
-    class MyJuncture extends Juncture {
-      schema = createSchemaDef(() => new MySchema());
-
-      [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
-
-      myReducer = mixReducer(this, () => () => []);
-    }
-    const myJuncture = new MyJuncture();
-    expect(isMixReducerDef(myJuncture.myReducer)).toBe(true);
   });
 });
