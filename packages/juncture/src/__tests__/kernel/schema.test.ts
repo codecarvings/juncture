@@ -6,7 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchemaDefinition, Schema, schemaDefinitionKind } from '../../kernel/schema';
+import { createDef, DefKind } from '../../kernel/def';
+import { createSchemaDef, isSchemaDef, Schema } from '../../kernel/schema';
 import { jSymbols } from '../../symbols';
 
 describe('Schema', () => {
@@ -30,14 +31,8 @@ describe('Schema', () => {
   });
 });
 
-describe('schemaDefinitionKind', () => {
-  test('should contain "schema"', () => {
-    expect(schemaDefinitionKind).toBe('schema');
-  });
-});
-
-describe('createSchemaDefinition', () => {
-  test('should create a SchemaDefinition by passing a schema factory', () => {
+describe('createSchemaDef', () => {
+  test('should create a SchemaDef by passing a schema factory', () => {
     class MySchema extends Schema<string> {
       constructor() {
         super('str');
@@ -45,9 +40,30 @@ describe('createSchemaDefinition', () => {
     }
     const schemaFactory = () => new MySchema();
 
-    const definition = createSchemaDefinition(schemaFactory);
-    expect(definition[jSymbols.definitionKind]).toBe(schemaDefinitionKind);
-    expect(definition[jSymbols.definitionPayload]).toBe(schemaFactory);
-    expect((definition as any)[jSymbols.paramSelectorTag]).toBeUndefined();
+    const def = createSchemaDef(schemaFactory);
+    expect(def.defKind).toBe(DefKind.schema);
+    expect(def.defSubKind).toBe('');
+    expect(def[jSymbols.defPayload]).toBe(schemaFactory);
+  });
+});
+
+describe('isSchemaDef', () => {
+  test('should return true if an object is a SchemaDef', () => {
+    class MySchema extends Schema<string> {
+      constructor() {
+        super('str');
+      }
+    }
+    const schemaFactory = () => new MySchema();
+
+    const def = createSchemaDef(schemaFactory);
+    expect(isSchemaDef(def)).toBe(true);
+  });
+
+  test('should return false if an object is not a SchemaDef', () => {
+    expect(isSchemaDef(createDef(DefKind.selector, '', undefined))).toBe(false);
+    expect(isSchemaDef(null)).toBe(false);
+    expect(isSchemaDef(undefined)).toBe(false);
+    expect(isSchemaDef('dummy')).toBe(false);
   });
 });

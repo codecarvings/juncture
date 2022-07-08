@@ -15,13 +15,12 @@ export interface Context<Z> {
   readonly _: Z;
 
   value<C extends Cursor>(_: C): ValueOf<JunctureOfCursor<C>>;
-
   select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
-
   dispach<C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
 }
 
-export interface BindedContext<J extends Juncture> extends Context<CursorOf<J>> {
+// Cannot use interface extends... because methods are overriden (not overloaded)
+export type BindedContext<J extends Juncture> = Context<CursorOf<J>> & {
   value(): ValueOf<J>;
   select(): SelectBin<J>;
   dispach(): DispatchBin<J>;

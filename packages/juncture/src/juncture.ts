@@ -9,7 +9,7 @@
 import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
 import { Driver } from './kernel/driver';
-import { SchemaDefinition, SchemaOfDefinition } from './kernel/schema';
+import { SchemaDef, SchemaOfSchemaDef } from './kernel/schema';
 import { selector } from './kernel/selector';
 import { jSymbols, JSymbols } from './symbols';
 
@@ -33,13 +33,13 @@ export abstract class Juncture {
 
   abstract [jSymbols.createFrame](config: FrameConfig): Frame<any>;
 
-  readonly abstract schema: SchemaDefinition<any>;
+  readonly abstract schema: SchemaDef<any>;
 
   readonly defaultValue = selector(this, () => undefined as ValueOf<this>); // TODO: Impement this
 
   readonly path = selector(this, ({ _ }) => getFrame(_).layout.path);
 
-  readonly isAttached = selector(this, () => true); // TODO: Impement this
+  readonly isMounted = selector(this, () => true); // TODO: Impement this
 
   readonly value = selector(this, () => undefined as ValueOf<this>);// TODO: Impement this
 
@@ -77,9 +77,9 @@ export type FrameOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFra
 export type PrivateCursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['privateCursor'];
 export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['cursor'];
 
-export type SchemaOf<J extends Juncture> = SchemaOfDefinition<J['schema']>;
-export type ValueOf<J extends Juncture> = SchemaOfDefinition<J['schema']>['defaultValue'];
-export type HandledValueOf<J extends Juncture> = SchemaOfDefinition<J['schema']>[JSymbols['handledValue']];
+export type SchemaOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>;
+export type ValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>['defaultValue'];
+export type HandledValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>[JSymbols['handledValue']];
 // #endregion
 
 // #region JunctureType

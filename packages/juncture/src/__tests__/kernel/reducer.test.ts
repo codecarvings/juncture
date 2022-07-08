@@ -8,101 +8,75 @@
 
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import {
-  createMixRedicerDefinition, createReducerDefinition, isMixReducerDefinition, isPlainReducerDefinition,
-  isReducerDefinition, mixReducer, reducer, reducerDefinitionKind
-} from '../../kernel/reducer';
-import { createSchemaDefinition, Schema } from '../../kernel/schema';
+import { createDef, DefKind } from '../../kernel/def';
+import { createMixReducerDef, createPlainReducerDef, isMixReducerDef, isPlainReducerDef, mixReducer, reducer, ReducerDefSubKind } from '../../kernel/reducer';
+import { createSchemaDef, Schema } from '../../kernel/schema';
 import { jSymbols } from '../../symbols';
 
-describe('reducerDefinitionKind', () => {
-  test('should contain "reducer"', () => {
-    expect(reducerDefinitionKind).toBe('reducer');
-  });
-});
-
-describe('createReducerDefinition', () => {
-  test('should create a plain ReducerDefinition by passing a reducer', () => {
+describe('createPlainReducerDef', () => {
+  test('should create a PlainReducerDefn by passing a reducer', () => {
     const myReducer = () => () => undefined;
-    const definition = createReducerDefinition(myReducer);
-    expect(definition[jSymbols.definitionKind]).toBe(reducerDefinitionKind);
-    expect(definition[jSymbols.definitionPayload]).toBe(myReducer);
-    expect((definition as any)[jSymbols.mixReducerTag]).toBeUndefined();
+    const def = createPlainReducerDef(myReducer);
+    expect(def.defKind).toBe(DefKind.reducer);
+    expect(def.defSubKind).toBe(ReducerDefSubKind.plain);
+    expect(def[jSymbols.defPayload]).toBe(myReducer);
   });
 });
 
-describe('createMixRedicerDefinition', () => {
-  test('should create a MixReducerDefinition by passing a selector', () => {
+describe('createMixRedicerDef', () => {
+  test('should create a MixReducerDefby passing a selector', () => {
     const myReducer = () => () => [];
-    const definition = createMixRedicerDefinition(myReducer);
-    expect(definition[jSymbols.definitionKind]).toBe(reducerDefinitionKind);
-    expect(definition[jSymbols.definitionPayload]).toBe(myReducer);
-    expect(definition[jSymbols.mixReducerTag]).toBe(true);
+    const def = createMixReducerDef(myReducer);
+    expect(def.defKind).toBe(DefKind.reducer);
+    expect(def.defSubKind).toBe(ReducerDefSubKind.mix);   
+    expect(def[jSymbols.defPayload]).toBe(myReducer);
   });
 });
 
-describe('isReducerDefinition', () => {
-  test('should return true if an object is a plain ReducerDefinition', () => {
+describe('isPlainReducerDef', () => {
+  test('should return true if an object is a PlainReducerDef', () => {
     const myReducer = () => () => undefined;
-    const definition = createReducerDefinition(myReducer);
-    expect(isReducerDefinition(definition)).toBe(true);
+    const def = createPlainReducerDef(myReducer);
+    expect(isPlainReducerDef(def)).toBe(true);
   });
 
-  test('should return true if an object is a MixReducerDefinition', () => {
+  test('should return false if an object is a MixReducerDef', () => {
     const myReducer = () => () => [];
-    const definition = createMixRedicerDefinition(myReducer);
-    expect(isReducerDefinition(definition)).toBe(true);
+    const def = createMixReducerDef(myReducer);
+    expect(isPlainReducerDef(def)).toBe(false);
   });
 
-  test('should return false if an object is not a ReducerDefinition', () => {
-    expect(isReducerDefinition(null)).toBe(false);
-    expect(isReducerDefinition(undefined)).toBe(false);
-    expect(isReducerDefinition('dummy')).toBe(false);
+  test('should return false if an object is not a PlainReducerDef', () => {
+    expect(isPlainReducerDef(createDef(DefKind.selector, '', undefined))).toBe(false);
+    expect(isPlainReducerDef(null)).toBe(false);
+    expect(isPlainReducerDef(undefined)).toBe(false);
+    expect(isPlainReducerDef('dummy')).toBe(false);
   });
 });
 
-describe('isPlainReducerDefinition', () => {
-  test('should return true if an object is a plain ReducerDefinition', () => {
-    const myReducer = () => () => undefined;
-    const definition = createReducerDefinition(myReducer);
-    expect(isPlainReducerDefinition(definition)).toBe(true);
-  });
-
-  test('should return false if an object is a MixReducerDefinition', () => {
+describe('isMixReducerDef', () => {
+  test('should return true if an object is a MixReducerDef', () => {
     const myReducer = () => () => [];
-    const definition = createMixRedicerDefinition(myReducer);
-    expect(isPlainReducerDefinition(definition)).toBe(false);
+    const def = createMixReducerDef(myReducer);
+    expect(isMixReducerDef(def)).toBe(true);
   });
 
-  test('should return false if an object is not a ReducerDefinition', () => {
-    expect(isPlainReducerDefinition(null)).toBe(false);
-    expect(isPlainReducerDefinition(undefined)).toBe(false);
-    expect(isPlainReducerDefinition('dummy')).toBe(false);
-  });
-});
-
-describe('isMixReducerDefinition', () => {
-  test('should return true if an object is a MixReducerDefinition', () => {
-    const myReducer = () => () => [];
-    const definition = createMixRedicerDefinition(myReducer);
-    expect(isMixReducerDefinition(definition)).toBe(true);
-  });
-
-  test('should return false if an object is a plain ReducerDefinition', () => {
+  test('should return false if an object is a PlainReducerDef', () => {
     const myReducer = () => () => undefined;
-    const definition = createReducerDefinition(myReducer);
-    expect(isMixReducerDefinition(definition)).toBe(false);
+    const def = createPlainReducerDef(myReducer);
+    expect(isMixReducerDef(def)).toBe(false);
   });
 
-  test('should return false if an object is not a ReducerDefinition', () => {
-    expect(isMixReducerDefinition(null)).toBe(false);
-    expect(isMixReducerDefinition(undefined)).toBe(false);
-    expect(isMixReducerDefinition('dummy')).toBe(false);
+  test('should return false if an object is not a MixReducerDef', () => {
+    expect(isPlainReducerDef(createDef(DefKind.selector, '', undefined))).toBe(false);
+    expect(isMixReducerDef(null)).toBe(false);
+    expect(isMixReducerDef(undefined)).toBe(false);
+    expect(isMixReducerDef('dummy')).toBe(false);
   });
 });
 
 describe('reducer composer', () => {
-  test('should create a plain ReducerDefinition by passing a Juncture instance and a reducer', () => {
+  test('should create a PlainReducerDef by passing a Juncture instance and a reducer', () => {
     class MySchema extends Schema<string> {
       constructor() {
         super('');
@@ -110,7 +84,7 @@ describe('reducer composer', () => {
     }
     class MyFrame<J extends MyJuncture> extends Frame<J> { }
     class MyJuncture extends Juncture {
-      schema = createSchemaDefinition(() => new MySchema());
+      schema = createSchemaDef(() => new MySchema());
 
       [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
@@ -119,12 +93,12 @@ describe('reducer composer', () => {
       myReducer = reducer(this, ({ value }) => () => value());
     }
     const myJuncture = new MyJuncture();
-    expect(isPlainReducerDefinition(myJuncture.myReducer)).toBe(true);
+    expect(isPlainReducerDef(myJuncture.myReducer)).toBe(true);
   });
 });
 
 describe('mixReducer composer', () => {
-  test('should create a MixReducerDefinition by passing a Juncture instance and a selector', () => {
+  test('should create a MixReducerDef by passing a Juncture instance and a selector', () => {
     class MySchema extends Schema<string> {
       constructor() {
         super('');
@@ -132,13 +106,13 @@ describe('mixReducer composer', () => {
     }
     class MyFrame<J extends MyJuncture> extends Frame<J> { }
     class MyJuncture extends Juncture {
-      schema = createSchemaDefinition(() => new MySchema());
+      schema = createSchemaDef(() => new MySchema());
 
       [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
       myReducer = mixReducer(this, () => () => []);
     }
     const myJuncture = new MyJuncture();
-    expect(isMixReducerDefinition(myJuncture.myReducer)).toBe(true);
+    expect(isMixReducerDef(myJuncture.myReducer)).toBe(true);
   });
 });

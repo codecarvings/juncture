@@ -9,7 +9,7 @@
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
 import { Driver } from '../../kernel/driver';
-import { createSchemaDefinition, Schema } from '../../kernel/schema';
+import { createSchemaDef, Schema } from '../../kernel/schema';
 import { selector } from '../../kernel/selector';
 import { jSymbols } from '../../symbols';
 
@@ -21,7 +21,7 @@ describe('Driver', () => {
   }
   class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
-    schema = createSchemaDefinition(() => new MySchema());
+    schema = createSchemaDef(() => new MySchema());
 
     [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
@@ -51,7 +51,7 @@ describe('Driver', () => {
     test('should have a property "selectors" containing the map of each declared selector', () => {
       expect(driver.selectors.defaultValue).toBe(juncture.defaultValue);
       expect(driver.selectors.path).toBe(juncture.path);
-      expect(driver.selectors.isAttached).toBe(juncture.isAttached);
+      expect(driver.selectors.isMounted).toBe(juncture.isMounted);
       expect(driver.selectors.value).toBe(juncture.value);
       expect(driver.selectors.mySelector).toBe(juncture.mySelector);
       expect(Object.keys(driver.selectors)).toHaveLength(5);
@@ -59,7 +59,7 @@ describe('Driver', () => {
 
     test('should have a property "selectorKeys" containing the selector keys', () => {
       expect((driver.selectorKeys as string[]).sort())
-        .toEqual(['defaultValue', 'path', 'isAttached', 'value', 'mySelector'].sort());
+        .toEqual(['defaultValue', 'path', 'isMounted', 'value', 'mySelector'].sort());
     });
   });
 });

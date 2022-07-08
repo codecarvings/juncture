@@ -6,20 +6,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const definitionPayload = Symbol('definitionPayload');
+const defPayload = Symbol('defPayload');
 const handledValue = Symbol('handledValue');
 const createDriver = Symbol('createDriver');
 const createFrame = Symbol('createFrame');
 
 export interface JSymbols {
-  readonly definitionPayload: typeof definitionPayload;
+  readonly defPayload: typeof defPayload;
   readonly handledValue: typeof handledValue;
   readonly createDriver: typeof createDriver;
   readonly createFrame: typeof createFrame;
 }
 
 export const jSymbols: JSymbols = {
-  definitionPayload,
+  defPayload,
   handledValue,
   createDriver,
   createFrame

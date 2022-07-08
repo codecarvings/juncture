@@ -10,8 +10,8 @@
 import { Frame, FrameConfig } from '../frame/frame';
 import { Juncture } from '../juncture';
 import { Driver } from '../kernel/driver';
-import { createSchemaDefinition, Schema } from '../kernel/schema';
-import { isDirectSelectorDefinition } from '../kernel/selector';
+import { createSchemaDef, Schema } from '../kernel/schema';
+import { isDirectSelectorDef } from '../kernel/selector';
 import { jSymbols } from '../symbols';
 
 describe('Juncture', () => {
@@ -22,7 +22,7 @@ describe('Juncture', () => {
   }
   class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
-    schema = createSchemaDefinition(() => new MySchema());
+    schema = createSchemaDef(() => new MySchema());
 
     [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
   }
@@ -40,19 +40,19 @@ describe('Juncture', () => {
     });
 
     test('should contain a "defaultValue" direct selector', () => {
-      expect(isDirectSelectorDefinition(juncture.defaultValue)).toBe(true);
+      expect(isDirectSelectorDef(juncture.defaultValue)).toBe(true);
     });
 
     test('should contain a "path" direct selector', () => {
-      expect(isDirectSelectorDefinition(juncture.path)).toBe(true);
+      expect(isDirectSelectorDef(juncture.path)).toBe(true);
     });
 
-    test('should contain a "attached" direct selector', () => {
-      expect(isDirectSelectorDefinition(juncture.isAttached)).toBe(true);
+    test('should contain a "isMounted" direct selector', () => {
+      expect(isDirectSelectorDef(juncture.isMounted)).toBe(true);
     });
 
     test('should contain a "value" direct selector', () => {
-      expect(isDirectSelectorDefinition(juncture.value)).toBe(true);
+      expect(isDirectSelectorDef(juncture.value)).toBe(true);
     });
   });
 
@@ -89,7 +89,7 @@ describe('Juncture', () => {
         expect(driver).toBeInstanceOf(Driver);
         expect(driver.selectors.defaultValue).toBe(juncture.defaultValue);
         expect(driver.selectors.path).toBe(juncture.path);
-        expect(driver.selectors.isAttached).toBe(juncture.isAttached);
+        expect(driver.selectors.isMounted).toBe(juncture.isMounted);
         expect(driver.selectors.value).toBe(juncture.value);
       });
 

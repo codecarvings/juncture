@@ -9,9 +9,7 @@
 import { MixReducerContext, PrivateContextRoleConsumer, ReducerContext } from '../context/private-context';
 import { Path } from '../frame/path';
 import { HandledValueOf, Juncture } from '../juncture';
-import {
-  createIntegratedDefinition, DefinitionKind, IntegratedDefinition, isIntegratedDefinition
-} from './definition';
+import { createDef, Def, DefKind, isDef } from './def';
 
 export interface Action {
   readonly target: Path; // TODO | FrameRef;
@@ -19,56 +17,56 @@ export interface Action {
   readonly args: any;
 }
 
-// #region Definition
-export const notAReducerDefinition = '!!NOT-A-REDUCER!!';
+// #region Def
+export const notAReducerDef = '!!NOT-A-REDUCER!!';
 
-export enum ReducerDefinitionSubKind {
+export enum ReducerDefSubKind {
   plain = 'plain',
   mix = 'mix'
 }
 
-export interface ReducerDefinition<T extends ReducerDefinitionSubKind, B extends (...args: any) => any>
-  extends IntegratedDefinition<DefinitionKind.reducer, T, PrivateContextRoleConsumer<B>> { }
+export interface ReducerDef<T extends ReducerDefSubKind, B extends (...args: any) => any>
+  extends Def<DefKind.reducer, T, PrivateContextRoleConsumer<B>> { }
 
-export function createReducerDefinition<T extends ReducerDefinitionSubKind, B extends (...args: any) => any>(
-  subKind: T, reducerFn: PrivateContextRoleConsumer<B>): ReducerDefinition<T, B> {
-  const result: any = createIntegratedDefinition(DefinitionKind.reducer, subKind, reducerFn);
+function createReducerDef<T extends ReducerDefSubKind, B extends (...args: any) => any>(
+  subKind: T, reducerFn: PrivateContextRoleConsumer<B>): ReducerDef<T, B> {
+  const result: any = createDef(DefKind.reducer, subKind, reducerFn);
   return result;
 }
 
-export function isReducerDefinition(obj: any, subKind?: ReducerDefinitionSubKind): obj is ReducerDefinition<any, any> {
-  return isIntegratedDefinition(obj, DefinitionKind.reducer, subKind);
+function isReducerDef(obj: any, subKind?: ReducerDefSubKind): obj is ReducerDef<any, any> {
+  return isDef(obj, DefKind.reducer, subKind);
 }
 
-export type ReducersOf<O> = {
-  readonly [K in keyof O as O[K] extends ReducerDefinition<any, any> ? K : never]: O[K];
+export type ReducerDefsOf<O> = {
+  readonly [K in keyof O as O[K] extends ReducerDef<any, any> ? K : never]: O[K];
 };
 
 // --- PlainReducer
-interface PlainReducerDefinition<B extends (...args: any) => any>
-  extends ReducerDefinition<ReducerDefinitionSubKind.plain, B> { }
+interface PlainReducerDef<B extends (...args: any) => any>
+  extends ReducerDef<ReducerDefSubKind.plain, B> { }
 
-export function createPlainReducerDefinition<B extends (...args: any) => any>(
-  reducerFn: PrivateContextRoleConsumer<B>): PlainReducerDefinition<B> {
-  return createReducerDefinition(ReducerDefinitionSubKind.plain, reducerFn);
+export function createPlainReducerDef<B extends (...args: any) => any>(
+  reducerFn: PrivateContextRoleConsumer<B>): PlainReducerDef<B> {
+  return createReducerDef(ReducerDefSubKind.plain, reducerFn);
 }
 
-export function isPlainReducerDefinition(obj: any): obj is PlainReducerDefinition<any> {
-  return isReducerDefinition(obj, ReducerDefinitionSubKind.plain);
+export function isPlainReducerDef(obj: any): obj is PlainReducerDef<any> {
+  return isReducerDef(obj, ReducerDefSubKind.plain);
 }
 // #endregion
 
 // --- MixReducer
-interface MixReducerDefinition<B extends (...args: any) => ReadonlyArray<Action>>
-  extends ReducerDefinition<ReducerDefinitionSubKind.mix, B> { }
+interface MixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>
+  extends ReducerDef<ReducerDefSubKind.mix, B> { }
 
-export function createMixReducerDefinition<B extends (...args: any) => ReadonlyArray<Action>>(
-  reducerFn: PrivateContextRoleConsumer<B>): MixReducerDefinition<B> {
-  return createReducerDefinition(ReducerDefinitionSubKind.mix, reducerFn);
+export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
+  reducerFn: PrivateContextRoleConsumer<B>): MixReducerDef<B> {
+  return createReducerDef(ReducerDefSubKind.mix, reducerFn);
 }
 
-export function isMixReducerDefinition(obj: any): obj is MixReducerDefinition<any> {
-  return isReducerDefinition(obj, ReducerDefinitionSubKind.mix);
+export function isMixReducerDef(obj: any): obj is MixReducerDef<any> {
+  return isReducerDef(obj, ReducerDefSubKind.mix);
 }
 // #endregion
 
@@ -78,8 +76,8 @@ export function reducer<J extends Juncture, B extends (
   juncture: J,
   reducerFn: ($: ReducerContext<J>) => B
 )
-  : PlainReducerDefinition<B> {
-  return createPlainReducerDefinition(reducerFn as any);
+  : PlainReducerDef<B> {
+  return createPlainReducerDef(reducerFn as any);
 }
 
 export function mixReducer<J extends Juncture, B extends (
@@ -87,7 +85,7 @@ export function mixReducer<J extends Juncture, B extends (
   juncture: J,
   reducerFn: ($: MixReducerContext<J>) => B
 )
-  : MixReducerDefinition<B> {
-  return createMixReducerDefinition(reducerFn as any);
+  : MixReducerDef<B> {
+  return createMixReducerDef(reducerFn as any);
 }
 // #endregion

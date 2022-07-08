@@ -8,7 +8,7 @@
 
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { createSchemaDefinition, Schema } from '../../kernel/schema';
+import { createSchemaDef, Schema } from '../../kernel/schema';
 import { jSymbols } from '../../symbols';
 
 describe('Frame class', () => {
@@ -19,7 +19,7 @@ describe('Frame class', () => {
   }
   class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
-    schema = createSchemaDefinition(() => new MySchema());
+    schema = createSchemaDef(() => new MySchema());
 
     [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
   }

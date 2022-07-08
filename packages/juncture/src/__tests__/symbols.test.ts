@@ -9,8 +9,8 @@
 import { jSymbols } from '../symbols';
 
 describe('jSymbols', () => {
-  test('should contain the definitionPayload symbol', () => {
-    expect(typeof jSymbols.definitionPayload).toBe('symbol');
+  test('should contain the defPayload symbol', () => {
+    expect(typeof jSymbols.defPayload).toBe('symbol');
   });
 
   test('should contain the handledValue symbol', () => {

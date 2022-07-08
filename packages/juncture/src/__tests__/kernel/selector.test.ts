@@ -8,104 +8,81 @@
 
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { createSchemaDefinition, Schema } from '../../kernel/schema';
+import { createDef, DefKind } from '../../kernel/def';
+import { createSchemaDef, Schema } from '../../kernel/schema';
 import {
-  createParamSelectorDefinition,
-  createSelectorDefinition,
-  isDirectSelectorDefinition,
-  isParamSelectorDefinition,
-  isSelectorDefinition, paramSelector, selector, selectorDefinitionKind
+  createDirectSelectorDef,
+  createParamSelectorDef,
+  isDirectSelectorDef,
+  isParamSelectorDef,
+  paramSelector, selector, SelectorDefSubKind
 } from '../../kernel/selector';
 import { jSymbols } from '../../symbols';
 
-describe('selectorDefinitionKind', () => {
-  test('should contain "selector"', () => {
-    expect(selectorDefinitionKind).toBe('selector');
-  });
-});
-
-describe('createSelectorDefinition', () => {
-  test('should create a direct SelectorDefinition by passing a selector', () => {
+describe('createDirectSelectorDef', () => {
+  test('should create a DiretSelectorDef by passing a selector', () => {
     const mySelector = () => undefined;
-    const definition = createSelectorDefinition(mySelector);
-    expect(definition[jSymbols.definitionKind]).toBe(selectorDefinitionKind);
-    expect(definition[jSymbols.definitionPayload]).toBe(mySelector);
-    expect((definition as any)[jSymbols.paramSelectorTag]).toBeUndefined();
+    const de = createDirectSelectorDef(mySelector);
+    expect(de.defKind).toBe(DefKind.selector);
+    expect(de.defSubKind).toBe(SelectorDefSubKind.direct);
+    expect(de[jSymbols.defPayload]).toBe(mySelector);
   });
 });
 
-describe('createParamSelectorDefinition', () => {
-  test('should create a ParamSelectorDefinition by passing a selector', () => {
+describe('createParamSelectorDef', () => {
+  test('should create a ParamSelectorDef by passing a selector', () => {
     const mySelector = () => () => undefined;
-    const definition = createParamSelectorDefinition(mySelector);
-    expect(definition[jSymbols.definitionKind]).toBe(selectorDefinitionKind);
-    expect(definition[jSymbols.definitionPayload]).toBe(mySelector);
-    expect(definition[jSymbols.paramSelectorTag]).toBe(true);
+    const def = createParamSelectorDef(mySelector);
+    expect(def.defKind).toBe(DefKind.selector);
+    expect(def.defSubKind).toBe(SelectorDefSubKind.param);
+    expect(def[jSymbols.defPayload]).toBe(mySelector);
   });
 });
 
-describe('isSelectorDefinition', () => {
-  test('should return true if an object is a direct SelectorDefinition', () => {
+describe('isDirectSelectorDef', () => {
+  test('should return true if an object is a DirectSelectorDef', () => {
     const mySelector = () => undefined;
-    const definition = createSelectorDefinition(mySelector);
-    expect(isSelectorDefinition(definition)).toBe(true);
+    const def = createDirectSelectorDef(mySelector);
+    expect(isDirectSelectorDef(def)).toBe(true);
   });
 
-  test('should return true if an object is a ParamSelectorDefinition', () => {
+  test('should return false if an object is a ParamSelectorDef', () => {
     const mySelector = () => () => undefined;
-    const definition = createParamSelectorDefinition(mySelector);
-    expect(isSelectorDefinition(definition)).toBe(true);
+    const def = createParamSelectorDef(mySelector);
+    expect(isDirectSelectorDef(def)).toBe(false);
   });
 
-  test('should return false if an object is not a SelectorDefinition', () => {
-    expect(isSelectorDefinition(null)).toBe(false);
-    expect(isSelectorDefinition(undefined)).toBe(false);
-    expect(isSelectorDefinition('dummy')).toBe(false);
+  test('should return false if an object is not a DirectSelectorDef', () => {
+    expect(isDirectSelectorDef(createDef(DefKind.schema, '', undefined))).toBe(false);
+    expect(isDirectSelectorDef(null)).toBe(false);
+    expect(isDirectSelectorDef(undefined)).toBe(false);
+    expect(isDirectSelectorDef('dummy')).toBe(false);
   });
 });
 
-describe('isDirectSelectorDefinition', () => {
-  test('should return true if an object is a direct SelectorDefinition', () => {
-    const mySelector = () => undefined;
-    const definition = createSelectorDefinition(mySelector);
-    expect(isDirectSelectorDefinition(definition)).toBe(true);
-  });
-
-  test('should return false if an object is a ParamSelectorDefinition', () => {
+describe('isParamSelectorDef', () => {
+  test('should return true if an object is a ParamSelectorDef', () => {
     const mySelector = () => () => undefined;
-    const definition = createParamSelectorDefinition(mySelector);
-    expect(isDirectSelectorDefinition(definition)).toBe(false);
+    const def = createParamSelectorDef(mySelector);
+    expect(isParamSelectorDef(def)).toBe(true);
   });
 
-  test('should return false if an object is not a SelectorDefinition', () => {
-    expect(isSelectorDefinition(null)).toBe(false);
-    expect(isSelectorDefinition(undefined)).toBe(false);
-    expect(isSelectorDefinition('dummy')).toBe(false);
-  });
-});
-
-describe('isParamSelectorDefinition', () => {
-  test('should return true if an object is a ParamSelectorDefinition', () => {
-    const mySelector = () => () => undefined;
-    const definition = createParamSelectorDefinition(mySelector);
-    expect(isParamSelectorDefinition(definition)).toBe(true);
-  });
-
-  test('should return false if an object is a direct SelectorDefinition', () => {
+  test('should return false if an object is a DirectSelectorDef', () => {
     const mySelector = () => undefined;
-    const definition = createSelectorDefinition(mySelector);
-    expect(isParamSelectorDefinition(definition)).toBe(false);
+    const def = createDirectSelectorDef(mySelector);
+    expect(isParamSelectorDef(def)).toBe(false);
   });
 
-  test('should return false if an object is not a SelectorDefinition', () => {
-    expect(isParamSelectorDefinition(null)).toBe(false);
-    expect(isParamSelectorDefinition(undefined)).toBe(false);
-    expect(isParamSelectorDefinition('dummy')).toBe(false);
+  test('should return false if an object is not a ParamSelectorDef', () => {
+    expect(isParamSelectorDef(createDef(DefKind.schema, '', undefined))).toBe(false);
+    expect(isParamSelectorDef(null)).toBe(false);
+    expect(isParamSelectorDef(undefined)).toBe(false);
+    expect(isParamSelectorDef('dummy')).toBe(false);
   });
 });
 
 describe('selector composer', () => {
-  test('should create a direct SelectorDefinition by passing a Juncture instance and a selector', () => {
+  test('should create a DirectSelectorDef by passing a Juncture instance and a selector', () => {
     class MySchema extends Schema<string> {
       constructor() {
         super('');
@@ -113,7 +90,7 @@ describe('selector composer', () => {
     }
     class MyFrame<J extends MyJuncture> extends Frame<J> { }
     class MyJuncture extends Juncture {
-      schema = createSchemaDefinition(() => new MySchema());
+      schema = createSchemaDef(() => new MySchema());
 
       [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
@@ -122,12 +99,12 @@ describe('selector composer', () => {
       mySelector = selector(this, ({ value }) => value());
     }
     const myJuncture = new MyJuncture();
-    expect(isDirectSelectorDefinition(myJuncture.mySelector)).toBe(true);
+    expect(isDirectSelectorDef(myJuncture.mySelector)).toBe(true);
   });
 });
 
 describe('paramSelector composer', () => {
-  test('should create a ParamSelectorDefinition by passing a Juncture instance and a selector', () => {
+  test('should create a ParamSelectorDef by passing a Juncture instance and a selector', () => {
     class MySchema extends Schema<string> {
       constructor() {
         super('');
@@ -135,13 +112,13 @@ describe('paramSelector composer', () => {
     }
     class MyFrame<J extends MyJuncture> extends Frame<J> { }
     class MyJuncture extends Juncture {
-      schema = createSchemaDefinition(() => new MySchema());
+      schema = createSchemaDef(() => new MySchema());
 
       [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
       mySelector = paramSelector(this, () => (val: string) => val.length);
     }
     const myJuncture = new MyJuncture();
-    expect(isParamSelectorDefinition(myJuncture.mySelector)).toBe(true);
+    expect(isParamSelectorDef(myJuncture.mySelector)).toBe(true);
   });
 });

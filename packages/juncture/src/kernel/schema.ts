@@ -7,7 +7,7 @@
  */
 
 import { jSymbols } from '../symbols';
-import { createDefinition, Definition, DefinitionKind } from './definition';
+import { createDef, Def, DefKind, isDef } from './def';
 
 // #region Schema
 export abstract class Schema<V extends HV = any, HV = V> {
@@ -19,13 +19,17 @@ export abstract class Schema<V extends HV = any, HV = V> {
 }
 // #endregion
 
-// #region Definition
-export type SchemaDefinition<X extends Schema> = Definition<DefinitionKind.schema, () => X>;
+// #region Def
+export type SchemaDef<X extends Schema> = Def<DefKind.schema, '', () => X>;
 
-export function createSchemaDefinition<X extends Schema>(schemaFactory: () => X): SchemaDefinition<X> {
-  return createDefinition(DefinitionKind.schema, schemaFactory);
+export function createSchemaDef<X extends Schema>(schemaFactory: () => X): SchemaDef<X> {
+  return createDef(DefKind.schema, '', schemaFactory);
+}
+
+export function isSchemaDef(obj: any): obj is SchemaDef<any> {
+  return isDef(obj, DefKind.schema, '');
 }
 
 // ---  Derivations
-export type SchemaOfDefinition<D> = D extends SchemaDefinition<infer X> ? X : never;
+export type SchemaOfSchemaDef<D> = D extends SchemaDef<infer X> ? X : never;
 // #endregion

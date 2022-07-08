@@ -8,68 +8,66 @@
 
 import { PrivateContextRoleConsumer, SelectorContext } from '../context/private-context';
 import { Juncture } from '../juncture';
-import {
-  createIntegratedDefinition, DefinitionKind, IntegratedDefinition, isIntegratedDefinition
-} from './definition';
+import { createDef, Def, DefKind, isDef } from './def';
 
-// #region Definition
-export const notASelectorDefinition = '!!NOT-A-SELECTOR!!';
+// #region Def
+export const notASelectorDef = '!!NOT-A-SELECTOR!!';
 
-export enum SelectorDefinitionSubKind {
+export enum SelectorDefSubKind {
   direct = 'direct',
   param = 'param'
 }
 
-export interface SelectorDefinition<T extends SelectorDefinitionSubKind, B>
-  extends IntegratedDefinition<DefinitionKind.selector, T, PrivateContextRoleConsumer<B>> { }
+export interface SelectorDef<T extends SelectorDefSubKind, B>
+  extends Def<DefKind.selector, T, PrivateContextRoleConsumer<B>> { }
 
-function createSelectorDefinition<T extends SelectorDefinitionSubKind, B>(
+function createSelectorDef<T extends SelectorDefSubKind, B>(
   subKind: T,
   selectorFn: PrivateContextRoleConsumer<B>
-): SelectorDefinition<T, B> {
-  const result: any = createIntegratedDefinition(DefinitionKind.selector, subKind, selectorFn);
+): SelectorDef<T, B> {
+  const result: any = createDef(DefKind.selector, subKind, selectorFn);
   return result;
 }
 
-function isSelectorDefinition(obj: any, subKind?: SelectorDefinitionSubKind): obj is SelectorDefinition<any, any> {
-  return isIntegratedDefinition(obj, DefinitionKind.selector, subKind);
+function isSelectorDef(obj: any, subKind?: SelectorDefSubKind): obj is SelectorDef<any, any> {
+  return isDef(obj, DefKind.selector, subKind);
 }
 
-export type SelectorsOf<O> = {
-  readonly [K in keyof O as O[K] extends SelectorDefinition<any, any> ? K : never]: O[K];
+export type SelectorDefsOf<O> = {
+  readonly [K in keyof O as O[K] extends SelectorDef<any, any> ? K : never]: O[K];
 };
 
 // --- Direct
-export interface DirectSelectorDefinition<B>
-  extends SelectorDefinition<SelectorDefinitionSubKind.direct, B> { }
+export interface DirectSelectorDef<B>
+  extends SelectorDef<SelectorDefSubKind.direct, B> { }
 
-export function createDirectSelectorDefinition
-  <B>(selectorFn: PrivateContextRoleConsumer<B>): DirectSelectorDefinition<B> {
-  return createSelectorDefinition(SelectorDefinitionSubKind.direct, selectorFn);
+export function createDirectSelectorDef
+  <B>(selectorFn: PrivateContextRoleConsumer<B>): DirectSelectorDef<B> {
+  return createSelectorDef(SelectorDefSubKind.direct, selectorFn);
 }
 
-export function isDirectSelectorDefinition(obj: any): obj is DirectSelectorDefinition<any> {
-  return isSelectorDefinition(obj, SelectorDefinitionSubKind.direct);
+export function isDirectSelectorDef(obj: any): obj is DirectSelectorDef<any> {
+  return isSelectorDef(obj, SelectorDefSubKind.direct);
 }
 
 // --- ParamSelector
-export interface ParamSelectorDefinition<B extends (...args: any) => any>
-  extends SelectorDefinition<SelectorDefinitionSubKind.param, B> { }
+export interface ParamSelectorDef<B extends (...args: any) => any>
+  extends SelectorDef<SelectorDefSubKind.param, B> { }
 
-export function createParamSelectorDefinition<B extends (...args: any) => any>(
-  selectorFn: PrivateContextRoleConsumer<B>): ParamSelectorDefinition<B> {
-  return createSelectorDefinition(SelectorDefinitionSubKind.param, selectorFn);
+export function createParamSelectorDef<B extends (...args: any) => any>(
+  selectorFn: PrivateContextRoleConsumer<B>): ParamSelectorDef<B> {
+  return createSelectorDef(SelectorDefSubKind.param, selectorFn);
 }
 
-export function isParamSelectorDefinition(obj: any): obj is ParamSelectorDefinition<any> {
-  return isSelectorDefinition(obj, SelectorDefinitionSubKind.param);
+export function isParamSelectorDef(obj: any): obj is ParamSelectorDef<any> {
+  return isSelectorDef(obj, SelectorDefSubKind.param);
 }
 // #endregion
 
 // #region Composer
 export function selector<J extends Juncture, B>(juncture: J, selectorFn: ($: SelectorContext<J>) => B)
-  : DirectSelectorDefinition<B> {
-  return createDirectSelectorDefinition(selectorFn as any);
+  : DirectSelectorDef<B> {
+  return createDirectSelectorDef(selectorFn as any);
 }
 
 export function paramSelector<J extends Juncture, B extends (
@@ -77,7 +75,7 @@ export function paramSelector<J extends Juncture, B extends (
   juncture: J,
   selectorFn: ($: SelectorContext<J>) => B
 )
-  : ParamSelectorDefinition<B> {
-  return createParamSelectorDefinition(selectorFn as any);
+  : ParamSelectorDef<B> {
+  return createParamSelectorDef(selectorFn as any);
 }
 // #endregion
