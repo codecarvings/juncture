@@ -51,7 +51,7 @@ describe('PrivateDefComposer', () => {
       test('should create a Private DirectSelectorDef by passing a selector', () => {
         const mySelector = composer.selector(({ value }) => value());
         expect(isDirectSelectorDef(mySelector)).toBe(true);
-        expect(mySelector.accessModifier).toBe('private');
+        expect(mySelector.access).toBe('private');
       });
     });
 
@@ -63,7 +63,7 @@ describe('PrivateDefComposer', () => {
       test('should create a Private ParamSelectorDef by passing a selector', () => {
         const mySelector = composer.paramSelector(() => (val: string) => val.length);
         expect(isParamSelectorDef(mySelector)).toBe(true);
-        expect(mySelector.accessModifier).toBe('private');
+        expect(mySelector.access).toBe('private');
       });
     });
 
@@ -75,7 +75,7 @@ describe('PrivateDefComposer', () => {
       test('should create a Private PlainReducerDef by passing a reducer', () => {
         const myReducer = composer.reducer(({ value }) => () => value());
         expect(isPlainReducerDef(myReducer)).toBe(true);
-        expect(myReducer.accessModifier).toBe('private');
+        expect(myReducer.access).toBe('private');
       });
     });
 
@@ -87,7 +87,7 @@ describe('PrivateDefComposer', () => {
       test('should create a Private MixReducerDef by passing a reducer', () => {
         const myReducer = composer.mixReducer(() => () => []);
         expect(isMixReducerDef(myReducer)).toBe(true);
-        expect(myReducer.accessModifier).toBe('private');
+        expect(myReducer.access).toBe('private');
       });
     });
   });

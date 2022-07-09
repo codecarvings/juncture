@@ -29,6 +29,6 @@ describe('asPrivate', () => {
     const def = createDef(DefKind.schema, '', undefined);
     expect((def as any).accessModifier).toBeUndefined();
     const def2 = asPrivate(def);
-    expect(def2.accessModifier).toBe('private');
+    expect(def2.access).toBe('private');
   });
 });
