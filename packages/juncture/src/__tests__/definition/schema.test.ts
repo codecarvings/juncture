@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDef, DefKind } from '../../def/def';
-import { createSchemaDef, isSchemaDef, Schema } from '../../def/schema';
+import { createDef, DefKind } from '../../definition/def';
+import { createSchemaDef, isSchemaDef, Schema } from '../../definition/schema';
 import { jSymbols } from '../../symbols';
 
 describe('Schema', () => {

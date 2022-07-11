@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchemaDef, Schema } from '../../def/schema';
+import { createSchemaDef, Schema } from '../../definition/schema';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
@@ -23,7 +23,7 @@ describe('Frame class', () => {
 
     [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
   }
-  const juncture = new MyJuncture();
+  const juncture = Juncture.getInstance(MyJuncture);
   const config: FrameConfig = {
     layout: {
       parent: null,

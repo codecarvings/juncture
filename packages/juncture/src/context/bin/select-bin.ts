@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateSuffix } from '../../def/private';
-import { notASelectorDef, SelectorDef } from '../../def/selector';
+import { PrivateSuffix } from '../../definition/private';
+import { notASelectorDef, SelectorDef } from '../../definition/selector';
 
 type SelectBinItem<S> = S extends SelectorDef<any, infer B> ? B : typeof notASelectorDef;
 

@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DefComposer } from './def/composer';
-import { Driver } from './def/driver';
-import { SchemaDef, SchemaOfSchemaDef } from './def/schema';
+import { DefComposer } from './definition/composer';
+import { Driver } from './definition/driver';
+import { SchemaDef, SchemaOfSchemaDef } from './definition/schema';
 import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
 import { jSymbols, JSymbols } from './symbols';
+import { finalizeAssembling } from './util/assembler';
 
 // --- Symbols
 const instanceSymbol = Symbol('instance');
@@ -54,6 +55,8 @@ export abstract class Juncture {
       }
     }
     const instance = new Type() as InstanceType<JT>;
+    finalizeAssembling(instance);
+
     // eslint-disable-next-line no-param-reassign
     (Type as any)[junctureSymbols.instance] = { Type, instance };
     return instance;

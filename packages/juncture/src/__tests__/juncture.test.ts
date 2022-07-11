@@ -7,13 +7,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DefComposer } from '../def/composer';
-import { Driver } from '../def/driver';
-import { createSchemaDef, Schema } from '../def/schema';
-import { isDirectSelectorDef } from '../def/selector';
+import { DefComposer } from '../definition/composer';
+import { Driver } from '../definition/driver';
+import { createSchemaDef, Schema } from '../definition/schema';
+import { isDirectSelectorDef } from '../definition/selector';
 import { Frame, FrameConfig } from '../frame/frame';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
+import { finalizeAssembling } from '../util/assembler';
 
 describe('Juncture', () => {
   class MySchema extends Schema<string> {
@@ -26,10 +27,13 @@ describe('Juncture', () => {
     schema = createSchemaDef(() => new MySchema());
 
     [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
+
+    test = 21;
   }
 
   test('should be a class instantiable without arguments', () => {
     const juncture = new MyJuncture();
+    finalizeAssembling(juncture);
     expect(juncture).toBeInstanceOf(Juncture);
   });
 
@@ -37,7 +41,8 @@ describe('Juncture', () => {
     let juncture: MyJuncture;
 
     beforeEach(() => {
-      juncture = new MyJuncture();
+      juncture = Juncture.getInstance(MyJuncture);
+      finalizeAssembling(juncture);
     });
 
     test('should contain the DEF composer', () => {

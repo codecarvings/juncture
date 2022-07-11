@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateSuffix } from '../../def/private';
-import { Action, notAReducerDef, ReducerDef } from '../../def/reducer';
+import { PrivateSuffix } from '../../definition/private';
+import { Action, notAReducerDef, ReducerDef } from '../../definition/reducer';
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
 type PrepareBinItem<S> =

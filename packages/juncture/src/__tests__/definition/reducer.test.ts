@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDef, DefKind } from '../../def/def';
+import { createDef, DefKind } from '../../definition/def';
 import {
   createMixReducerDef, createPlainReducerDef, isMixReducerDef, isPlainReducerDef,
   ReducerDefSubKind
-} from '../../def/reducer';
+} from '../../definition/reducer';
 import { jSymbols } from '../../symbols';
 
 describe('createPlainReducerDef', () => {

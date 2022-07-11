@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Driver } from '../../def/driver';
-import { createSchemaDef, Schema } from '../../def/schema';
+import { Driver } from '../../definition/driver';
+import { createSchemaDef, Schema } from '../../definition/schema';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
@@ -29,7 +29,7 @@ describe('Driver', () => {
 
   let juncture: MyJuncture;
   beforeEach(() => {
-    juncture = new MyJuncture();
+    juncture = Juncture.getInstance(MyJuncture);
   });
 
   test('should be a class instantiable by passing a Juncture instance', () => {

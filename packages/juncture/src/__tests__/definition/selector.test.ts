@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDef, DefKind } from '../../def/def';
+import { createDef, DefKind } from '../../definition/def';
 import {
   createDirectSelectorDef,
   createParamSelectorDef,
   isDirectSelectorDef,
   isParamSelectorDef,
   SelectorDefSubKind
-} from '../../def/selector';
+} from '../../definition/selector';
 import { jSymbols } from '../../symbols';
 
 describe('createDirectSelectorDef', () => {

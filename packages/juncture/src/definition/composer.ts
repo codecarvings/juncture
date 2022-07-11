@@ -8,6 +8,7 @@
 
 import { MixReducerContext, ReducerContext, SelectorContext } from '../context/private-context';
 import { HandledValueOf, Juncture } from '../juncture';
+import { registerAssemblableProp } from '../util/assembler';
 import { asPrivate, Private } from './private';
 import {
   Action, createMixReducerDef, createPlainReducerDef, MixReducerDef, PlainReducerDef
@@ -21,25 +22,25 @@ export class PrivateDefComposer<J extends Juncture> {
 
   // eslint-disable-next-line class-methods-use-this
   selector<P extends ($: SelectorContext<J>) => any>(selectorFn: P): Private<DirectSelectorDef<ReturnType<P>>> {
-    return asPrivate(createDirectSelectorDef(selectorFn as any));
+    return registerAssemblableProp(this.juncture, asPrivate(createDirectSelectorDef(selectorFn as any)));
   }
 
   // eslint-disable-next-line class-methods-use-this
   paramSelector<P extends ($: SelectorContext<J>) => (...args: any) => any>(
     selectorFn: P): Private<ParamSelectorDef<ReturnType<P>>> {
-    return asPrivate(createParamSelectorDef(selectorFn as any));
+    return registerAssemblableProp(this.juncture, asPrivate(createParamSelectorDef(selectorFn as any)));
   }
 
   // eslint-disable-next-line class-methods-use-this
   reducer<P extends ($: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
     reducerFn: P): Private<PlainReducerDef<ReturnType<P>>> {
-    return asPrivate(createPlainReducerDef(reducerFn as any));
+    return registerAssemblableProp(this.juncture, asPrivate(createPlainReducerDef(reducerFn as any)));
   }
 
   // eslint-disable-next-line class-methods-use-this
   mixReducer<P extends ($: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
     reducerFn: P): Private<MixReducerDef<ReturnType<P>>> {
-    return asPrivate(createMixReducerDef(reducerFn as any));
+    return registerAssemblableProp(this.juncture, asPrivate(createMixReducerDef(reducerFn as any)));
   }
 }
 
@@ -48,26 +49,35 @@ export class DefComposer<J extends Juncture> {
 
   readonly private = new PrivateDefComposer(this.juncture);
 
+  override<D extends DirectSelectorDef<any>>(parent: D): any;
+  override<D extends ParamSelectorDef<any>>(parent: D): any;
+  override<D extends PlainReducerDef<any>>(parent: D): any;
+  override<D extends MixReducerDef<any>>(parent: D): any;
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  override(parent: any): any {
+    return {};
+  }
+
   // eslint-disable-next-line class-methods-use-this
   selector<P extends ($: SelectorContext<J>) => any>(selectorFn: P): DirectSelectorDef<ReturnType<P>> {
-    return createDirectSelectorDef(selectorFn as any);
+    return registerAssemblableProp(this.juncture, createDirectSelectorDef(selectorFn as any));
   }
 
   // eslint-disable-next-line class-methods-use-this
   paramSelector<P extends ($: SelectorContext<J>) => (...args: any) => any>(
     selectorFn: P): ParamSelectorDef<ReturnType<P>> {
-    return createParamSelectorDef(selectorFn as any);
+    return registerAssemblableProp(this.juncture, createParamSelectorDef(selectorFn as any));
   }
 
   // eslint-disable-next-line class-methods-use-this
   reducer<P extends ($: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
     reducerFn: P): PlainReducerDef<ReturnType<P>> {
-    return createPlainReducerDef(reducerFn as any);
+    return registerAssemblableProp(this.juncture, createPlainReducerDef(reducerFn as any));
   }
 
   // eslint-disable-next-line class-methods-use-this
   mixReducer<P extends ($: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
     reducerFn: P): MixReducerDef<ReturnType<P>> {
-    return createMixReducerDef(reducerFn as any);
+    return registerAssemblableProp(this.juncture, createMixReducerDef(reducerFn as any));
   }
 }

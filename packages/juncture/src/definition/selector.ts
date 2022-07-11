@@ -26,8 +26,7 @@ function createSelectorDef<T extends SelectorDefSubKind, B>(
   subKind: T,
   selectorFn: PrivateContextRoleConsumer<B>
 ): SelectorDef<T, B> {
-  const result: any = createDef(DefKind.selector, subKind, selectorFn);
-  return result;
+  return createDef(DefKind.selector, subKind, selectorFn);
 }
 
 function isSelectorDef(obj: any, subKind?: SelectorDefSubKind): obj is SelectorDef<any, any> {

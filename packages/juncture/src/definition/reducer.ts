@@ -31,8 +31,7 @@ export interface ReducerDef<T extends ReducerDefSubKind, B extends (...args: any
 
 function createReducerDef<T extends ReducerDefSubKind, B extends (...args: any) => any>(
   subKind: T, reducerFn: PrivateContextRoleConsumer<B>): ReducerDef<T, B> {
-  const result: any = createDef(DefKind.reducer, subKind, reducerFn);
-  return result;
+  return createDef(DefKind.reducer, subKind, reducerFn);
 }
 
 function isReducerDef(obj: any, subKind?: ReducerDefSubKind): obj is ReducerDef<any, any> {

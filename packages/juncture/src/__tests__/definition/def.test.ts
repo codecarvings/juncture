@@ -8,19 +8,19 @@
 
 import {
   createDef, Def, DefKind, isDef
-} from '../../def/def';
+} from '../../definition/def';
 import { jSymbols } from '../../symbols';
 
 describe('DefKind', () => {
-  test('should cointain the schema kind', () => {
+  test('should contain the schema kind', () => {
     expect(DefKind.schema).toBe('schema');
   });
 
-  test('should cointain the selector kind', () => {
+  test('should contain the selector kind', () => {
     expect(DefKind.selector).toBe('selector');
   });
 
-  test('should cointain the reducer kind', () => {
+  test('should contain the reducer kind', () => {
     expect(DefKind.reducer).toBe('reducer');
   });
 });

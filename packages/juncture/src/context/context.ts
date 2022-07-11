@@ -24,4 +24,4 @@ export type BindedContext<J extends Juncture> = Context<CursorOf<J>> & {
   value(): ValueOf<J>;
   select(): SelectBin<J>;
   dispach(): DispatchBin<J>;
-}
+};

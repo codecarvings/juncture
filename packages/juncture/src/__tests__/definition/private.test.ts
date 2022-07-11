@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDef, DefKind } from '../../def/def';
-import { asPrivate } from '../../def/private';
+import { createDef, DefKind } from '../../definition/def';
+import { asPrivate } from '../../definition/private';
 import { jSymbols } from '../../symbols';
 
 describe('asPrivate', () => {
