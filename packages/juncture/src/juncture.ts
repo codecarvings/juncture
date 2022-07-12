@@ -8,11 +8,11 @@
 
 import { DefComposer } from './definition/composer';
 import { Driver } from './definition/driver';
+import { StandardPropertyAssembler } from './definition/property-assembler';
 import { SchemaDef, SchemaOfSchemaDef } from './definition/schema';
 import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
 import { jSymbols, JSymbols } from './symbols';
-import { finalizeAssembling } from './util/assembler';
 
 // --- Symbols
 const instanceSymbol = Symbol('instance');
@@ -34,7 +34,9 @@ export abstract class Juncture {
 
   abstract [jSymbols.createFrame](config: FrameConfig): Frame<any>;
 
-  protected readonly DEF: DefComposer<this> = new DefComposer(this);
+  protected readonly [jSymbols.propertyAssembler] = new StandardPropertyAssembler(this);
+
+  protected readonly DEF: DefComposer<this> = new DefComposer(this, this[jSymbols.propertyAssembler]);
 
   readonly abstract schema: SchemaDef<any>;
 
@@ -54,8 +56,8 @@ export abstract class Juncture {
         return cache.instance as InstanceType<JT>;
       }
     }
-    const instance = new Type() as InstanceType<JT>;
-    finalizeAssembling(instance);
+    const instance: InstanceType<JT> = new Type() as InstanceType<JT>;
+    instance[jSymbols.propertyAssembler].close();
 
     // eslint-disable-next-line no-param-reassign
     (Type as any)[junctureSymbols.instance] = { Type, instance };

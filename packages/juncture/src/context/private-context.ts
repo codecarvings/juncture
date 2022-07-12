@@ -27,7 +27,7 @@ interface PrivateContextRole {
 }
 
 export interface PrivateContextRoleConsumer<B> {
-  ($: PrivateContextRole): B;
+  (ctx: PrivateContextRole): B;
 }
 
 export interface PrivateContext<J extends Juncture> extends PrivateContextRole {

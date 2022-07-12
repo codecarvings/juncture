@@ -7,13 +7,13 @@
  */
 
 import { DefComposer, PrivateDefComposer } from '../../definition/composer';
+import { AssemblablePropertyCallback, PropertyAssembler } from '../../definition/property-assembler';
 import { isMixReducerDef, isPlainReducerDef } from '../../definition/reducer';
 import { createSchemaDef, Schema } from '../../definition/schema';
 import { isDirectSelectorDef, isParamSelectorDef } from '../../definition/selector';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
-import { finalizeAssembling } from '../../util/assembler';
 
 class MySchema extends Schema<string> {
   constructor() {
@@ -32,16 +32,27 @@ beforeEach(() => {
   juncture = Juncture.getInstance(MyJuncture);
 });
 
+const dummyPropertyAssembler: PropertyAssembler = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  registerProperty<V extends object>(value: V, callback?: AssemblablePropertyCallback): V {
+    return value;
+  },
+  isClosed: false,
+  close() {
+    this.isClosed = true;
+  }
+};
+
 describe('PrivateDefComposer', () => {
-  test('should be a class instantiable by passing a Juncture instance', () => {
-    const composer = new PrivateDefComposer(juncture);
+  test('should be a class instantiable by passing a Juncture instance and a property assembler', () => {
+    const composer = new PrivateDefComposer(juncture, dummyPropertyAssembler);
     expect(composer).toBeInstanceOf(PrivateDefComposer);
   });
 
   describe('instance', () => {
     let composer: PrivateDefComposer<MyJuncture>;
     beforeEach(() => {
-      composer = new PrivateDefComposer(juncture);
+      composer = new PrivateDefComposer(juncture, dummyPropertyAssembler);
     });
 
     describe('"selector" property', () => {
@@ -52,7 +63,6 @@ describe('PrivateDefComposer', () => {
       test('should create a Private DirectSelectorDef by passing a selector', () => {
         const mySelector = composer.selector(({ value }) => value());
         (juncture as any).mySelector = mySelector;
-        finalizeAssembling(juncture);
         expect(isDirectSelectorDef(mySelector)).toBe(true);
         expect(mySelector.access).toBe('private');
       });
@@ -66,7 +76,6 @@ describe('PrivateDefComposer', () => {
       test('should create a Private ParamSelectorDef by passing a selector', () => {
         const mySelector = composer.paramSelector(() => (val: string) => val.length);
         (juncture as any).mySelector = mySelector;
-        finalizeAssembling(juncture);
         expect(isParamSelectorDef(mySelector)).toBe(true);
         expect(mySelector.access).toBe('private');
       });
@@ -80,7 +89,6 @@ describe('PrivateDefComposer', () => {
       test('should create a Private PlainReducerDef by passing a reducer', () => {
         const myReducer = composer.reducer(({ value }) => () => value());
         (juncture as any).myReducer = myReducer;
-        finalizeAssembling(juncture);
         expect(isPlainReducerDef(myReducer)).toBe(true);
         expect(myReducer.access).toBe('private');
       });
@@ -94,7 +102,6 @@ describe('PrivateDefComposer', () => {
       test('should create a Private MixReducerDef by passing a reducer', () => {
         const myReducer = composer.mixReducer(() => () => []);
         (juncture as any).myReducer = myReducer;
-        finalizeAssembling(juncture);
         expect(isMixReducerDef(myReducer)).toBe(true);
         expect(myReducer.access).toBe('private');
       });
@@ -103,15 +110,15 @@ describe('PrivateDefComposer', () => {
 });
 
 describe('DefComposer', () => {
-  test('should be a class instantiable by passing a Juncture instance', () => {
-    const composer = new DefComposer(juncture);
+  test('should be a class instantiable by passing a Juncture instance and a PropertyAssembler', () => {
+    const composer = new DefComposer(juncture, dummyPropertyAssembler);
     expect(composer).toBeInstanceOf(DefComposer);
   });
 
   describe('instance', () => {
     let composer: DefComposer<MyJuncture>;
     beforeEach(() => {
-      composer = new DefComposer(juncture);
+      composer = new DefComposer(juncture, dummyPropertyAssembler);
     });
 
     test('"private" property should return a PrivateDefComposer instance', () => {
@@ -126,7 +133,6 @@ describe('DefComposer', () => {
       test('should create a DirectSelectorDef by passing a selector', () => {
         const mySelector = composer.selector(({ value }) => value());
         (juncture as any).mySelector = mySelector;
-        finalizeAssembling(juncture);
         expect(isDirectSelectorDef(mySelector)).toBe(true);
       });
     });
@@ -139,7 +145,6 @@ describe('DefComposer', () => {
       test('should create a ParamSelectorDef by passing a selector', () => {
         const mySelector = composer.paramSelector(() => (val: string) => val.length);
         (juncture as any).mySelector = mySelector;
-        finalizeAssembling(juncture);
         expect(isParamSelectorDef(mySelector)).toBe(true);
       });
     });
@@ -152,7 +157,6 @@ describe('DefComposer', () => {
       test('should create a PlainReducerDef by passing a reducer', () => {
         const myReducer = composer.reducer(({ value }) => () => value());
         (juncture as any).myReducer = myReducer;
-        finalizeAssembling(juncture);
         expect(isPlainReducerDef(myReducer)).toBe(true);
       });
     });
@@ -165,7 +169,6 @@ describe('DefComposer', () => {
       test('should create a MixReducerDef by passing a reducer', () => {
         const myReducer = composer.mixReducer(() => () => []);
         (juncture as any).myReducer = myReducer;
-        finalizeAssembling(juncture);
         expect(isMixReducerDef(myReducer)).toBe(true);
       });
     });

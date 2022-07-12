@@ -14,7 +14,6 @@ import { isDirectSelectorDef } from '../definition/selector';
 import { Frame, FrameConfig } from '../frame/frame';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
-import { finalizeAssembling } from '../util/assembler';
 
 describe('Juncture', () => {
   class MySchema extends Schema<string> {
@@ -33,7 +32,7 @@ describe('Juncture', () => {
 
   test('should be a class instantiable without arguments', () => {
     const juncture = new MyJuncture();
-    finalizeAssembling(juncture);
+    juncture[jSymbols.propertyAssembler].close();
     expect(juncture).toBeInstanceOf(Juncture);
   });
 
@@ -42,7 +41,6 @@ describe('Juncture', () => {
 
     beforeEach(() => {
       juncture = Juncture.getInstance(MyJuncture);
-      finalizeAssembling(juncture);
     });
 
     test('should contain the DEF composer', () => {
