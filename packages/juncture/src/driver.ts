@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture, SchemaOf } from '../juncture';
-import { jSymbols } from '../symbols';
-import { mappedAssign } from '../util/object';
-import { DefKind, isDef } from './def';
-import { SelectorDefsOf } from './selector';
+import { DefKind, isDef } from './definition/def';
+import { ReducerDefsOf } from './definition/reducer';
+import { SelectorDefsOf } from './definition/selector';
+import { Juncture, SchemaOf } from './juncture';
+import { jSymbols } from './symbols';
+import { mappedAssign } from './util/object';
 
 export class Driver<J extends Juncture> {
   readonly schema: SchemaOf<J>;
@@ -19,14 +20,22 @@ export class Driver<J extends Juncture> {
 
   readonly selectorKeys: ReadonlyArray<string>;
 
+  readonly reducers: ReducerDefsOf<J>;
+
+  readonly reducerKeys: ReadonlyArray<string>;
+
   constructor(protected readonly juncture: J) {
     this.schema = this.juncture.schema[jSymbols.defPayload]();
 
     const junctureKeys = Object.keys(juncture);
 
-    const selectors = this.getSelectors(junctureKeys);
+    const selectors = this.getDefs(junctureKeys, DefKind.selector);
     this.selectors = selectors.map;
     this.selectorKeys = selectors.keys;
+
+    const reducers = this.getDefs(junctureKeys, DefKind.reducer);
+    this.reducers = reducers.map;
+    this.reducerKeys = reducers.keys;
   }
 
   protected getDefs(junctureKeys: string[], kind: DefKind): { map: any, keys: string[] } {
@@ -34,9 +43,5 @@ export class Driver<J extends Juncture> {
     const keys = junctureKeys.filter(key => isDef(juncture[key], kind));
     const map = mappedAssign({}, keys, key => juncture[key]);
     return { map, keys };
-  }
-
-  protected getSelectors(junctureKeys: string[]) {
-    return this.getDefs(junctureKeys, DefKind.selector);
   }
 }

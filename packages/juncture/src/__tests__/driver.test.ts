@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Driver } from '../../definition/driver';
-import { createSchemaDef, Schema } from '../../definition/schema';
-import { Frame, FrameConfig } from '../../frame/frame';
-import { Juncture } from '../../juncture';
-import { jSymbols } from '../../symbols';
+import { createSchemaDef, Schema } from '../definition/schema';
+import { Driver } from '../driver';
+import { Frame, FrameConfig } from '../frame/frame';
+import { Juncture } from '../juncture';
+import { jSymbols } from '../symbols';
 
 describe('Driver', () => {
   class MySchema extends Schema<string> {
@@ -25,11 +25,19 @@ describe('Driver', () => {
     [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
     mySelector = this.DEF.selector(() => 0);
+
+    myReducer = this.DEF.reducer(() => (value: string) => value);
   }
 
-  let juncture: MyJuncture;
+  class MyJuncture2 extends MyJuncture {
+    myParamSelector = this.DEF.paramSelector(() => (value: string) => value);
+
+    myMixReducer = this.DEF.mixReducer(() => () => []);
+  }
+
+  let juncture: MyJuncture2;
   beforeEach(() => {
-    juncture = Juncture.getInstance(MyJuncture);
+    juncture = Juncture.getInstance(MyJuncture2);
   });
 
   test('should be a class instantiable by passing a Juncture instance', () => {
@@ -38,7 +46,7 @@ describe('Driver', () => {
   });
 
   describe('instance', () => {
-    let driver: Driver<MyJuncture>;
+    let driver: Driver<MyJuncture2>;
     beforeEach(() => {
       driver = new Driver(juncture);
     });
@@ -53,12 +61,24 @@ describe('Driver', () => {
       expect(driver.selectors.isMounted).toBe(juncture.isMounted);
       expect(driver.selectors.value).toBe(juncture.value);
       expect(driver.selectors.mySelector).toBe(juncture.mySelector);
-      expect(Object.keys(driver.selectors)).toHaveLength(5);
+      expect(driver.selectors.myParamSelector).toBe(juncture.myParamSelector);
+      expect(Object.keys(driver.selectors)).toHaveLength(6);
     });
 
     test('should have a property "selectorKeys" containing the selector keys', () => {
       expect((driver.selectorKeys as string[]).sort())
-        .toEqual(['defaultValue', 'path', 'isMounted', 'value', 'mySelector'].sort());
+        .toEqual(['defaultValue', 'path', 'isMounted', 'value', 'mySelector', 'myParamSelector'].sort());
+    });
+
+    test('should have a property "reducers" containing the map of each declared reducer', () => {
+      expect(driver.reducers.myReducer).toBe(juncture.myReducer);
+      expect(driver.reducers.myMixReducer).toBe(juncture.myMixReducer);
+      expect(Object.keys(driver.reducers)).toHaveLength(2);
+    });
+
+    test('should have a property "reducerKeys" containing the reducer keys', () => {
+      expect((driver.reducerKeys as string[]).sort())
+        .toEqual(['myReducer', 'myMixReducer'].sort());
     });
   });
 });

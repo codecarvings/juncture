@@ -7,6 +7,7 @@
  */
 
 import { createSchemaDef, Schema } from '../../definition/schema';
+import { isCursor } from '../../frame/cursor';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
@@ -50,6 +51,15 @@ describe('Frame class', () => {
 
     test('should have a "layout" property containing the same value of the provided config', () => {
       expect(frame.layout).toBe(config.layout);
+    });
+
+    // eslint-disable-next-line max-len
+    test('should have a "privateCursor" property that give access to a private cursor associated with the frame', () => {
+      expect(isCursor(frame.privateCursor, frame)).toBe(true);
+    });
+
+    test('should have a "cursor" property that give access to a cursor associated with the frame', () => {
+      expect(isCursor(frame.cursor, frame)).toBe(true);
     });
   });
 

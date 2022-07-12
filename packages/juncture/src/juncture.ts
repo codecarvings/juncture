@@ -7,9 +7,9 @@
  */
 
 import { DefComposer } from './definition/composer';
-import { Driver } from './definition/driver';
 import { StandardPropertyAssembler } from './definition/property-assembler';
 import { SchemaDef, SchemaOfSchemaDef } from './definition/schema';
+import { Driver } from './driver';
 import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
 import { jSymbols, JSymbols } from './symbols';

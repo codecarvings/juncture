@@ -8,9 +8,9 @@
  */
 
 import { DefComposer } from '../definition/composer';
-import { Driver } from '../definition/driver';
 import { createSchemaDef, Schema } from '../definition/schema';
 import { isDirectSelectorDef } from '../definition/selector';
+import { Driver } from '../driver';
 import { Frame, FrameConfig } from '../frame/frame';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';

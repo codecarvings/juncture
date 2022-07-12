@@ -22,8 +22,24 @@ export interface Cursor<F extends Frame<any> = any> {
   readonly [cursorSymbols.frame]: F;
 }
 
+export function createCursor<F extends Frame<any>>(frame: F): Cursor<F> {
+  return {
+    [cursorSymbols.frame]: frame
+  };
+}
+
 export function getFrame<C extends Cursor>(_: C) {
   return _[cursorSymbols.frame];
+}
+
+export function isCursor<F extends Frame<any>>(obj: any, frame?: F): obj is F {
+  if (!obj) {
+    return false;
+  }
+  if (frame !== undefined) {
+    return obj[cursorSymbols.frame] === frame;
+  }
+  return obj[cursorSymbols.frame] instanceof Frame<any>;
 }
 
 // ---  Derivations

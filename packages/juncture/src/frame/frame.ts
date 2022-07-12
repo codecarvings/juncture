@@ -7,7 +7,8 @@
  */
 
 import { Juncture } from '../juncture';
-import { Cursor } from './cursor';
+import { defineLazyProperty } from '../util/object';
+import { createCursor, Cursor } from './cursor';
 import { Path } from './path';
 
 export interface FrameLayout {
@@ -26,6 +27,17 @@ export abstract class Frame<J extends Juncture> {
 
   constructor(readonly juncture: J, config: FrameConfig) {
     this.layout = config.layout;
+
+    defineLazyProperty(this, 'privateCursor', () => this.createPrivateCursor());
+    defineLazyProperty(this, 'cursor', () => this.createCursor());
+  }
+
+  protected createPrivateCursor(): Cursor<this> {
+    return createCursor(this);
+  }
+
+  protected createCursor(): Cursor<this> {
+    return createCursor(this);
   }
 
   readonly privateCursor!: Cursor<this>;
