@@ -9,6 +9,10 @@
 import { StandardPropertyAssembler } from '../../definition/property-assembler';
 
 describe('StandardPropertyAssembler', () => {
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   const createPropertyValue = <V>(assembler: StandardPropertyAssembler, value: V):
   { value: V, mockFn: jest.Mock<void, [string, object]> } => {
     const mockFn = jest.fn();
@@ -31,7 +35,6 @@ describe('StandardPropertyAssembler', () => {
         expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
         jest.runAllTimers();
       }).toThrow();
-      jest.useRealTimers();
     });
   });
 
@@ -111,7 +114,6 @@ describe('StandardPropertyAssembler', () => {
         test1.assembler.close();
         jest.runAllTimers();
       }).not.toThrow();
-      jest.useRealTimers();
     });
 
     // eslint-disable-next-line max-len
