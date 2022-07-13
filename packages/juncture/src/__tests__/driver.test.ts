@@ -11,13 +11,8 @@ import { Driver } from '../driver';
 import { Juncture } from '../juncture';
 
 describe('Driver', () => {
-  class MySchema extends Schema<string> {
-    constructor() {
-      super('');
-    }
-  }
   class MyJuncture extends Juncture {
-    schema = createSchemaDef(() => new MySchema());
+    schema = createSchemaDef(() => new Schema(''));
 
     mySelector = this.DEF.selector(() => 0);
 
@@ -51,7 +46,7 @@ describe('Driver', () => {
     });
 
     test('should have a property "schema" with the schema object', () => {
-      expect(driver.schema).toBeInstanceOf(MySchema);
+      expect(driver.schema).toBeInstanceOf(Schema);
     });
 
     test('should have a property selector.defs containing the map of each declared selector', () => {

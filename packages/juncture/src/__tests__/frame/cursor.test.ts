@@ -11,13 +11,8 @@ import { createCursor, getFrame, isCursor } from '../../frame/cursor';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
 
-class MySchema extends Schema<string> {
-  constructor() {
-    super('');
-  }
-}
 class MyJuncture extends Juncture {
-  schema = createSchemaDef(() => new MySchema());
+  schema = createSchemaDef(() => new Schema(''));
 }
 const juncture = Juncture.getInstance(MyJuncture);
 const config: FrameConfig = {

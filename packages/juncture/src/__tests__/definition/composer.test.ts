@@ -13,13 +13,8 @@ import { createSchemaDef, Schema } from '../../definition/schema';
 import { isDirectSelectorDef, isParamSelectorDef } from '../../definition/selector';
 import { Juncture } from '../../juncture';
 
-class MySchema extends Schema<string> {
-  constructor() {
-    super('');
-  }
-}
 class MyJuncture extends Juncture {
-  schema = createSchemaDef(() => new MySchema());
+  schema = createSchemaDef(() => new Schema(''));
 }
 
 let juncture: MyJuncture;

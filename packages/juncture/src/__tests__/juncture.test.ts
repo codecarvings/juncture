@@ -8,7 +8,7 @@
  */
 
 import { DefComposer } from '../definition/composer';
-import { createSchemaDef, Schema } from '../definition/schema';
+import { createSchemaDef, isSchemaDef, Schema } from '../definition/schema';
 import { isDirectSelectorDef } from '../definition/selector';
 import { Driver } from '../driver';
 import { Frame, FrameConfig } from '../frame/frame';
@@ -16,13 +16,8 @@ import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
 describe('Juncture', () => {
-  class MySchema extends Schema<string> {
-    constructor() {
-      super('');
-    }
-  }
   class MyJuncture extends Juncture {
-    schema = createSchemaDef(() => new MySchema());
+    schema = createSchemaDef(() => new Schema(''));
 
     test = 21;
   }
@@ -60,6 +55,10 @@ describe('Juncture', () => {
 
     test('should contain the DEF composer', () => {
       expect((juncture as any).DEF).toBeInstanceOf(DefComposer);
+    });
+
+    test('should contain the "schema"', () => {
+      expect(isSchemaDef(juncture.schema)).toBe(true);
     });
 
     test('should contain a "defaultValue" direct selector', () => {

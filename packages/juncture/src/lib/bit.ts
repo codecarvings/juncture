@@ -12,13 +12,7 @@ import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
-let createBitSchema: <V>(defaultValue: V) => BitSchema<V>;
-export class BitSchema<V = any> extends Schema<V> {
-  // Initialization without static block
-  static #staticInit = (() => {
-    createBitSchema = <V2>(defaultValue: V2) => new BitSchema<V2>(defaultValue);
-  })();
-}
+export class BitSchema<V = any> extends Schema<V> { }
 // #endregion
 
 // #region Composer
@@ -37,8 +31,8 @@ export class BitDefComposer<J extends Bit> extends DefComposer<J> {
 
 // #region Juncture
 export abstract class Bit extends Juncture {
-  // abstract schema: SchemaDef<BitSchema>;
-  schema = createSchemaDef(() => createBitSchema('TODO'));
+  // abstract readonly schema: SchemaDef<BitSchema>;
+  readonly schema = createSchemaDef(() => new BitSchema('TODO'));
 
   protected [jSymbols.createDefComposer]() {
     return new BitDefComposer(this);
