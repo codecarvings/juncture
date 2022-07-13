@@ -21,11 +21,8 @@ describe('Juncture', () => {
       super('');
     }
   }
-  class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
     schema = createSchemaDef(() => new MySchema());
-
-    [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
     test = 21;
   }
@@ -41,6 +38,24 @@ describe('Juncture', () => {
 
     beforeEach(() => {
       juncture = Juncture.getInstance(MyJuncture);
+    });
+
+    describe('[jSymbols.createFrame] method', () => {
+      const config: FrameConfig = {
+        layout: {
+          parent: null,
+          path: [],
+          isDivergent: false,
+          isUnivocal: true
+        }
+      };
+
+      test('should create a new Frame for the provided Juncture instance and config', () => {
+        const frame = juncture[jSymbols.createFrame](config);
+        expect(frame).toBeInstanceOf(Frame);
+        expect(frame.juncture).toBe(juncture);
+        expect(frame.layout).toBe(config.layout);
+      });
     });
 
     test('should contain the DEF composer', () => {
@@ -95,10 +110,7 @@ describe('Juncture', () => {
         const juncture = Juncture.getInstance(MyJuncture);
         const driver = Juncture.getDriver(juncture);
         expect(driver).toBeInstanceOf(Driver);
-        expect(driver.selectors.defaultValue).toBe(juncture.defaultValue);
-        expect(driver.selectors.path).toBe(juncture.path);
-        expect(driver.selectors.isMounted).toBe(juncture.isMounted);
-        expect(driver.selectors.value).toBe(juncture.value);
+        expect(driver.juncture).toBe(juncture);
       });
 
       test('should always return the same value', () => {
@@ -120,6 +132,8 @@ describe('Juncture', () => {
         expect(factory).toHaveBeenCalledTimes(0);
         Juncture.getDriver(juncture);
         expect(factory).toHaveBeenCalledTimes(1);
+        Juncture.getDriver(juncture);
+        expect(factory).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -133,14 +147,15 @@ describe('Juncture', () => {
         }
       };
 
-      test('should create a new Frame for the provided Juncture instance', () => {
+      test('should create a new Frame for the provided Juncture instance and config', () => {
         const juncture = Juncture.getInstance(MyJuncture);
-        const frame = Juncture.createFrame(juncture, config);
+        const frame = juncture[jSymbols.createFrame](config);
         expect(frame).toBeInstanceOf(Frame);
         expect(frame.juncture).toBe(juncture);
+        expect(frame.layout).toBe(config.layout);
       });
 
-      test('should lazily invoke the instance method [jSymbols.createFrame]', () => {
+      test('should invoke the instance method [jSymbols.createFrame]', () => {
         const juncture = Juncture.getInstance(MyJuncture);
         const originalFactory = juncture[jSymbols.createFrame].bind(juncture);
         const factory = jest.fn(originalFactory);

@@ -22,7 +22,7 @@ export interface FrameConfig {
   readonly layout: FrameLayout;
 }
 
-export abstract class Frame<J extends Juncture> {
+export class Frame<J extends Juncture> {
   readonly layout: FrameLayout;
 
   constructor(readonly juncture: J, config: FrameConfig) {

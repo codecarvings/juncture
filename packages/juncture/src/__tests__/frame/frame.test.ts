@@ -10,7 +10,6 @@ import { createSchemaDef, Schema } from '../../definition/schema';
 import { isCursor } from '../../frame/cursor';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { jSymbols } from '../../symbols';
 
 describe('Frame class', () => {
   class MySchema extends Schema<string> {
@@ -18,11 +17,8 @@ describe('Frame class', () => {
       super('');
     }
   }
-  class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
     schema = createSchemaDef(() => new MySchema());
-
-    [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
   }
   const juncture = Juncture.getInstance(MyJuncture);
   const config: FrameConfig = {
@@ -35,17 +31,19 @@ describe('Frame class', () => {
   };
 
   test('should be instantiable by passing a juncture and a FrameConfig object', () => {
-    const frame = new MyFrame(juncture, config);
-    expect(frame).toBeInstanceOf(MyFrame);
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const frame = new Frame(juncture, config);
+    }).not.toThrow();
   });
 
   describe('instance', () => {
-    let frame: MyFrame<MyJuncture>;
+    let frame: Frame<MyJuncture>;
     beforeEach(() => {
-      frame = new MyFrame(juncture, config);
+      frame = new Frame(juncture, config);
     });
 
-    test('should have a "juncture" property containing the same value of the provided juncture', () => {
+    test('should have a "juncture" property containing a reference to the original Juncture', () => {
       expect(frame.juncture).toBe(juncture);
     });
 

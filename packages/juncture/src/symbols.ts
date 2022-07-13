@@ -9,6 +9,7 @@
 const defPayload = Symbol('defPayload');
 const handledValue = Symbol('handledValue');
 const propertyAssembler = Symbol('propertyAssembler');
+const createDefComposer = Symbol('createDefComposer');
 const createDriver = Symbol('createDriver');
 const createFrame = Symbol('createFrame');
 
@@ -16,6 +17,7 @@ export interface JSymbols {
   readonly defPayload: typeof defPayload;
   readonly handledValue: typeof handledValue;
   readonly propertyAssembler: typeof propertyAssembler;
+  readonly createDefComposer: typeof createDefComposer;
   readonly createDriver: typeof createDriver;
   readonly createFrame: typeof createFrame;
 }
@@ -24,6 +26,7 @@ export const jSymbols: JSymbols = {
   defPayload,
   handledValue,
   propertyAssembler,
+  createDefComposer,
   createDriver,
   createFrame
 };

@@ -21,6 +21,10 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.propertyAssembler).toBe('symbol');
   });
 
+  test('should contain the createDefComposer symbol', () => {
+    expect(typeof jSymbols.createDefComposer).toBe('symbol');
+  });
+
   test('should contain the createDriver symbol', () => {
     expect(typeof jSymbols.createDriver).toBe('symbol');
   });

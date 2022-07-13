@@ -13,35 +13,32 @@ import { Juncture, SchemaOf } from './juncture';
 import { jSymbols } from './symbols';
 import { mappedAssign } from './util/object';
 
+interface DefBox<M> {
+  readonly defs: M;
+  readonly keys: ReadonlyArray<string>;
+}
+
 export class Driver<J extends Juncture> {
   readonly schema: SchemaOf<J>;
 
-  readonly selectors: SelectorDefsOf<J>;
+  readonly selector: DefBox<SelectorDefsOf<J>>;
 
-  readonly selectorKeys: ReadonlyArray<string>;
+  readonly reducer: DefBox<ReducerDefsOf<J>>;
 
-  readonly reducers: ReducerDefsOf<J>;
-
-  readonly reducerKeys: ReadonlyArray<string>;
-
-  constructor(protected readonly juncture: J) {
+  constructor(readonly juncture: J) {
     this.schema = this.juncture.schema[jSymbols.defPayload]();
 
     const junctureKeys = Object.keys(juncture);
 
-    const selectors = this.getDefs(junctureKeys, DefKind.selector);
-    this.selectors = selectors.map;
-    this.selectorKeys = selectors.keys;
+    this.selector = this.getDefs(junctureKeys, DefKind.selector);
 
-    const reducers = this.getDefs(junctureKeys, DefKind.reducer);
-    this.reducers = reducers.map;
-    this.reducerKeys = reducers.keys;
+    this.reducer = this.getDefs(junctureKeys, DefKind.reducer);
   }
 
-  protected getDefs(junctureKeys: string[], kind: DefKind): { map: any, keys: string[] } {
+  protected getDefs(junctureKeys: string[], kind: DefKind): DefBox<any> {
     const juncture = this.juncture as any;
     const keys = junctureKeys.filter(key => isDef(juncture[key], kind));
-    const map = mappedAssign({}, keys, key => juncture[key]);
-    return { map, keys };
+    const defs = mappedAssign({}, keys, key => juncture[key]);
+    return { defs, keys };
   }
 }

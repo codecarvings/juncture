@@ -8,9 +8,7 @@
 
 import { createSchemaDef, Schema } from '../definition/schema';
 import { Driver } from '../driver';
-import { Frame, FrameConfig } from '../frame/frame';
 import { Juncture } from '../juncture';
-import { jSymbols } from '../symbols';
 
 describe('Driver', () => {
   class MySchema extends Schema<string> {
@@ -18,11 +16,8 @@ describe('Driver', () => {
       super('');
     }
   }
-  class MyFrame<J extends MyJuncture> extends Frame<J> { }
   class MyJuncture extends Juncture {
     schema = createSchemaDef(() => new MySchema());
-
-    [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 
     mySelector = this.DEF.selector(() => 0);
 
@@ -51,33 +46,37 @@ describe('Driver', () => {
       driver = new Driver(juncture);
     });
 
+    test('should have a property "juncture" that refers to the original juncture instance', () => {
+      expect(driver.juncture).toBe(juncture);
+    });
+
     test('should have a property "schema" with the schema object', () => {
       expect(driver.schema).toBeInstanceOf(MySchema);
     });
 
-    test('should have a property "selectors" containing the map of each declared selector', () => {
-      expect(driver.selectors.defaultValue).toBe(juncture.defaultValue);
-      expect(driver.selectors.path).toBe(juncture.path);
-      expect(driver.selectors.isMounted).toBe(juncture.isMounted);
-      expect(driver.selectors.value).toBe(juncture.value);
-      expect(driver.selectors.mySelector).toBe(juncture.mySelector);
-      expect(driver.selectors.myParamSelector).toBe(juncture.myParamSelector);
-      expect(Object.keys(driver.selectors)).toHaveLength(6);
+    test('should have a property selector.defs containing the map of each declared selector', () => {
+      expect(driver.selector.defs.defaultValue).toBe(juncture.defaultValue);
+      expect(driver.selector.defs.path).toBe(juncture.path);
+      expect(driver.selector.defs.isMounted).toBe(juncture.isMounted);
+      expect(driver.selector.defs.value).toBe(juncture.value);
+      expect(driver.selector.defs.mySelector).toBe(juncture.mySelector);
+      expect(driver.selector.defs.myParamSelector).toBe(juncture.myParamSelector);
+      expect(Object.keys(driver.selector.defs)).toHaveLength(6);
     });
 
-    test('should have a property "selectorKeys" containing the selector keys', () => {
-      expect((driver.selectorKeys as string[]).sort())
+    test('should have a property selector.keys containing the selector keys', () => {
+      expect((driver.selector.keys as string[]).sort())
         .toEqual(['defaultValue', 'path', 'isMounted', 'value', 'mySelector', 'myParamSelector'].sort());
     });
 
-    test('should have a property "reducers" containing the map of each declared reducer', () => {
-      expect(driver.reducers.myReducer).toBe(juncture.myReducer);
-      expect(driver.reducers.myMixReducer).toBe(juncture.myMixReducer);
-      expect(Object.keys(driver.reducers)).toHaveLength(2);
+    test('should have a property reducer.defs containing the map of each declared reducer', () => {
+      expect(driver.reducer.defs.myReducer).toBe(juncture.myReducer);
+      expect(driver.reducer.defs.myMixReducer).toBe(juncture.myMixReducer);
+      expect(Object.keys(driver.reducer.defs)).toHaveLength(2);
     });
 
-    test('should have a property "reducerKeys" containing the reducer keys', () => {
-      expect((driver.reducerKeys as string[]).sort())
+    test('should have a property reducer.keys containing the reducer keys', () => {
+      expect((driver.reducer.keys as string[]).sort())
         .toEqual(['myReducer', 'myMixReducer'].sort());
     });
   });

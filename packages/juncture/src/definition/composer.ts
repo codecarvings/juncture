@@ -8,6 +8,7 @@
 
 import { MixReducerContext, ReducerContext, SelectorContext } from '../context/private-context';
 import { HandledValueOf, Juncture } from '../juncture';
+import { jSymbols } from '../symbols';
 import { asPrivate, Private } from './private';
 import { PropertyAssembler } from './property-assembler';
 import {
@@ -45,18 +46,36 @@ export class PrivateDefComposer<J extends Juncture> {
 }
 
 export class DefComposer<J extends Juncture> {
-  constructor(protected readonly juncture: J, protected readonly assembler: PropertyAssembler) { }
+  constructor(
+    protected readonly juncture: J,
+    protected readonly assembler: PropertyAssembler = juncture[jSymbols.propertyAssembler]
+  ) {
+    const overrideMannequin = this.createOverrideMannequin();
+    this.override = () => overrideMannequin as any;
+  }
+
+  // Since at runtime it's not possible to know DefKind when override(...) is invoked,
+  // this method returs an object with all the possible methods availabe for every DefKind
+  protected createOverrideMannequin() {
+    const { assembler } = this;
+    return {
+      selector(selectorFn: any) {
+        const def = createDirectSelectorDef(undefined!);
+        return assembler.registerProperty(def, (key, parent) => {
+          (def as any)[jSymbols.defPayload] = undefined;
+        });
+      }
+    };
+  }
+
+  readonly override: {
+    <D extends DirectSelectorDef<any>>(parent : D): 'DIRECT SELECTOR';
+    <D extends ParamSelectorDef<any>>(parent: D): 'PARAM SELECTOR';
+    <D extends PlainReducerDef<any>>(parent: D): 'PLAIN REDUCER';
+    <D extends MixReducerDef<any>>(parent: D): 'MIX REDUCER';
+  };
 
   readonly private = new PrivateDefComposer(this.juncture, this.assembler);
-
-  override<D extends DirectSelectorDef<any>>(parent: D): any;
-  override<D extends ParamSelectorDef<any>>(parent: D): any;
-  override<D extends PlainReducerDef<any>>(parent: D): any;
-  override<D extends MixReducerDef<any>>(parent: D): any;
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  override(parent: any): any {
-    return {};
-  }
 
   // eslint-disable-next-line class-methods-use-this
   selector<P extends (ctx: SelectorContext<J>) => any>(selectorFn: P): DirectSelectorDef<ReturnType<P>> {

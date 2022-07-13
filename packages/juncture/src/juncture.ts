@@ -28,21 +28,27 @@ const junctureSymbols: JunctureSymbols = {
 
 // #region Juncture
 export abstract class Juncture {
+  protected [jSymbols.createDefComposer]() {
+    return new DefComposer(this);
+  }
+
   protected [jSymbols.createDriver]() {
     return new Driver<this>(this);
   }
 
-  abstract [jSymbols.createFrame](config: FrameConfig): Frame<any>;
+  [jSymbols.createFrame](config: FrameConfig) {
+    return new Frame(this, config);
+  }
 
   protected readonly [jSymbols.propertyAssembler] = new StandardPropertyAssembler(this);
 
-  protected readonly DEF: DefComposer<this> = new DefComposer(this, this[jSymbols.propertyAssembler]);
+  protected readonly DEF: DefComposer<this> = this[jSymbols.createDefComposer]();
 
   readonly abstract schema: SchemaDef<any>;
 
-  readonly defaultValue = this.DEF.selector(() => undefined as ValueOf<this>); // TODO: Impement this
+  readonly defaultValue = this.DEF.selector(() => Juncture.getDriver(this).schema.defaultValue as ValueOf<this>);
 
-  readonly path = this.DEF.selector(({ _ }) => getFrame(_).path);
+  readonly path = this.DEF.selector(({ _ }) => getFrame(_).layout.path);
 
   readonly isMounted = this.DEF.selector(() => true); // TODO: Impement this
 
@@ -90,7 +96,7 @@ export type HandledValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>[
 // #endregion
 
 // #region JunctureType
-export interface JunctureType<J extends Juncture = any> {
+export interface JunctureType<J extends Juncture = Juncture> {
   new(): J;
 }
 

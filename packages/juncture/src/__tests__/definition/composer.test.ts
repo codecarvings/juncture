@@ -11,20 +11,15 @@ import { AssemblablePropertyCallback, PropertyAssembler } from '../../definition
 import { isMixReducerDef, isPlainReducerDef } from '../../definition/reducer';
 import { createSchemaDef, Schema } from '../../definition/schema';
 import { isDirectSelectorDef, isParamSelectorDef } from '../../definition/selector';
-import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { jSymbols } from '../../symbols';
 
 class MySchema extends Schema<string> {
   constructor() {
     super('');
   }
 }
-class MyFrame<J extends MyJuncture> extends Frame<J> { }
 class MyJuncture extends Juncture {
   schema = createSchemaDef(() => new MySchema());
-
-  [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 }
 
 let juncture: MyJuncture;
@@ -110,8 +105,13 @@ describe('PrivateDefComposer', () => {
 });
 
 describe('DefComposer', () => {
-  test('should be a class instantiable by passing a Juncture instance and a PropertyAssembler', () => {
+  test('should accept a Juncture instance and a property assembler', () => {
     const composer = new DefComposer(juncture, dummyPropertyAssembler);
+    expect(composer).toBeInstanceOf(DefComposer);
+  });
+
+  test('should accept a Juncture instance only without the need to provided an additional property assembler', () => {
+    const composer = new DefComposer(juncture);
     expect(composer).toBeInstanceOf(DefComposer);
   });
 
@@ -178,12 +178,17 @@ describe('DefComposer', () => {
         expect(typeof composer.override).toBe('function');
       });
 
-      xtest('should accept a dummy parameter (for typing), but should ignore it', () => {
+      // eslint-disable-next-line max-len
+      test('should accept a dummy parameter (for typing), but should ignore it and return always the same "OverrideMannequin" object', () => {
         const mySelector = composer.paramSelector(() => (val: string) => val.length);
-        const overrideComposer1 = composer.override(mySelector);
-        expect(typeof overrideComposer1).toBe('object');
-        const overrideComposer2 = composer.override<typeof mySelector>(undefined!);
-        expect(typeof overrideComposer2).toBe('object');
+        const myReducer = composer.reducer(() => () => undefined!);
+
+        const OverrideMannequin1 = composer.override(mySelector);
+        expect(typeof OverrideMannequin1).toBe('object');
+        const OverrideMannequin2 = composer.override(myReducer);
+        expect(OverrideMannequin2).toBe(OverrideMannequin1);
+        const OverrideMannequin3 = composer.override<typeof mySelector>(undefined!);
+        expect(OverrideMannequin3).toBe(OverrideMannequin1);
       });
     });
   });

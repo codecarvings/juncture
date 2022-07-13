@@ -18,7 +18,7 @@ const cursorSymbols: CursorSymbols = {
   frame: cursorSymbol
 };
 
-export interface Cursor<F extends Frame<any> = any> {
+export interface Cursor<F extends Frame<any> = Frame<any>> {
   readonly [cursorSymbols.frame]: F;
 }
 

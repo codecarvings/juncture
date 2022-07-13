@@ -10,18 +10,14 @@ import { createSchemaDef, Schema } from '../../definition/schema';
 import { createCursor, getFrame, isCursor } from '../../frame/cursor';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
-import { jSymbols } from '../../symbols';
 
 class MySchema extends Schema<string> {
   constructor() {
     super('');
   }
 }
-class MyFrame<J extends MyJuncture> extends Frame<J> { }
 class MyJuncture extends Juncture {
   schema = createSchemaDef(() => new MySchema());
-
-  [jSymbols.createFrame] = (config: FrameConfig) => new MyFrame(this, config);
 }
 const juncture = Juncture.getInstance(MyJuncture);
 const config: FrameConfig = {
@@ -32,8 +28,8 @@ const config: FrameConfig = {
     isUnivocal: true
   }
 };
-const frame1 = new MyFrame(juncture, config);
-const frame2 = new MyFrame(juncture, config);
+const frame1 = new Frame(juncture, config);
+const frame2 = new Frame(juncture, config);
 
 describe('createCursor', () => {
   test('should create a cursor by passing a frame', () => {
