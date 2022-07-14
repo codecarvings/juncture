@@ -21,9 +21,9 @@ export class Schema<V extends HV = any, HV = V> {
 // #endregion
 
 // #region Def
-export type SchemaDef<X extends Schema> = Def<DefKind.schema, '', () => X>;
+export type SchemaDef<B extends Schema> = Def<DefKind.schema, '', () => B>;
 
-export function createSchemaDef<X extends Schema>(schemaFactory: () => X): SchemaDef<X> {
+export function createSchemaDef<B extends Schema>(schemaFactory: () => B): SchemaDef<B> {
   return createDef(DefKind.schema, '', schemaFactory);
 }
 
@@ -32,5 +32,5 @@ export function isSchemaDef(obj: any): obj is SchemaDef<any> {
 }
 
 // ---  Derivations
-export type SchemaOfSchemaDef<D> = D extends SchemaDef<infer X> ? X : never;
+export type SchemaOfSchemaDef<D extends SchemaDef<any>> = D extends SchemaDef<infer X> ? X : never;
 // #endregion

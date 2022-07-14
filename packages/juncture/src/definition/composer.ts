@@ -7,7 +7,8 @@
  */
 
 import { MixReducerContext, ReducerContext, SelectorContext } from '../context/private-context';
-import { HandledValueOf, Juncture } from '../juncture';
+import { Juncture } from '../juncture';
+import { HandledValueOf } from '../schema-host';
 import { jSymbols } from '../symbols';
 import { asPrivate, Private } from './private';
 import { PropertyAssembler } from './property-assembler';

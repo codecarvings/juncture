@@ -32,4 +32,8 @@ describe('jSymbols', () => {
   test('should contain the createFrame symbol', () => {
     expect(typeof jSymbols.createFrame).toBe('symbol');
   });
+
+  test('should contain the bitDefault symbol', () => {
+    expect(typeof jSymbols.bitDefault).toBe('symbol');
+  });
 });

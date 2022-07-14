@@ -9,7 +9,8 @@
 import { DefKind, isDef } from './definition/def';
 import { ReducerDefsOf } from './definition/reducer';
 import { SelectorDefsOf } from './definition/selector';
-import { Juncture, SchemaOf } from './juncture';
+import { Juncture } from './juncture';
+import { SchemaOf } from './schema-host';
 import { jSymbols } from './symbols';
 import { mappedAssign } from './util/object';
 

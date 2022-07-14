@@ -12,6 +12,7 @@ const propertyAssembler = Symbol('propertyAssembler');
 const createDefComposer = Symbol('createDefComposer');
 const createDriver = Symbol('createDriver');
 const createFrame = Symbol('createFrame');
+const bitDefault = Symbol('bitDefault');
 
 export interface JSymbols {
   readonly defPayload: typeof defPayload;
@@ -20,6 +21,7 @@ export interface JSymbols {
   readonly createDefComposer: typeof createDefComposer;
   readonly createDriver: typeof createDriver;
   readonly createFrame: typeof createFrame;
+  readonly bitDefault: typeof bitDefault;
 }
 
 export const jSymbols: JSymbols = {
@@ -28,5 +30,6 @@ export const jSymbols: JSymbols = {
   propertyAssembler,
   createDefComposer,
   createDriver,
-  createFrame
+  createFrame,
+  bitDefault
 };

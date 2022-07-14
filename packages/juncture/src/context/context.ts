@@ -7,7 +7,8 @@
  */
 
 import { Cursor, JunctureOfCursor } from '../frame/cursor';
-import { CursorOf, Juncture, ValueOf } from '../juncture';
+import { CursorOf, Juncture } from '../juncture';
+import { ValueOf } from '../schema-host';
 import { DispatchBin } from './bin/dispatch-bin';
 import { SelectBin } from './bin/select-bin';
 

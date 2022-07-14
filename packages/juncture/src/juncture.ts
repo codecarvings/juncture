@@ -8,11 +8,12 @@
 
 import { DefComposer } from './definition/composer';
 import { StandardPropertyAssembler } from './definition/property-assembler';
-import { SchemaDef, SchemaOfSchemaDef } from './definition/schema';
+import { SchemaDef } from './definition/schema';
 import { Driver } from './driver';
 import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
-import { jSymbols, JSymbols } from './symbols';
+import { SchemaHost, ValueOf } from './schema-host';
+import { jSymbols } from './symbols';
 
 // --- Symbols
 const instanceSymbol = Symbol('instance');
@@ -27,7 +28,7 @@ const junctureSymbols: JunctureSymbols = {
 };
 
 // #region Juncture
-export abstract class Juncture {
+export abstract class Juncture implements SchemaHost {
   protected [jSymbols.createDefComposer]() {
     return new DefComposer(this);
   }
@@ -89,18 +90,10 @@ export abstract class Juncture {
 export type FrameOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>;
 export type PrivateCursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['privateCursor'];
 export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['cursor'];
-
-export type SchemaOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>;
-export type ValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>['defaultValue'];
-export type HandledValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>[JSymbols['handledValue']];
 // #endregion
 
 // #region JunctureType
 export interface JunctureType<J extends Juncture = Juncture> {
   new(): J;
 }
-
-export type SchemaOfType<JT extends JunctureType> = SchemaOf<InstanceType<JT>>;
-export type ValueOfType<JT extends JunctureType> = ValueOf<InstanceType<JT>>;
-export type HandledValueOfType<JT extends JunctureType> = HandledValueOf<InstanceType<JT>>;
 // #endregion

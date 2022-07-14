@@ -7,7 +7,8 @@
  */
 
 import { Cursor, JunctureOfCursor, ValueOfCursor } from '../frame/cursor';
-import { Juncture, PrivateCursorOf, ValueOf } from '../juncture';
+import { Juncture, PrivateCursorOf } from '../juncture';
+import { ValueOf } from '../schema-host';
 import { PrepareBin, PrivatePrepareBin } from './bin/prepare-bin';
 import { PrivateReduceBin, ReduceBin } from './bin/reduce-bin';
 import { PrivateSelectBin, SelectBin } from './bin/select-bin';

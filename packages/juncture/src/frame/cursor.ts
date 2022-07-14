@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValueOf } from '../juncture';
+import { ValueOf } from '../schema-host';
 import { Frame } from './frame';
 
 // --- Symbols
