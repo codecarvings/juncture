@@ -35,7 +35,7 @@ export class BitDefComposer<J extends Bit> extends DefComposer<J> {
   }
 
   readonly override!: DefComposer<J>['override'] & {
-    <D extends BitSchema<any>>(parent: D): 'BIT SCHEMA';
+    <D extends SchemaDef<BitSchema<any>>>(parent: D): 'BIT SCHEMA';
   };
 }
 // #endregion

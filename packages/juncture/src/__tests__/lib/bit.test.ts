@@ -10,7 +10,7 @@ import { bit } from '../../lib/bit';
 
 // TODO
 test('Bit', () => {
-  class Test extends bit.string {
+  class Test extends bit.of('MyDefaultValue') {
     count = this.DEF.selector(({ value }) => value().length);
   }
 });
