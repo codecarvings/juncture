@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Context } from './context/context';
-import { CursorOfType, Juncture, JunctureType } from './juncture';
+import { BindedContext } from './context/context';
+import { Juncture, JunctureType } from './juncture';
 import { ValueOfType } from './schema-host';
 
 export class Root<JT extends JunctureType> {
@@ -26,5 +26,6 @@ export class Root<JT extends JunctureType> {
     return this._state;
   }
 
-  readonly context: Context<CursorOfType<JT>> = undefined!;
+  // TODO: Implemen getContext and remove static context...
+  readonly context: BindedContext<InstanceType<JT>> = undefined!;
 }

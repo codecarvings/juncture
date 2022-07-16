@@ -16,5 +16,5 @@ test('Bit', () => {
   }
 
   const root = new Root(MyBit, 'my-loaded-state');
-  root.context.dispach(root.context._).set('new Value');
+  // root.context.dispach(root.context._).set('sfds');
 });

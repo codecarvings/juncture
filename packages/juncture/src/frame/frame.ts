@@ -12,7 +12,7 @@ import { createCursor, Cursor } from './cursor';
 import { Path } from './path';
 
 export interface FrameLayout {
-  readonly parent: Frame<any> | null;
+  readonly parent: Frame | null;
   readonly path: Path;
   readonly isUnivocal: boolean;
   readonly isDivergent: boolean;
@@ -22,7 +22,7 @@ export interface FrameConfig {
   readonly layout: FrameLayout;
 }
 
-export class Frame<J extends Juncture> {
+export class Frame<J extends Juncture = Juncture> {
   readonly layout: FrameLayout;
 
   constructor(readonly juncture: J, config: FrameConfig) {
@@ -32,15 +32,19 @@ export class Frame<J extends Juncture> {
     defineLazyProperty(this, 'cursor', () => this.createCursor());
   }
 
-  protected createPrivateCursor(): Cursor<this> {
+  protected createPrivateCursor(): Cursor<this['juncture']> {
     return createCursor(this);
   }
 
-  protected createCursor(): Cursor<this> {
+  protected createCursor(): Cursor<this['juncture']> {
     return createCursor(this);
   }
 
-  readonly privateCursor!: Cursor<this>;
+  readonly privateCursor!: Cursor<this['juncture']>;
 
-  readonly cursor!: Cursor<this>;
+  readonly cursor!: Cursor<this['juncture']>;
 }
+
+// ---  Derivations
+export type JunctureOfFrame<F extends Frame> = F['juncture'];
+// #endregion

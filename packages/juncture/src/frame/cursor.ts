@@ -6,8 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { FrameOf, Juncture } from '../juncture';
 import { ValueOf } from '../schema-host';
-import { Frame } from './frame';
+import { Frame, JunctureOfFrame } from './frame';
 
 // --- Symbols
 const cursorSymbol = Symbol('frame');
@@ -18,13 +19,13 @@ const cursorSymbols: CursorSymbols = {
   frame: cursorSymbol
 };
 
-export interface Cursor<F extends Frame<any> = Frame<any>> {
-  readonly [cursorSymbols.frame]: F;
+export interface Cursor<J extends Juncture = Juncture> {
+  readonly [cursorSymbols.frame]: FrameOf<J>;
 }
 
-export function createCursor<F extends Frame<any>>(frame: F): Cursor<F> {
+export function createCursor<F extends Frame>(frame: F): Cursor<JunctureOfFrame<F>> {
   return {
-    [cursorSymbols.frame]: frame
+    [cursorSymbols.frame]: frame as any
   };
 }
 
@@ -32,14 +33,16 @@ export function getFrame<C extends Cursor>(_: C) {
   return _[cursorSymbols.frame];
 }
 
-export function isCursor<F extends Frame<any>>(obj: any, frame?: F): obj is F {
+export function isCursor(obj: any): obj is Cursor;
+export function isCursor<F extends Frame>(obj: any, frame: F): obj is Cursor<JunctureOfFrame<F>>;
+export function isCursor<F extends Frame>(obj: any, frame?: F) {
   if (!obj) {
     return false;
   }
   if (frame !== undefined) {
     return obj[cursorSymbols.frame] === frame;
   }
-  return obj[cursorSymbols.frame] instanceof Frame<any>;
+  return obj[cursorSymbols.frame] instanceof Frame;
 }
 
 // ---  Derivations
