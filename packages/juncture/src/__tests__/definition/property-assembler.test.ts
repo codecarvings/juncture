@@ -9,7 +9,7 @@
 import { StandardPropertyAssembler } from '../../definition/property-assembler';
 
 describe('StandardPropertyAssembler', () => {
-  afterAll(() => {
+  afterEach(() => {
     jest.useRealTimers();
   });
 
@@ -33,7 +33,7 @@ describe('StandardPropertyAssembler', () => {
       expect(() => {
         const assembler = new StandardPropertyAssembler({});
         expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
-        jest.runAllTimers();
+        jest.runAllTicks();
       }).toThrow();
     });
   });
@@ -112,7 +112,7 @@ describe('StandardPropertyAssembler', () => {
       expect(() => {
         const test1 = new Test1();
         test1.assembler.close();
-        jest.runAllTimers();
+        jest.runAllTicks();
       }).not.toThrow();
     });
 
@@ -217,6 +217,7 @@ describe('StandardPropertyAssembler', () => {
       const container = {} as any;
       const assembler = new StandardPropertyAssembler(container);
       expect(assembler.isClosed).toBe(false);
+      assembler.close();
     });
   });
 });

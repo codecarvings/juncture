@@ -6,7 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { MixReducerContext, ReducerContext, SelectorContext } from '../context/private-context';
+import {
+  MixReducerContext, OverrideSelectorContext, ReducerContext, SelectorContext
+} from '../context/private-context';
 import { Juncture } from '../juncture';
 import { HandledValueOf } from '../schema-host';
 import { jSymbols } from '../symbols';
@@ -16,7 +18,7 @@ import {
   Action, createMixReducerDef, createPlainReducerDef, MixReducerDef, PlainReducerDef
 } from './reducer';
 import {
-  createDirectSelectorDef, createParamSelectorDef, DirectSelectorDef, ParamSelectorDef
+  createDirectSelectorDef, createParamSelectorDef, DirectSelectorDef, ParamSelectorDef, SelectorOfSelectorDef
 } from './selector';
 
 export class PrivateDefComposer<J extends Juncture> {
@@ -51,7 +53,7 @@ export class DefComposer<J extends Juncture> {
     this.override = () => overrideMannequin as any;
   }
 
-  // Since at runtime it's not possible to know DefKind when override(...) is invoked,
+  // Since at runtime it's not possible to know the DefKind when override(...) is invoked,
   // this method returs an object with all the possible methods availabe for every DefKind
   protected createOverrideMannequin() {
     const { assembler } = this;
@@ -61,13 +63,26 @@ export class DefComposer<J extends Juncture> {
         return assembler.registerProperty(def, (key, parent) => {
           (def as any)[jSymbols.defPayload] = undefined;
         });
+      },
+      paramSelector(selectorFn: any) {
+        const def = createParamSelectorDef(undefined!);
+        return assembler.registerProperty(def, (key, parent) => {
+          (def as any)[jSymbols.defPayload] = undefined;
+        });
       }
     };
   }
 
   readonly override: {
-    <D extends DirectSelectorDef<any>>(parent : D): 'DIRECT SELECTOR';
-    <D extends ParamSelectorDef<any>>(parent: D): 'PARAM SELECTOR';
+    <D extends DirectSelectorDef<any>>(parent: D): {
+      selector<P extends (ctx: OverrideSelectorContext<J, SelectorOfSelectorDef<D>>) => any>
+      (selectorFn: P): DirectSelectorDef<ReturnType<P>>;
+    };
+    <D extends ParamSelectorDef<any>>(parent: D): {
+      paramSelector<P extends (ctx: OverrideSelectorContext<J, SelectorOfSelectorDef<D>>)
+      => (...args: any) => any>(
+        selectorFn: P): ParamSelectorDef<ReturnType<P>>;
+    }
     <D extends PlainReducerDef<any>>(parent: D): 'PLAIN REDUCER';
     <D extends MixReducerDef<any>>(parent: D): 'MIX REDUCER';
   };

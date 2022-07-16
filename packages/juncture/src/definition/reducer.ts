@@ -38,6 +38,7 @@ function isReducerDef(obj: any, subKind?: ReducerDefSubKind): obj is ReducerDef<
   return isDef(obj, DefKind.reducer, subKind);
 }
 
+// ---  Derivations
 export type ReducerDefsOf<O> = {
   readonly [K in keyof O as O[K] extends ReducerDef<any, any> ? K : never]: O[K];
 };

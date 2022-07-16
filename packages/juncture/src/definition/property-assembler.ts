@@ -21,8 +21,6 @@ export interface PropertyAssembler {
   close(): void;
 }
 
-const standardCloseCheckInterval = 10;
-
 export class StandardPropertyAssembler implements PropertyAssembler {
   protected pendingProperty: AssemblableProperty | undefined;
 
@@ -35,11 +33,11 @@ export class StandardPropertyAssembler implements PropertyAssembler {
   }
 
   constructor(protected readonly container: object) {
-    setTimeout(() => {
+    queueMicrotask(() => {
       if (!this.isClosed) {
         throw Error('PropertyAssembler close method has not been invoked.');
       }
-    }, standardCloseCheckInterval);
+    });
   }
 
   registerProperty<V extends object>(value: V, callback?: AssemblablePropertyCallback): V {

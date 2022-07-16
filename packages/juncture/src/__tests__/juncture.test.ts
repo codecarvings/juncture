@@ -21,7 +21,7 @@ describe('Juncture', () => {
 
     test = 21;
 
-    len = this.DEF.selector(({ select }) => select().isMounted);
+    len = this.DEF.selector(({ select }) => select().value.length);
   }
 
   test('should be a class instantiable without arguments', () => {

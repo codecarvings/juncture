@@ -10,7 +10,9 @@ import { DefComposer, PrivateDefComposer } from '../../definition/composer';
 import { AssemblablePropertyCallback, PropertyAssembler } from '../../definition/property-assembler';
 import { isMixReducerDef, isPlainReducerDef } from '../../definition/reducer';
 import { createSchemaDef, Schema } from '../../definition/schema';
-import { isDirectSelectorDef, isParamSelectorDef } from '../../definition/selector';
+import {
+  DirectSelectorDef, isDirectSelectorDef, isParamSelectorDef, ParamSelectorDef
+} from '../../definition/selector';
 import { Juncture } from '../../juncture';
 
 class MyJuncture extends Juncture {
@@ -52,7 +54,6 @@ describe('PrivateDefComposer', () => {
 
       test('should create a Private DirectSelectorDef by passing a selector', () => {
         const mySelector = composer.selector(({ value }) => value());
-        (juncture as any).mySelector = mySelector;
         expect(isDirectSelectorDef(mySelector)).toBe(true);
         expect(mySelector.access).toBe('private');
       });
@@ -65,7 +66,6 @@ describe('PrivateDefComposer', () => {
 
       test('should create a Private ParamSelectorDef by passing a selector', () => {
         const mySelector = composer.paramSelector(() => (val: string) => val.length);
-        (juncture as any).mySelector = mySelector;
         expect(isParamSelectorDef(mySelector)).toBe(true);
         expect(mySelector.access).toBe('private');
       });
@@ -78,7 +78,6 @@ describe('PrivateDefComposer', () => {
 
       test('should create a Private PlainReducerDef by passing a reducer', () => {
         const myReducer = composer.reducer(({ value }) => () => value());
-        (juncture as any).myReducer = myReducer;
         expect(isPlainReducerDef(myReducer)).toBe(true);
         expect(myReducer.access).toBe('private');
       });
@@ -91,7 +90,6 @@ describe('PrivateDefComposer', () => {
 
       test('should create a Private MixReducerDef by passing a reducer', () => {
         const myReducer = composer.mixReducer(() => () => []);
-        (juncture as any).myReducer = myReducer;
         expect(isMixReducerDef(myReducer)).toBe(true);
         expect(myReducer.access).toBe('private');
       });
@@ -127,7 +125,6 @@ describe('DefComposer', () => {
 
       test('should create a DirectSelectorDef by passing a selector', () => {
         const mySelector = composer.selector(({ value }) => value());
-        (juncture as any).mySelector = mySelector;
         expect(isDirectSelectorDef(mySelector)).toBe(true);
       });
     });
@@ -139,7 +136,6 @@ describe('DefComposer', () => {
 
       test('should create a ParamSelectorDef by passing a selector', () => {
         const mySelector = composer.paramSelector(() => (val: string) => val.length);
-        (juncture as any).mySelector = mySelector;
         expect(isParamSelectorDef(mySelector)).toBe(true);
       });
     });
@@ -151,7 +147,6 @@ describe('DefComposer', () => {
 
       test('should create a PlainReducerDef by passing a reducer', () => {
         const myReducer = composer.reducer(({ value }) => () => value());
-        (juncture as any).myReducer = myReducer;
         expect(isPlainReducerDef(myReducer)).toBe(true);
       });
     });
@@ -163,7 +158,6 @@ describe('DefComposer', () => {
 
       test('should create a MixReducerDef by passing a reducer', () => {
         const myReducer = composer.mixReducer(() => () => []);
-        (juncture as any).myReducer = myReducer;
         expect(isMixReducerDef(myReducer)).toBe(true);
       });
     });
@@ -178,12 +172,66 @@ describe('DefComposer', () => {
         const mySelector = composer.paramSelector(() => (val: string) => val.length);
         const myReducer = composer.reducer(() => () => undefined!);
 
-        const OverrideMannequin1 = composer.override(mySelector);
-        expect(typeof OverrideMannequin1).toBe('object');
-        const OverrideMannequin2 = composer.override(myReducer);
-        expect(OverrideMannequin2).toBe(OverrideMannequin1);
-        const OverrideMannequin3 = composer.override<typeof mySelector>(undefined!);
-        expect(OverrideMannequin3).toBe(OverrideMannequin1);
+        const mannequin1 = composer.override(mySelector);
+        expect(typeof mannequin1).toBe('object');
+        const mannequin2 = composer.override(myReducer);
+        expect(mannequin2).toBe(mannequin1);
+        const mannequin3 = composer.override<typeof mySelector>(undefined!);
+        expect(mannequin3).toBe(mannequin1);
+      });
+
+      describe('when passing a DirectSelectorDef as type argument OverrideMannequin has', () => {
+        let myOriginalSelector: DirectSelectorDef<string>;
+        beforeEach(() => {
+          myOriginalSelector = composer.selector(() => 'original');
+        });
+
+        describe('a "selector" property that', () => {
+          test('should be a function', () => {
+            const mannequin = composer.override(myOriginalSelector);
+            expect(typeof mannequin.selector).toBe('function');
+          });
+
+          test('should create a new DirectSelectorDef assignable to the parent by passing a selector', () => {
+            const mannequin = composer.override(myOriginalSelector);
+            const myNewSelector: DirectSelectorDef<string> = mannequin.selector(({ value }) => value());
+            expect(isDirectSelectorDef(myNewSelector)).toBe(true);
+            expect(myNewSelector).not.toBe(myOriginalSelector);
+          });
+
+          test('should provide access to the parent selector', () => {
+            const mannequin = composer.override(myOriginalSelector);
+            const myNewSelector = mannequin.selector(({ parent }) => `${parent}2`);
+            expect(isDirectSelectorDef(myNewSelector)).toBe(true);
+          });
+        });
+      });
+
+      describe('when passing a ParamSelectorDef as type argument OverrideMannequin has', () => {
+        let myOriginalSelector: ParamSelectorDef<(value: string) => number>;
+        beforeEach(() => {
+          myOriginalSelector = composer.paramSelector(() => (value: string) => value.length);
+        });
+
+        describe('a "paramSelector" property that', () => {
+          test('should be a function', () => {
+            const mannequin = composer.override(myOriginalSelector);
+            expect(typeof mannequin.paramSelector).toBe('function');
+          });
+
+          test('should create a new ParamSelectorDef assignable to the parent by passing a selector', () => {
+            const mannequin = composer.override(myOriginalSelector);
+            const myNewSelector: ParamSelectorDef<(value: string) => number> = mannequin.paramSelector(() => () => 0);
+            expect(isParamSelectorDef(myNewSelector)).toBe(true);
+            expect(myNewSelector).not.toBe(myOriginalSelector);
+          });
+
+          test('should provide access to the parent selector', () => {
+            const mannequin = composer.override(myOriginalSelector);
+            const myNewSelector = mannequin.paramSelector(({ parent }) => () => parent(''));
+            expect(isParamSelectorDef(myNewSelector)).toBe(true);
+          });
+        });
       });
     });
   });

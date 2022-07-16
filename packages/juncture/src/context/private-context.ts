@@ -44,6 +44,10 @@ export interface PrivateContext<J extends Juncture> extends PrivateContextRole {
 
 export interface SelectorContext<J extends Juncture> extends PrivateContext<J> { }
 
+export interface OverrideSelectorContext<J extends Juncture, P> extends SelectorContext<J> {
+  readonly parent: P;
+}
+
 export interface ReducerContext<J extends Juncture> extends PrivateContext<J> {
   reduce(): PrivateReduceBin<J, ValueOf<J>>;
   reduce(_: this['_']): PrivateReduceBin<J, ValueOf<J>>;
