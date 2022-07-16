@@ -13,11 +13,11 @@ import { ValueOfType } from './schema-host';
 export class Root<JT extends JunctureType> {
   protected readonly juncture: InstanceType<JT>;
 
-  constructor(public readonly Type: JT, defaultState?: ValueOfType<JT>) {
+  constructor(public readonly Type: JT, state?: ValueOfType<JT>) {
     this.juncture = Juncture.getInstance(Type);
     const driver = Juncture.getDriver(this.juncture);
-    const initialDefaultState = defaultState === undefined ? driver.schema.defaultValue : defaultState;
-    this._state = initialDefaultState;
+    const initialState = state === undefined ? driver.schema.defaultValue : state;
+    this._state = initialState;
   }
 
   protected _state: ValueOfType<JT>;

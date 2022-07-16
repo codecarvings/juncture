@@ -11,7 +11,7 @@ import { isCursor } from '../../frame/cursor';
 import { Frame, FrameConfig } from '../../frame/frame';
 import { Juncture } from '../../juncture';
 
-describe('Frame class', () => {
+describe('Frame', () => {
   class MyJuncture extends Juncture {
     schema = createSchemaDef(() => new Schema(''));
   }

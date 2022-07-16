@@ -68,6 +68,10 @@ export abstract class SettableBooleanBit extends SettableBit {
 
   switch = this.DEF.reducer(({ value }) => () => !value());
 }
+
+export abstract class SettableSymbolBit extends SettableBit {
+  abstract schema: SchemaDef<BitSchema<symbol>>;
+}
 // #endregion
 
 // #region Builder types
@@ -110,7 +114,7 @@ interface StatedSettableBooleanBit extends SettableBooleanBit {
 }
 interface StatedSettableBooleanBitType extends JunctureType<StatedSettableBooleanBit> { }
 
-interface StatedSettableSymbolBit extends SettableBit {
+interface StatedSettableSymbolBit extends SettableSymbolBit {
   schema: SchemaDef<BitSchema<symbol>>;
 }
 interface StatedSettableSymbolBitType extends JunctureType<StatedSettableSymbolBit> { }
@@ -124,15 +128,20 @@ function createBitType<JT extends abstract new(...args: any) => Bit>(Type: JT, d
   return BuiltBit;
 }
 
-class DefaultStringBit extends createBitType(Bit, '') { }
-class DefaultNumberBit extends createBitType(Bit, 0) { }
-class DefaultBooleanBit extends createBitType(Bit, false) { }
-class DefaultSymbolBit extends createBitType(Bit, jSymbols.bitDefault) { }
+const defaultStringValue = '';
+const defaultNumberValue = 0;
+const defaultBooleanValue = false;
+const defaultSymbolValue = jSymbols.bitDefault;
 
-class DefaultSettableStringBit extends createBitType(SettableStringBit, '') { }
-class DefaultSettableNumberBit extends createBitType(SettableNumberBit, 0) { }
-class DefaultSettableBooleanBit extends createBitType(SettableBooleanBit, false) { }
-class DefaultSettableSymbolBit extends createBitType(SettableBit, jSymbols.bitDefault) { }
+class DefaultStringBit extends createBitType(Bit, defaultStringValue) { }
+class DefaultNumberBit extends createBitType(Bit, defaultNumberValue) { }
+class DefaultBooleanBit extends createBitType(Bit, defaultBooleanValue) { }
+class DefaultSymbolBit extends createBitType(Bit, defaultSymbolValue) { }
+
+class DefaultSettableStringBit extends createBitType(SettableStringBit, defaultStringValue) { }
+class DefaultSettableNumberBit extends createBitType(SettableNumberBit, defaultNumberValue) { }
+class DefaultSettableBooleanBit extends createBitType(SettableBooleanBit, defaultBooleanValue) { }
+class DefaultSettableSymbolBit extends createBitType(SettableSymbolBit, defaultSymbolValue) { }
 
 interface BitBuilder {
   readonly String: StatedStringBitType;
@@ -167,7 +176,22 @@ export const jBit: BitBuilder = {
   Number: DefaultNumberBit,
   Boolean: DefaultBooleanBit,
   Symbol: DefaultSymbolBit,
-  Of: <V>(defaultValue: V) => createBitType(Bit, defaultValue) as any,
+  Of: <V>(defaultValue: V) => {
+    if (defaultValue as any === defaultStringValue) {
+      return DefaultStringBit;
+    }
+    if (defaultValue as any === defaultNumberValue) {
+      return DefaultNumberBit;
+    }
+    if (defaultValue as any === defaultBooleanValue) {
+      return DefaultBooleanBit;
+    }
+    if (defaultValue as any === defaultSymbolValue) {
+      return DefaultSymbolBit;
+    }
+
+    return createBitType(Bit, defaultValue) as any;
+  },
 
   settable: {
     String: DefaultSettableStringBit,
@@ -175,6 +199,19 @@ export const jBit: BitBuilder = {
     Boolean: DefaultSettableBooleanBit,
     Symbol: DefaultSettableSymbolBit,
     Of: <V>(defaultValue: V) => {
+      if (defaultValue as any === defaultStringValue) {
+        return DefaultSettableStringBit;
+      }
+      if (defaultValue as any === defaultNumberValue) {
+        return DefaultSettableNumberBit;
+      }
+      if (defaultValue as any === defaultBooleanValue) {
+        return DefaultSettableBooleanBit;
+      }
+      if (defaultValue as any === defaultSymbolValue) {
+        return DefaultSettableSymbolBit;
+      }
+
       const type = typeof defaultValue;
       let Type: any;
       switch (type) {
@@ -188,7 +225,7 @@ export const jBit: BitBuilder = {
           Type = SettableBooleanBit;
           break;
         case 'symbol':
-          Type = SettableBit;
+          Type = SettableSymbolBit;
           break;
         default:
           Type = SettableBit;
