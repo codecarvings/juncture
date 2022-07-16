@@ -27,14 +27,46 @@ describe('StandardPropertyAssembler', () => {
       assembler.close();
     });
 
-    // eslint-disable-next-line max-len
-    test('constructor should automatically (async) throw if "close" method is not invoked at the end of the instance initialization process', () => {
-      jest.useFakeTimers();
-      expect(() => {
-        const assembler = new StandardPropertyAssembler({});
-        expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
-        jest.runAllTicks();
-      }).toThrow();
+    test('should accept the container object and a boolean indicating whether to check close status', () => {
+      const assembler = new StandardPropertyAssembler({}, true);
+      expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
+      assembler.close();
+    });
+
+    describe('when checkClose argument is not provided', () => {
+      // eslint-disable-next-line max-len
+      test('should automatically (async) throw if "close" method is not invoked at the end of the instance initialization process', () => {
+        jest.useFakeTimers();
+        expect(() => {
+          const assembler = new StandardPropertyAssembler({}, true);
+          expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
+          jest.runAllTicks();
+        }).toThrow();
+      });
+    });
+
+    describe('when checkClose argument is true', () => {
+      // eslint-disable-next-line max-len
+      test('should automatically (async) throw if "close" method is not invoked at the end of the instance initialization process', () => {
+        jest.useFakeTimers();
+        expect(() => {
+          const assembler = new StandardPropertyAssembler({}, true);
+          expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
+          jest.runAllTicks();
+        }).toThrow();
+      });
+    });
+
+    describe('when checkClose argument is false', () => {
+      // eslint-disable-next-line max-len
+      test('should not (async) throw if "close" method is not invoked at the end of the instance initialization process', () => {
+        jest.useFakeTimers();
+        expect(() => {
+          const assembler = new StandardPropertyAssembler({}, false);
+          expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
+          jest.runAllTicks();
+        }).not.toThrow();
+      });
     });
   });
 

@@ -41,7 +41,7 @@ export abstract class Juncture implements SchemaHost {
     return new Frame(this, config);
   }
 
-  protected readonly [jSymbols.propertyAssembler] = new StandardPropertyAssembler(this);
+  protected readonly [jSymbols.propertyAssembler] = new StandardPropertyAssembler(this, false);
 
   protected readonly DEF: DefComposer<this> = this[jSymbols.createDefComposer]();
 

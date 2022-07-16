@@ -21,6 +21,31 @@ export interface PropertyAssembler {
   close(): void;
 }
 
+let spaInstancesToCheck: StandardPropertyAssembler[] = [];
+let spaCheckTaskQueued = false;
+function spaCheckTask() {
+  try {
+    spaInstancesToCheck.forEach(instance => {
+      if (!instance.isClosed) {
+        throw Error('PropertyAssembler close method has not been invoked.');
+      }
+    });
+  } finally {
+    spaInstancesToCheck = [];
+    spaCheckTaskQueued = false;
+  }
+}
+function spaQueueCheckTask() {
+  if (!spaCheckTaskQueued) {
+    spaCheckTaskQueued = true;
+    queueMicrotask(spaCheckTask);
+  }
+}
+function spaRegisterCheckTask(instance: StandardPropertyAssembler) {
+  spaInstancesToCheck.push(instance);
+  spaQueueCheckTask();
+}
+
 export class StandardPropertyAssembler implements PropertyAssembler {
   protected pendingProperty: AssemblableProperty | undefined;
 
@@ -32,12 +57,10 @@ export class StandardPropertyAssembler implements PropertyAssembler {
     return this.#isClosed;
   }
 
-  constructor(protected readonly container: object) {
-    queueMicrotask(() => {
-      if (!this.isClosed) {
-        throw Error('PropertyAssembler close method has not been invoked.');
-      }
-    });
+  constructor(protected readonly container: object, checkClose: boolean = true) {
+    if (checkClose) {
+      spaRegisterCheckTask(this);
+    }
   }
 
   registerProperty<V extends object>(value: V, callback?: AssemblablePropertyCallback): V {
