@@ -14,6 +14,14 @@ export interface SchemaHost {
   readonly schema: SchemaDef<any>;
 }
 
+export interface SchemaHostType<H extends SchemaHost = SchemaHost> {
+  new(): H
+}
+
 export type SchemaOf<J extends SchemaHost> = SchemaOfSchemaDef<J['schema']>;
 export type ValueOf<J extends SchemaHost> = SchemaOfSchemaDef<J['schema']>['defaultValue'];
 export type HandledValueOf<J extends SchemaHost> = SchemaOfSchemaDef<J['schema']>[JSymbols['handledValue']];
+
+export type SchemaOfType<JT extends SchemaHostType> = SchemaOf<InstanceType<JT>>;
+export type ValueOfType<JT extends SchemaHostType> = ValueOf<InstanceType<JT>>;
+export type HandledValueOfType<JT extends SchemaHostType> = HandledValueOf<InstanceType<JT>>;

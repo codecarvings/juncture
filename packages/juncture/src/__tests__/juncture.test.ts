@@ -20,6 +20,8 @@ describe('Juncture', () => {
     schema = createSchemaDef(() => new Schema(''));
 
     test = 21;
+
+    len = this.DEF.selector(({ select }) => select().isMounted);
   }
 
   test('should be a class instantiable without arguments', () => {

@@ -90,6 +90,10 @@ export abstract class Juncture implements SchemaHost {
 export type FrameOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>;
 export type PrivateCursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['privateCursor'];
 export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['cursor'];
+
+export type FrameOfType<JT extends JunctureType> = FrameOf<InstanceType<JT>>;
+export type PrivateCursorOfType<JT extends JunctureType> = PrivateCursorOf<InstanceType<JT>>;
+export type CursorOfType<JT extends JunctureType> = CursorOf<InstanceType<JT>>;
 // #endregion
 
 // #region JunctureType

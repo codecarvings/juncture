@@ -22,24 +22,20 @@ import {
 export class PrivateDefComposer<J extends Juncture> {
   constructor(protected readonly juncture: J, protected readonly assembler: PropertyAssembler) { }
 
-  // eslint-disable-next-line class-methods-use-this
   selector<P extends (ctx: SelectorContext<J>) => any>(selectorFn: P): Private<DirectSelectorDef<ReturnType<P>>> {
     return this.assembler.registerProperty(asPrivate(createDirectSelectorDef(selectorFn as any)));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   paramSelector<P extends (ctx: SelectorContext<J>) => (...args: any) => any>(
     selectorFn: P): Private<ParamSelectorDef<ReturnType<P>>> {
     return this.assembler.registerProperty(asPrivate(createParamSelectorDef(selectorFn as any)));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   reducer<P extends (ctx: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
     reducerFn: P): Private<PlainReducerDef<ReturnType<P>>> {
     return this.assembler.registerProperty(asPrivate(createPlainReducerDef(reducerFn as any)));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   mixReducer<P extends (ctx: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
     reducerFn: P): Private<MixReducerDef<ReturnType<P>>> {
     return this.assembler.registerProperty(asPrivate(createMixReducerDef(reducerFn as any)));
@@ -78,24 +74,20 @@ export class DefComposer<J extends Juncture> {
 
   readonly private = new PrivateDefComposer(this.juncture, this.assembler);
 
-  // eslint-disable-next-line class-methods-use-this
   selector<P extends (ctx: SelectorContext<J>) => any>(selectorFn: P): DirectSelectorDef<ReturnType<P>> {
     return this.assembler.registerProperty(createDirectSelectorDef(selectorFn as any));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   paramSelector<P extends (ctx: SelectorContext<J>) => (...args: any) => any>(
     selectorFn: P): ParamSelectorDef<ReturnType<P>> {
     return this.assembler.registerProperty(createParamSelectorDef(selectorFn as any));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   reducer<P extends (ctx: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
     reducerFn: P): PlainReducerDef<ReturnType<P>> {
     return this.assembler.registerProperty(createPlainReducerDef(reducerFn as any));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   mixReducer<P extends (ctx: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
     reducerFn: P): MixReducerDef<ReturnType<P>> {
     return this.assembler.registerProperty(createMixReducerDef(reducerFn as any));
