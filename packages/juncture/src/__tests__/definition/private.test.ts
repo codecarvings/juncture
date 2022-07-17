@@ -7,7 +7,7 @@
  */
 
 import { createDef, DefKind } from '../../definition/def';
-import { asPrivate } from '../../definition/private';
+import { asPrivate, isPrivate } from '../../definition/private';
 import { jSymbols } from '../../symbols';
 
 describe('asPrivate', () => {
@@ -30,5 +30,21 @@ describe('asPrivate', () => {
     expect((def as any).accessModifier).toBeUndefined();
     const def2 = asPrivate(def);
     expect(def2.access).toBe('private');
+  });
+});
+
+describe('isPrivate', () => {
+  test('should return true if the provided obj is a Private Def', () => {
+    const def = createDef(DefKind.schema, '', undefined);
+    const privateDef = asPrivate(def);
+    expect(isPrivate(privateDef)).toBe(true);
+  });
+
+  test('should return false if the provided obj is not a Private Def', () => {
+    const def = createDef(DefKind.schema, '', undefined);
+    expect(isPrivate(def)).toBe(false);
+    expect(isPrivate({})).toBe(false);
+    expect(isPrivate(null)).toBe(false);
+    expect(isPrivate(undefined)).toBe(false);
   });
 });

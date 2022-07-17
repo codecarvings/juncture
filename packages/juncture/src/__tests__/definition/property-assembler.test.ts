@@ -9,247 +9,212 @@
 import { StandardPropertyAssembler } from '../../definition/property-assembler';
 
 describe('StandardPropertyAssembler', () => {
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  const createPropertyValue = <V>(assembler: StandardPropertyAssembler, value: V):
-  { value: V, mockFn: jest.Mock<void, [string, object]> } => {
-    const mockFn = jest.fn();
-    const result = { value, mockFn };
-    return assembler.registerProperty(result, mockFn);
-  };
-
   describe('constructor', () => {
     test('should accept the container object as the only argument', () => {
-      const assembler = new StandardPropertyAssembler({});
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
       expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
-      assembler.close();
+    });
+  });
+
+  describe('registerStaticProperty method', () => {
+    test('should return an unique symbol', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const value1 = { value: 'test1' };
+      const s1 = assembler.registerStaticProperty(value1);
+      container.s1 = s1;
+      expect(typeof s1).toBe('symbol');
+      const s2 = assembler.registerStaticProperty(value1);
+      container.s2 = s2;
+      expect(typeof s2).toBe('symbol');
+      expect(s2).not.toBe(s1);
     });
 
-    test('should accept the container object and a boolean indicating whether to check close status', () => {
-      const assembler = new StandardPropertyAssembler({}, true);
-      expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
-      assembler.close();
+    test('should automatically invoke the wire method', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const originalWire = assembler.wire.bind(assembler);
+      const wire = jest.fn(originalWire);
+      (assembler as any).wire = wire;
+
+      const value1 = { value: 'test1' };
+      container.s1 = assembler.registerStaticProperty(value1);
+      expect(wire).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('registerDynamicProperty method', () => {
+    test('should return an unique symbol', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const factory1 = () => null;
+      const s1 = assembler.registerDynamicProperty(factory1);
+      container.s1 = s1;
+      expect(typeof s1).toBe('symbol');
+      const s2 = assembler.registerDynamicProperty(factory1);
+      container.s2 = s2;
+      expect(typeof s2).toBe('symbol');
+      expect(s2).not.toBe(s1);
     });
 
-    describe('when checkClose argument is not provided', () => {
-      // eslint-disable-next-line max-len
-      test('should automatically (async) throw if "close" method is not invoked at the end of the instance initialization process', () => {
-        jest.useFakeTimers();
-        expect(() => {
-          const assembler = new StandardPropertyAssembler({}, true);
-          expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
-          jest.runAllTicks();
-        }).toThrow();
+    test('should not invoke the provided factory', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const factory1 = jest.fn(() => null);
+      container.s1 = assembler.registerDynamicProperty(factory1);
+      expect(factory1).not.toHaveBeenCalled();
+    });
+
+    test('should automatically invoke the wire method', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const originalWire = assembler.wire.bind(assembler);
+      const wire = jest.fn(originalWire);
+      (assembler as any).wire = wire;
+
+      const factory1 = () => null;
+      container.s1 = assembler.registerDynamicProperty(factory1);
+      expect(wire).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('wire method', () => {
+    test('should set the value of a property registerd via registerStaticProperty', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const value1 = { value: 'test1' };
+      container.s1 = assembler.registerStaticProperty(value1);
+      expect(typeof container.s1).toBe('symbol');
+
+      assembler.wire();
+
+      expect(container.s1).toBe(value1);
+    });
+
+    test('should invoke the factory registerd via registerDynamicProperty', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const factory1 = jest.fn(() => null);
+      container.s1 = assembler.registerDynamicProperty(factory1);
+      expect(factory1).toHaveBeenCalledTimes(0);
+      assembler.wire();
+      expect(factory1).toHaveBeenCalledTimes(1);
+    });
+
+    describe('when invoke the factory registered by registerDynamicProperty', () => {
+      test('should provide the key as first argument', () => {
+        const container: any = {};
+        const assembler = new StandardPropertyAssembler(container);
+        const originalWire = assembler.wire.bind(assembler);
+        const wire = jest.fn(originalWire);
+        (assembler as any).wire = wire;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const factory1 = jest.fn((key: string) => null);
+        container.s1 = assembler.registerDynamicProperty(factory1);
+        assembler.wire();
+        expect(factory1.mock.lastCall[0]).toBe('s1');
+      });
+
+      describe('when no parent is present', () => {
+        test('should provide undefined as parent via the second argument', () => {
+          const container: any = {};
+          const assembler = new StandardPropertyAssembler(container);
+          const originalWire = assembler.wire.bind(assembler);
+          const wire = jest.fn(originalWire);
+          (assembler as any).wire = wire;
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const factory1 = jest.fn((key: string, parent: any) => null);
+          container.s1 = assembler.registerDynamicProperty(factory1);
+          assembler.wire();
+          expect(factory1.mock.lastCall[1]).toBe(undefined);
+        });
+      });
+
+      describe('when a parent has been previously registered via registerStaticProperty', () => {
+        test('should provide the parent value via the second argument', () => {
+          const container: any = {};
+          const assembler = new StandardPropertyAssembler(container);
+          const originalWire = assembler.wire.bind(assembler);
+          const wire = jest.fn(originalWire);
+          (assembler as any).wire = wire;
+
+          const value1 = { value: 'test1' };
+          container.s1 = assembler.registerStaticProperty(value1);
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const factory1 = jest.fn((key: string, parent: any) => null);
+          container.s1 = assembler.registerDynamicProperty(factory1);
+          assembler.wire();
+          expect(factory1.mock.lastCall[1]).toBe(value1);
+        });
+      });
+
+      describe('when a parent has been previously registered with registerDynamicProperty', () => {
+        test('should provide the parent value via the second argument', () => {
+          const container: any = {};
+          const assembler = new StandardPropertyAssembler(container);
+          const originalWire = assembler.wire.bind(assembler);
+          const wire = jest.fn(originalWire);
+          (assembler as any).wire = wire;
+
+          const value1 = { value: 'test1' };
+          container.s1 = assembler.registerDynamicProperty(() => value1);
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const factory1 = jest.fn((key: string, parent: any) => null);
+          container.s1 = assembler.registerDynamicProperty(factory1);
+          assembler.wire();
+          expect(factory1.mock.lastCall[1]).toBe(value1);
+        });
+      });
+
+      test('should provide the container as third argument', () => {
+        const container: any = {};
+        const assembler = new StandardPropertyAssembler(container);
+        const originalWire = assembler.wire.bind(assembler);
+        const wire = jest.fn(originalWire);
+        (assembler as any).wire = wire;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const factory1 = jest.fn((key: string, parent: any, container2: any) => null);
+        container.s1 = assembler.registerDynamicProperty(factory1);
+        assembler.wire();
+        expect(factory1.mock.lastCall[2]).toBe(container);
       });
     });
 
-    describe('when checkClose argument is true', () => {
-      // eslint-disable-next-line max-len
-      test('should automatically (async) throw if "close" method is not invoked at the end of the instance initialization process', () => {
-        jest.useFakeTimers();
-        expect(() => {
-          const assembler = new StandardPropertyAssembler({}, true);
-          expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
-          jest.runAllTicks();
-        }).toThrow();
-      });
+    test('should set the value of a property registerd via registerDynamicProperty', () => {
+      const container: any = {};
+      const assembler = new StandardPropertyAssembler(container);
+      const value1 = { value: 'test1' };
+      container.s1 = assembler.registerDynamicProperty(() => value1);
+      expect(typeof container.s1).toBe('symbol');
+
+      assembler.wire();
+
+      expect(container.s1).toBe(value1);
     });
 
-    describe('when checkClose argument is false', () => {
-      // eslint-disable-next-line max-len
-      test('should not (async) throw if "close" method is not invoked at the end of the instance initialization process', () => {
-        jest.useFakeTimers();
+    describe('when no pending property is present', () => {
+      test('should not throw error', () => {
+        const container1: any = {};
+        const assembler1 = new StandardPropertyAssembler(container1);
         expect(() => {
-          const assembler = new StandardPropertyAssembler({}, false);
-          expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
-          jest.runAllTicks();
+          assembler1.wire();
+        }).not.toThrow();
+
+        const container2: any = {};
+        const assembler2 = new StandardPropertyAssembler(container2);
+        expect(() => {
+          const value1 = { value: 'test1' };
+          container2.s1 = assembler2.registerStaticProperty(value1);
+          assembler2.wire();
+          assembler2.wire();
         }).not.toThrow();
       });
-    });
-  });
-
-  describe('registerProperty', () => {
-    test('should return the provided value', () => {
-      const value1 = { value: 'test1' };
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-
-        myVal1 = this.assembler.registerProperty(value1);
-      }
-      const test1 = new Test1();
-      test1.assembler.close();
-      expect(test1.myVal1).toBe(value1);
-    });
-
-    describe('allow to register a callback that', () => {
-      test('should receive the property key as first argument', () => {
-        class Test1 {
-          assembler = new StandardPropertyAssembler(this);
-
-          myVal1 = createPropertyValue(this.assembler, 'test1');
-        }
-        const test1 = new Test1();
-        test1.assembler.close();
-        expect(test1.myVal1.mockFn.mock.lastCall[0]).toBe('myVal1');
-      });
-
-      test('should receive <undefined> as second argument if the property is not an override', () => {
-        class Test1 {
-          assembler = new StandardPropertyAssembler(this);
-
-          myVal1 = createPropertyValue(this.assembler, 'test1');
-        }
-        const test1 = new Test1();
-        test1.assembler.close();
-        expect(test1.myVal1.mockFn.mock.lastCall[1]).toBeUndefined();
-      });
-
-      test('should receive the parent property value as second argument if the property is an override', () => {
-        class Test1 {
-          assembler = new StandardPropertyAssembler(this);
-
-          myVal1 = createPropertyValue(this.assembler, 'test1');
-        }
-        class Test2 extends Test1 {
-          myVal1 = createPropertyValue(this.assembler, 'test2');
-        }
-        const test2 = new Test2();
-        test2.assembler.close();
-        expect((test2.myVal1.mockFn.mock.lastCall[1] as any).value).toBe('test1');
-
-        class Test3 extends Test2 {
-          myVal2 = createPropertyValue(this.assembler, 'test3b');
-
-          myVal1 = createPropertyValue(this.assembler, 'test3');
-
-          myVal3 = createPropertyValue(this.assembler, 'test3c');
-        }
-        const test3 = new Test3();
-        test3.assembler.close();
-        expect((test3.myVal1.mockFn.mock.lastCall[1] as any).value).toBe('test2');
-      });
-    });
-
-    test('should be able to be invoked without a callback', () => {
-      const value1 = { value: 'test1' };
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-
-        myVal1 = this.assembler.registerProperty(value1);
-      }
-
-      jest.useFakeTimers();
-      expect(() => {
-        const test1 = new Test1();
-        test1.assembler.close();
-        jest.runAllTicks();
-      }).not.toThrow();
-    });
-
-    // eslint-disable-next-line max-len
-    test('should invoke the callback registerd with the preceding invokation of registerProperty in the same class', () => {
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-
-        myVal1 = createPropertyValue(this.assembler, 'test1');
-
-        myVal2 = createPropertyValue(this.assembler, 'test2');
-      }
-      const test1 = new Test1();
-      expect(test1.myVal1.mockFn).toHaveBeenCalledTimes(1);
-      test1.assembler.close();
-      expect(test1.myVal1.mockFn).toHaveBeenCalledTimes(1);
-    });
-
-    // eslint-disable-next-line max-len
-    test('should invoke the callback registerd with the preceding invokation of registerProperty in the parent class', () => {
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-
-        myVal1 = createPropertyValue(this.assembler, 'test1');
-      }
-      class Test2 extends Test1 {
-        myVal2 = createPropertyValue(this.assembler, 'test2');
-      }
-
-      const test2 = new Test2();
-      expect(test2.myVal1.mockFn).toHaveBeenCalledTimes(1);
-      test2.assembler.close();
-      expect(test2.myVal1.mockFn).toHaveBeenCalledTimes(1);
-    });
-
-    test('should throw if isClosed is true', () => {
-      const container = {} as any;
-      const assembler = new StandardPropertyAssembler(container);
-      expect(assembler.isClosed).toBe(false);
-      expect(() => {
-        container.myVal1 = assembler.registerProperty({ value: '1' });
-      }).not.toThrow();
-      assembler.close();
-      expect(assembler.isClosed).toBe(true);
-      expect(() => {
-        container.myVal2 = assembler.registerProperty({ value: '2' });
-      }).toThrow();
-    });
-  });
-
-  describe('close', () => {
-    test('should invoke the callback of the last property registerd with registerProperty', () => {
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-
-        myVal1 = createPropertyValue(this.assembler, 'test1');
-
-        myVal2 = createPropertyValue(this.assembler, 'test2');
-      }
-      const test1 = new Test1();
-      expect(test1.myVal2.mockFn).toHaveBeenCalledTimes(0);
-      test1.assembler.close();
-      expect(test1.myVal2.mockFn).toHaveBeenCalledTimes(1);
-    });
-
-    test('should not throw if the instance has no properties registerd with registerProperty', () => {
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-      }
-      const test1 = new Test1();
-      expect(() => {
-        test1.assembler.close();
-      }).not.toThrow();
-    });
-
-    test('should set isClosed to true', () => {
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-      }
-      const test1 = new Test1();
-      expect(test1.assembler.isClosed).toBe(false);
-      test1.assembler.close();
-      expect(test1.assembler.isClosed).toBe(true);
-    });
-
-    test('should throw if isClosed is true', () => {
-      class Test1 {
-        assembler = new StandardPropertyAssembler(this);
-      }
-      const test1 = new Test1();
-      expect(test1.assembler.isClosed).toBe(false);
-      test1.assembler.close();
-      expect(test1.assembler.isClosed).toBe(true);
-      expect(() => {
-        test1.assembler.close();
-      }).toThrow();
-    });
-  });
-
-  describe('isClosed', () => {
-    test('should be false by default', () => {
-      const container = {} as any;
-      const assembler = new StandardPropertyAssembler(container);
-      expect(assembler.isClosed).toBe(false);
-      assembler.close();
     });
   });
 });

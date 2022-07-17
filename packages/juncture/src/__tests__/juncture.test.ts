@@ -26,7 +26,6 @@ describe('Juncture', () => {
 
   test('should be a class instantiable without arguments', () => {
     const juncture = new MyJuncture();
-    juncture[jSymbols.propertyAssembler].close();
     expect(juncture).toBeInstanceOf(Juncture);
   });
 

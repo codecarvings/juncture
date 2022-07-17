@@ -6,44 +6,34 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface AssemblablePropertyCallback {
-  (key: string, parentValue: object | undefined): void;
+export interface AssemblablePropertyFactory {
+  (key: string, parentValue: any, container: any): any;
 }
 
-interface AssemblableProperty {
-  readonly value: object;
-  readonly callback: AssemblablePropertyCallback | undefined;
+interface StaticAssemblableProperty {
+  readonly placeholder: symbol;
+  readonly type: 'static';
+  readonly value: any;
 }
+
+interface DynamicAssemblableProperty {
+  readonly placeholder: symbol;
+  readonly type: 'dynamic';
+  readonly factory: AssemblablePropertyFactory;
+}
+
+type AssemblableProperty = StaticAssemblableProperty | DynamicAssemblableProperty;
 
 export interface PropertyAssembler {
-  registerProperty<V extends object>(value: V, callback?: AssemblablePropertyCallback): V;
-  isClosed: boolean;
-  close(): void;
+  registerStaticProperty<V>(value: V): V;
+  registerDynamicProperty(factory: AssemblablePropertyFactory): any;
+  wire(): void;
 }
 
-let spaInstancesToCheck: StandardPropertyAssembler[] = [];
-let spaCheckTaskQueued = false;
-function spaCheckTask() {
-  try {
-    spaInstancesToCheck.forEach(instance => {
-      if (!instance.isClosed) {
-        throw Error('PropertyAssembler close method has not been invoked.');
-      }
-    });
-  } finally {
-    spaInstancesToCheck = [];
-    spaCheckTaskQueued = false;
-  }
-}
-function spaQueueCheckTask() {
-  if (!spaCheckTaskQueued) {
-    spaCheckTaskQueued = true;
-    queueMicrotask(spaCheckTask);
-  }
-}
-function spaRegisterCheckTask(instance: StandardPropertyAssembler) {
-  spaInstancesToCheck.push(instance);
-  spaQueueCheckTask();
+let placeholderCounter = 0;
+function createPlaceholder() {
+  placeholderCounter += 1;
+  return Symbol(`Placeholder #${placeholderCounter}`);
 }
 
 export class StandardPropertyAssembler implements PropertyAssembler {
@@ -51,44 +41,31 @@ export class StandardPropertyAssembler implements PropertyAssembler {
 
   protected readonly valueCache = new Map<string, object>();
 
-  #isClosed = false;
+  constructor(protected readonly container: any) { }
 
-  get isClosed() {
-    return this.#isClosed;
-  }
-
-  constructor(protected readonly container: object, checkClose: boolean = true) {
-    if (checkClose) {
-      spaRegisterCheckTask(this);
-    }
-  }
-
-  registerProperty<V extends object>(value: V, callback?: AssemblablePropertyCallback): V {
-    this.ensureNotClosed();
-
+  registerStaticProperty<V>(value: V): V {
     this.wire();
 
+    const placeholder = createPlaceholder();
     this.pendingProperty = {
-      value, callback
+      placeholder, type: 'static', value
     };
 
-    return value;
+    return placeholder as any;
   }
 
-  close(): void {
-    this.ensureNotClosed();
-
-    this.#isClosed = true;
+  registerDynamicProperty(factory: AssemblablePropertyFactory): any {
     this.wire();
+
+    const placeholder = createPlaceholder();
+    this.pendingProperty = {
+      placeholder, type: 'dynamic', factory
+    };
+
+    return placeholder as any;
   }
 
-  protected ensureNotClosed() {
-    if (this.isClosed) {
-      throw Error('Property assembler already closed.');
-    }
-  }
-
-  protected wire() {
+  wire() {
     if (this.pendingProperty === undefined) {
       return;
     }
@@ -97,22 +74,26 @@ export class StandardPropertyAssembler implements PropertyAssembler {
     this.pendingProperty = undefined;
 
     const keys = Object.keys(this.container);
-    const propertyKeys = keys.filter(key => (this.container as any)[key] === property.value);
+    const propertyKeys = keys.filter(key => (this.container as any)[key] === property.placeholder);
     const totPropertyKeys = propertyKeys.length;
 
     if (totPropertyKeys === 1) {
       const key = propertyKeys[0];
-      if (property.callback) {
+      let newValue: any;
+      if (property.type === 'static') {
+        newValue = property.value;
+      } else {
         const parentValue = this.valueCache.get(key);
-        property.callback(key, parentValue);
+        newValue = property.factory(key, parentValue, this.container);
       }
-      this.valueCache.set(key, property.value);
+      this.container[key] = newValue;
+      this.valueCache.set(key, newValue);
     } else if (totPropertyKeys === 0) {
       // eslint-disable-next-line max-len
-      throw Error(`Unable to wire assemblable property: value not found in the container: ${JSON.stringify(property.value)}.`);
+      throw Error(`Unable to wire assemblable property: value not found in the container - placeholder: "${property.placeholder.toString()}".`);
     } else {
       // eslint-disable-next-line max-len
-      throw Error(`Unable to wire assemblable property: The same value has been used multiple times (${totPropertyKeys}) in the container: [${propertyKeys.join(', ')}].`);
+      throw Error(`Unable to wire assemblable property: The same value has been used multiple times (${totPropertyKeys}) in the container: [${propertyKeys.join(', ')}] - placeholder: "${property.placeholder.toString()}".`);
     }
   }
 }

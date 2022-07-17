@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -6,7 +7,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DefComposer } from '../definition/composer';
+import { CreateDefForOverrideArgs, DefComposer } from '../definition/composer';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import { Juncture, JunctureType } from '../juncture';
 import { ValueOf } from '../schema-host';
@@ -18,10 +19,8 @@ export class BitSchema<V = any> extends Schema<V> { }
 
 // #region Composer
 export class BitDefComposer<J extends Bit> extends DefComposer<J> {
-  protected createOverrideMannequin() {
-    return {
-      ...super.createOverrideMannequin()
-    };
+  protected createDefForOverride(args: CreateDefForOverrideArgs) {
+    return super.createDefForOverride(args);
   }
 
   readonly override!: DefComposer<J>['override'] & {

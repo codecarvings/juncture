@@ -37,8 +37,9 @@ function isSelectorDef(obj: any, subKind?: SelectorDefSubKind): obj is SelectorD
 export type SelectorDefsOf<O> = {
   readonly [K in keyof O as O[K] extends SelectorDef<any, any> ? K : never]: O[K];
 };
-export type SelectorOfSelectorDef<S extends SelectorDef<any, any>>
-  = S extends SelectorDef<any, infer B> ? B : never;
+
+export type SelectorOfSelectorDef<D extends SelectorDef<any, any>>
+  = D extends SelectorDef<any, infer B> ? B : never;
 
 // --- Direct
 export interface DirectSelectorDef<B>

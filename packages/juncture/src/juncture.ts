@@ -41,7 +41,7 @@ export abstract class Juncture implements SchemaHost {
     return new Frame(this, config);
   }
 
-  protected readonly [jSymbols.propertyAssembler] = new StandardPropertyAssembler(this, false);
+  protected readonly [jSymbols.propertyAssembler] = new StandardPropertyAssembler(this);
 
   protected readonly DEF: DefComposer<this> = this[jSymbols.createDefComposer]();
 
@@ -64,7 +64,7 @@ export abstract class Juncture implements SchemaHost {
       }
     }
     const instance: InstanceType<JT> = new Type() as InstanceType<JT>;
-    instance[jSymbols.propertyAssembler].close();
+    instance[jSymbols.propertyAssembler].wire();
 
     // eslint-disable-next-line no-param-reassign
     (Type as any)[junctureSymbols.instance] = { Type, instance };

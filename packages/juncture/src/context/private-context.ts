@@ -54,8 +54,16 @@ export interface ReducerContext<J extends Juncture> extends PrivateContext<J> {
   reduce<C extends Cursor>(_: C): ReduceBin<JunctureOfCursor<C>, ValueOfCursor<C>>;
 }
 
+export interface OverrideReducerContext<J extends Juncture, P> extends ReducerContext<J> {
+  readonly parent: P;
+}
+
 export interface MixReducerContext<J extends Juncture> extends ReducerContext<J> {
   prepare(): PrivatePrepareBin<J>;
   prepare(_: this['_']): PrivatePrepareBin<J>;
   prepare<C extends Cursor>(_: C): PrepareBin<JunctureOfCursor<C>>;
+}
+
+export interface OverrideMixReducerContext<J extends Juncture, P> extends MixReducerContext<J> {
+  readonly parent: P;
 }

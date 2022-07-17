@@ -43,6 +43,9 @@ export type ReducerDefsOf<O> = {
   readonly [K in keyof O as O[K] extends ReducerDef<any, any> ? K : never]: O[K];
 };
 
+export type ReducerOfReducerDef<D extends ReducerDef<any, any>>
+  = D extends ReducerDef<any, infer B> ? B : never;
+
 // --- PlainReducer
 export interface PlainReducerDef<P extends (...args: any) => any>
   extends ReducerDef<ReducerDefSubKind.plain, P> { }
