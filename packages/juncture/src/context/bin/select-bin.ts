@@ -9,7 +9,7 @@
 import { PrivateSuffix } from '../../definition/private';
 import { notASelectorDef, SelectorDef } from '../../definition/selector';
 
-type SelectBinItem<S> = S extends SelectorDef<any, infer B> ? B : typeof notASelectorDef;
+type SelectBinItem<D> = D extends SelectorDef<any, infer B> ? B : typeof notASelectorDef;
 
 export type SelectBin<J> = {
   readonly [K in keyof J as

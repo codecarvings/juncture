@@ -36,7 +36,7 @@ describe('createDef', () => {
     expect(def[jSymbols.defPayload]).toBe(payload);
   });
 
-  test('should create a def by passing kind and a value as payload', () => {
+  test('should create a def by passing kind, subkind and a value as payload', () => {
     const kind = DefKind.schema;
     const subKind = 'test';
     const payload = { val: 123 };

@@ -6,7 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchemaDef, Schema } from '../../definition/schema';
+/* eslint-disable no-multi-assign */
+/* eslint-disable max-len */
+
+import { asPrivate, isPrivate, Private } from '../../definition/private';
+import { PropertyAssembler } from '../../definition/property-assembler';
+import {
+  createSchemaDef, isSchemaDef, Schema, SchemaDef
+} from '../../definition/schema';
+import { createDirectSelectorDef } from '../../definition/selector';
 import { Juncture } from '../../juncture';
 import {
   Bit, BitDefComposer, BitSchema, jBit, SettableBit,
@@ -14,29 +22,153 @@ import {
 } from '../../lib/bit';
 import { jSymbols } from '../../symbols';
 
+// Exposes constructor as public
+export class TestBitSchema<V> extends BitSchema<V> {
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+  constructor(defaultValue: V) {
+    super(defaultValue);
+  }
+}
+
 describe('BitSchema', () => {
   test('should be a subclass of Schema', () => {
     expect(BitSchema.prototype).toBeInstanceOf(Schema);
   });
 
   test('should be a class instantiable by passing any type of defaultValue', () => {
-    expect(typeof new BitSchema('')).toBe('object');
-    expect(typeof new BitSchema(1)).toBe('object');
-    expect(typeof new BitSchema(true)).toBe('object');
-    expect(typeof new BitSchema({ myValue: 1 })).toBe('object');
-    expect(typeof new BitSchema(undefined)).toBe('object');
-    expect(typeof new BitSchema(null)).toBe('object');
+    expect(typeof new TestBitSchema('')).toBe('object');
+    expect(typeof new TestBitSchema(1)).toBe('object');
+    expect(typeof new TestBitSchema(true)).toBe('object');
+    expect(typeof new TestBitSchema({ myValue: 1 })).toBe('object');
+    expect(typeof new TestBitSchema(undefined)).toBe('object');
+    expect(typeof new TestBitSchema(null)).toBe('object');
   });
 
   test('should have a "defaultProperty" contianing the same value passed to the constructor', () => {
     const defaultValue = { myValue: 1 };
-    const schema = new BitSchema(defaultValue);
+    const schema = new TestBitSchema(defaultValue);
     expect(schema.defaultValue).toBe(defaultValue);
   });
 });
 
-xdescribe('BitDefComposer', () => {
-  // TODO: Implement this
+describe('BitDefComposer', () => {
+  class MyBit extends Bit {
+    schema = createSchemaDef(() => new Schema({
+      firstName: ''
+    }));
+  }
+
+  describe('instance', () => {
+    let juncture: MyBit;
+    let container: any;
+    let assembler: PropertyAssembler;
+    let composer: BitDefComposer<MyBit>;
+    beforeEach(() => {
+      juncture = new MyBit();
+      container = juncture;
+      assembler = Juncture.getPropertyAssembler(juncture);
+      composer = new BitDefComposer(juncture);
+    });
+
+    describe('override', () => {
+      describe('when passing a BitSchemaDef as type argument, proxy should provide access to', () => {
+        let myOriginalSchema: SchemaDef<BitSchema<{
+          firstName: string;
+        }>>;
+        beforeEach(() => {
+          myOriginalSchema = container.mySchema = assembler.registerStaticProperty(createSchemaDef(() => new TestBitSchema({
+            firstName: 'Sergio'
+          })));
+          assembler.wire();
+          myOriginalSchema = container.mySchema;
+        });
+
+        describe('a "setDefaultValue" property that', () => {
+          test('should be a function', () => {
+            const proxy = composer.override(myOriginalSchema);
+            expect(typeof proxy.setDefaultValue).toBe('function');
+          });
+
+          test('should create, after property wiring, a new SchemaDef of BitSchema assignable to the parent, by passing a schema factory', () => {
+            const proxy = composer.override(myOriginalSchema);
+            let myNewSchema: SchemaDef<BitSchema<{
+              firstName: string
+            }>> = container.mySchema = proxy.setDefaultValue(() => ({
+              firstName: 'Diego'
+            }));
+            assembler.wire();
+            myNewSchema = container.mySchema;
+            expect(isSchemaDef(myNewSchema)).toBe(true);
+            expect(myNewSchema).not.toBe(myOriginalSchema);
+          });
+
+          test('should not change the type of the schema value', () => {
+            const proxy = composer.override(myOriginalSchema);
+            let myNewSchema = proxy.setDefaultValue(() => ({
+              firstName: 'Fuffo',
+              lastName: 'Fufazzi'
+            }));
+
+            myOriginalSchema = myNewSchema;
+            myNewSchema = myOriginalSchema;
+          });
+
+          test('should provide access to the parent schema', () => {
+            const proxy = composer.override(myOriginalSchema);
+            container.mySchema = proxy.setDefaultValue(({ parent }) => ({
+              firstName: `${parent.defaultValue.firstName}2`
+            }));
+            assembler.wire();
+            const result: BitSchema<{ firstName: string }> = container.mySchema[jSymbols.defPayload]();
+            expect(result.defaultValue).toEqual({
+              firstName: 'Sergio2'
+            });
+          });
+
+          test('should return a non-private SchemaDef if the parent is not private', () => {
+            const proxy = composer.override(myOriginalSchema);
+            let myNewSchema = container.mySchema = proxy.setDefaultValue(() => ({ firstName: 'test' }));
+            assembler.wire();
+            myNewSchema = container.mySchema;
+            expect(isPrivate(myOriginalSchema)).toBe(false);
+            expect(isSchemaDef(myNewSchema)).toBe(true);
+            expect(isPrivate(myNewSchema)).toBe(false);
+          });
+
+          test('should return a private SchemaDef if the parent is private', () => {
+            let myOriginalPrivateSchema: Private<SchemaDef<BitSchema<{
+              firstName: string
+            }>>> = container.myPrivateSchema = assembler.registerStaticProperty(asPrivate(createSchemaDef(() => new TestBitSchema({
+              firstName: 'Sergio'
+            }))));
+            assembler.wire();
+            myOriginalPrivateSchema = container.myPrivateSchema;
+
+            const proxy = composer.override(myOriginalPrivateSchema);
+            let myNewPrivateSchema: Private<SchemaDef<BitSchema<{
+              firstName: string
+            }>>> = container.myPrivateSchema = proxy.setDefaultValue(() => ({ firstName: 'test' }));
+            assembler.wire();
+            myNewPrivateSchema = container.myPrivateSchema;
+            expect(isPrivate(myOriginalPrivateSchema)).toBe(true);
+            expect(isSchemaDef(myNewPrivateSchema)).toBe(true);
+            expect(isPrivate(myNewPrivateSchema)).toBe(true);
+          });
+
+          test('should throw error during wire if the parent is not a SchemaDef', () => {
+            container.mySchema = assembler.registerStaticProperty(createDirectSelectorDef(() => undefined));
+            const proxy = composer.override(myOriginalSchema);
+            container.mySchema = proxy.setDefaultValue(() => ({
+              firstName: 'test'
+            }));
+            expect(() => {
+              assembler.wire();
+            }).toThrow();
+          });
+        });
+      });
+    });
+  });
 });
 
 describe('Bit', () => {
@@ -44,33 +176,70 @@ describe('Bit', () => {
     expect(jBit.String.prototype).toBeInstanceOf(Juncture);
   });
 
-  test('should has BitDefComposer as composer', () => {
+  test('should have BitDefComposer as composer', () => {
     class MyBit extends Bit {
-      schema = createSchemaDef(() => new BitSchema(undefined));
+      schema = createSchemaDef(() => new TestBitSchema(undefined));
     }
     const myBit = Juncture.getInstance(MyBit);
     expect((myBit as any).DEF).toBeInstanceOf(BitDefComposer);
   });
 });
 
-xdescribe('SettableBit', () => {
-  // TODO: Implement this
+describe('SettableBit', () => {
+  test('should be a subclass of Bit', () => {
+    expect(SettableBit.prototype).toBeInstanceOf(Bit);
+  });
+
+  describe('reducers', () => {
+    describe('reset', () => {
+      // TODO: Implement this
+    });
+    describe('set', () => {
+      // TODO: Implement this
+    });
+  });
 });
 
-xdescribe('SettableStringBit', () => {
-  // TODO: Implement this
+describe('SettableStringBit', () => {
+  test('should be a subclass of SettableBit', () => {
+    expect(SettableStringBit.prototype).toBeInstanceOf(SettableBit);
+  });
 });
 
-xdescribe('SettableNumberBit', () => {
-  // TODO: Implement this
+describe('SettableNumberBit', () => {
+  test('should be a subclass of SettableBit', () => {
+    expect(SettableNumberBit.prototype).toBeInstanceOf(SettableBit);
+  });
+
+  describe('reducers', () => {
+    describe('add', () => {
+      // TODO: Implement this
+    });
+    describe('inc', () => {
+      // TODO: Implement this
+    });
+    describe('desc', () => {
+      // TODO: Implement this
+    });
+  });
 });
 
-xdescribe('SettableBooleanBit', () => {
-  // TODO: Implement this
+describe('SettableBooleanBit', () => {
+  test('should be a subclass of SettableBit', () => {
+    expect(SettableBooleanBit.prototype).toBeInstanceOf(SettableBit);
+  });
+
+  describe('reducers', () => {
+    describe('switch', () => {
+      // TODO: Implement this
+    });
+  });
 });
 
-xdescribe('SettableSymbolBit', () => {
-  // TODO: Implement this
+describe('SettableSymbolBit', () => {
+  test('should be a subclass of SettableBit', () => {
+    expect(SettableSymbolBit.prototype).toBeInstanceOf(SettableBit);
+  });
 });
 
 describe('jBit - Bit Builder', () => {

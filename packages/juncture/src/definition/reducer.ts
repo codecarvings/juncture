@@ -19,7 +19,7 @@ export interface Action {
 }
 
 // #region Def
-export const notAReducerDef = '!!NOT-A-REDUCER!!';
+export const notAReducerDef = '⚠ ERROR: NOT A REDUCER';
 
 export enum ReducerDefSubKind {
   plain = 'plain',
@@ -47,8 +47,8 @@ export type ReducerOfReducerDef<D extends ReducerDef<any, any>>
   = D extends ReducerDef<any, infer B> ? B : never;
 
 // --- PlainReducer
-export interface PlainReducerDef<P extends (...args: any) => any>
-  extends ReducerDef<ReducerDefSubKind.plain, P> { }
+export interface PlainReducerDef<B extends (...args: any) => any>
+  extends ReducerDef<ReducerDefSubKind.plain, B> { }
 
 export function createPlainReducerDef<B extends (...args: any) => any>(
   reducerFn: PrivateContextRoleConsumer<B>): PlainReducerDef<B> {

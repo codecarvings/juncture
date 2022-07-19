@@ -10,8 +10,8 @@ import { PrivateSuffix } from '../../definition/private';
 import { notAReducerDef, ReducerDef } from '../../definition/reducer';
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
-type ReduceBinItem<R, V> =
-  R extends ReducerDef<any, infer B> ? (...args : OverloadParameters<B>) => V : typeof notAReducerDef;
+type ReduceBinItem<D, V> =
+  D extends ReducerDef<any, infer B> ? (...args : OverloadParameters<B>) => V : typeof notAReducerDef;
 
 export type ReduceBin<J, V> = {
   readonly [K in keyof J as

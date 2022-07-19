@@ -14,14 +14,15 @@ export enum DefKind {
   reducer = 'reducer'
 }
 
-export interface Def<K extends DefKind, S extends string, P> {
+// Not a class because of Private implementation (and because so can be easily expanded...)
+export interface Def<K extends DefKind, Q extends string, P> {
   readonly defKind: K;
-  readonly defSubKind: S;
+  readonly defSubKind: Q;
   readonly [jSymbols.defPayload]: P;
 }
 
-export function createDef<K extends DefKind, S extends string, P>(kind: K, subKind: S, payload: P): Def<K, S, P> {
-  const result: Def<K, S, P> = {
+export function createDef<K extends DefKind, Q extends string, P>(kind: K, subKind: Q, payload: P): Def<K, Q, P> {
+  const result: Def<K, Q, P> = {
     defKind: kind,
     defSubKind: subKind,
     [jSymbols.defPayload]: payload

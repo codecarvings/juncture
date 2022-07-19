@@ -10,8 +10,8 @@ import { PrivateSuffix } from '../../definition/private';
 import { Action, notAReducerDef, ReducerDef } from '../../definition/reducer';
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
-type PrepareBinItem<S> =
-  S extends ReducerDef<any, infer B>
+type PrepareBinItem<D> =
+  D extends ReducerDef<any, infer B>
     ? (...args : OverloadParameters<B>) => Action : typeof notAReducerDef;
 
 export type PrepareBin<J> = {

@@ -19,19 +19,9 @@ import { jSymbols } from '../../symbols';
 describe('createDirectSelectorDef', () => {
   test('should create a DiretSelectorDef by passing a selector', () => {
     const mySelector = () => undefined;
-    const de = createDirectSelectorDef(mySelector);
-    expect(de.defKind).toBe(DefKind.selector);
-    expect(de.defSubKind).toBe(SelectorDefSubKind.direct);
-    expect(de[jSymbols.defPayload]).toBe(mySelector);
-  });
-});
-
-describe('createParamSelectorDef', () => {
-  test('should create a ParamSelectorDef by passing a selector', () => {
-    const mySelector = () => () => undefined;
-    const def = createParamSelectorDef(mySelector);
+    const def = createDirectSelectorDef(mySelector);
     expect(def.defKind).toBe(DefKind.selector);
-    expect(def.defSubKind).toBe(SelectorDefSubKind.param);
+    expect(def.defSubKind).toBe(SelectorDefSubKind.direct);
     expect(def[jSymbols.defPayload]).toBe(mySelector);
   });
 });
@@ -54,6 +44,16 @@ describe('isDirectSelectorDef', () => {
     expect(isDirectSelectorDef(null)).toBe(false);
     expect(isDirectSelectorDef(undefined)).toBe(false);
     expect(isDirectSelectorDef('dummy')).toBe(false);
+  });
+});
+
+describe('createParamSelectorDef', () => {
+  test('should create a ParamSelectorDef by passing a selector', () => {
+    const mySelector = () => () => undefined;
+    const def = createParamSelectorDef(mySelector);
+    expect(def.defKind).toBe(DefKind.selector);
+    expect(def.defSubKind).toBe(SelectorDefSubKind.param);
+    expect(def[jSymbols.defPayload]).toBe(mySelector);
   });
 });
 

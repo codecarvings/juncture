@@ -18,6 +18,9 @@ export class Schema<V extends HV = any, HV = V> {
 
   constructor(readonly defaultValue: V) { }
 }
+
+// ---  Derivations
+export type ValueOfSchema<X extends Schema> = X['defaultValue'];
 // #endregion
 
 // #region Def
@@ -27,10 +30,11 @@ export function createSchemaDef<B extends Schema>(schemaFactory: () => B): Schem
   return createDef(DefKind.schema, '', schemaFactory);
 }
 
-export function isSchemaDef(obj: any): obj is SchemaDef<any> {
+export function isSchemaDef(obj: any): obj is SchemaDef<Schema> {
   return isDef(obj, DefKind.schema, '');
 }
 
 // ---  Derivations
-export type SchemaOfSchemaDef<D extends SchemaDef<any>> = D extends SchemaDef<infer X> ? X : never;
+export type SchemaOfSchemaDef<D extends SchemaDef<Schema>> =
+  D extends SchemaDef<infer B> ? B : never;
 // #endregion

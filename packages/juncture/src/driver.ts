@@ -6,20 +6,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BareJuncture, SchemaOf } from './bare-juncture';
 import { DefKind, isDef } from './definition/def';
+import { isPrivate } from './definition/private';
 import { ReducerDefsOf } from './definition/reducer';
 import { SelectorDefsOf } from './definition/selector';
-import { Juncture } from './juncture';
-import { SchemaOf } from './schema-host';
 import { jSymbols } from './symbols';
 import { mappedAssign } from './util/object';
 
 interface DefBox<M> {
-  readonly defs: M;
   readonly keys: ReadonlyArray<string>;
+  readonly pubKeys: ReadonlyArray<string>;
+  readonly defs: M;
 }
 
-export class Driver<J extends Juncture> {
+export class Driver<J extends BareJuncture> {
   readonly schema: SchemaOf<J>;
 
   readonly selector: DefBox<SelectorDefsOf<J>>;
@@ -27,7 +28,7 @@ export class Driver<J extends Juncture> {
   readonly reducer: DefBox<ReducerDefsOf<J>>;
 
   constructor(readonly juncture: J) {
-    this.schema = this.juncture.schema[jSymbols.defPayload]();
+    this.schema = this.juncture.schema[jSymbols.defPayload]() as any;
 
     const junctureKeys = Object.keys(juncture);
 
@@ -39,7 +40,8 @@ export class Driver<J extends Juncture> {
   protected getDefs(junctureKeys: string[], kind: DefKind): DefBox<any> {
     const juncture = this.juncture as any;
     const keys = junctureKeys.filter(key => isDef(juncture[key], kind));
+    const pubKeys = keys.filter(key => !isPrivate(juncture[key]));
     const defs = mappedAssign({}, keys, key => juncture[key]);
-    return { defs, keys };
+    return { keys, pubKeys, defs };
   }
 }

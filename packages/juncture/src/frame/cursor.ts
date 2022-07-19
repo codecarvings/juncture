@@ -6,8 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { FrameOf, Juncture } from '../juncture';
-import { ValueOf } from '../schema-host';
+import { BareJuncture, FrameOf, ValueOf } from '../bare-juncture';
 import { Frame, JunctureOfFrame } from './frame';
 
 // --- Symbols
@@ -19,7 +18,7 @@ const cursorSymbols: CursorSymbols = {
   frame: cursorSymbol
 };
 
-export interface Cursor<J extends Juncture = Juncture> {
+export interface Cursor<J extends BareJuncture = BareJuncture> {
   readonly [cursorSymbols.frame]: FrameOf<J>;
 }
 

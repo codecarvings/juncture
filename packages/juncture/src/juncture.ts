@@ -6,29 +6,36 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BareJuncture, ValueOf } from './bare-juncture';
 import { DefComposer } from './definition/composer';
-import { StandardPropertyAssembler } from './definition/property-assembler';
-import { SchemaDef } from './definition/schema';
+import { PropertyAssembler, StandardPropertyAssembler } from './definition/property-assembler';
+import { Schema, SchemaDef } from './definition/schema';
 import { Driver } from './driver';
 import { getFrame } from './frame/cursor';
 import { Frame, FrameConfig } from './frame/frame';
-import { SchemaHost, ValueOf } from './schema-host';
 import { jSymbols } from './symbols';
 
 // --- Symbols
+const propertyAssemblerSymbol = Symbol('propertyAssembler');
 const instanceSymbol = Symbol('instance');
 const driverSymbol = Symbol('driver');
 interface JunctureSymbols {
+  readonly propertyAssembler: typeof propertyAssemblerSymbol;
   readonly instance: typeof instanceSymbol;
   readonly driver: typeof driverSymbol;
 }
 const junctureSymbols: JunctureSymbols = {
+  propertyAssembler: propertyAssemblerSymbol,
   instance: instanceSymbol,
   driver: driverSymbol
 };
 
 // #region Juncture
-export abstract class Juncture implements SchemaHost {
+export abstract class Juncture implements BareJuncture {
+  protected [jSymbols.createPropertyAssembler](): PropertyAssembler {
+    return new StandardPropertyAssembler(this);
+  }
+
   protected [jSymbols.createDefComposer]() {
     return new DefComposer(this);
   }
@@ -37,15 +44,13 @@ export abstract class Juncture implements SchemaHost {
     return new Driver<this>(this);
   }
 
-  [jSymbols.createFrame](config: FrameConfig) {
+  [jSymbols.createFrame](config: FrameConfig): Frame<this> {
     return new Frame(this, config);
   }
 
-  protected readonly [jSymbols.propertyAssembler] = new StandardPropertyAssembler(this);
-
   protected readonly DEF: DefComposer<this> = this[jSymbols.createDefComposer]();
 
-  readonly abstract schema: SchemaDef<any>;
+  readonly abstract schema: SchemaDef<Schema>;
 
   readonly defaultValue = this.DEF.selector(() => Juncture.getDriver(this).schema.defaultValue as ValueOf<this>);
 
@@ -64,18 +69,28 @@ export abstract class Juncture implements SchemaHost {
       }
     }
     const instance: InstanceType<JT> = new Type() as InstanceType<JT>;
-    instance[jSymbols.propertyAssembler].wire();
+    Juncture.getPropertyAssembler(instance).wire();
 
     // eslint-disable-next-line no-param-reassign
     (Type as any)[junctureSymbols.instance] = { Type, instance };
     return instance;
   }
 
+  static getPropertyAssembler<J extends Juncture>(juncture: J): PropertyAssembler {
+    if ((juncture as any)[junctureSymbols.propertyAssembler]) {
+      return (juncture as any)[junctureSymbols.propertyAssembler];
+    }
+    const result = juncture[jSymbols.createPropertyAssembler]();
+    // eslint-disable-next-line no-param-reassign
+    (juncture as any)[junctureSymbols.propertyAssembler] = result;
+    return result;
+  }
+
   static getDriver<J extends Juncture>(juncture: J): Driver<J> {
     if ((juncture as any)[junctureSymbols.driver]) {
       return (juncture as any)[junctureSymbols.driver];
     }
-    const result = (juncture as any)[jSymbols.createDriver]();
+    const result = juncture[jSymbols.createDriver]();
     // eslint-disable-next-line no-param-reassign
     (juncture as any)[junctureSymbols.driver] = result;
     return result;
@@ -85,15 +100,6 @@ export abstract class Juncture implements SchemaHost {
     return juncture[jSymbols.createFrame](config);
   }
 }
-
-// ---  Derivations
-export type FrameOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>;
-export type PrivateCursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['privateCursor'];
-export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createFrame]>['cursor'];
-
-export type FrameOfType<JT extends JunctureType> = FrameOf<InstanceType<JT>>;
-export type PrivateCursorOfType<JT extends JunctureType> = PrivateCursorOf<InstanceType<JT>>;
-export type CursorOfType<JT extends JunctureType> = CursorOf<InstanceType<JT>>;
 // #endregion
 
 // #region JunctureType

@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-/* eslint-disable no-multi-assign */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -8,42 +6,45 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DefComposer, PrivateDefComposer } from '../../definition/composer';
+/* eslint-disable max-len */
+/* eslint-disable no-multi-assign */
+
+import { BareJuncture } from '../../bare-juncture';
+import { BareDefComposer, DefComposer, PrivateDefComposer } from '../../definition/composer';
 import { isPrivate, Private } from '../../definition/private';
 import { PropertyAssembler, StandardPropertyAssembler } from '../../definition/property-assembler';
 import {
   Action, isMixReducerDef, isPlainReducerDef, MixReducerDef, PlainReducerDef
 } from '../../definition/reducer';
-import { createSchemaDef, Schema } from '../../definition/schema';
+import { createSchemaDef, Schema, SchemaDef } from '../../definition/schema';
 import {
   DirectSelectorDef, isDirectSelectorDef, isParamSelectorDef, ParamSelectorDef
 } from '../../definition/selector';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
 
-class MyJuncture extends Juncture {
-  schema = createSchemaDef(() => new Schema(''));
+interface MyBareJuncture extends BareJuncture {
+  schema: SchemaDef<Schema<string>>;
 }
 
-let juncture: MyJuncture;
+const bareJuncture: MyBareJuncture = undefined!;
 let container: any;
 let assembler: PropertyAssembler;
 beforeEach(() => {
-  juncture = Juncture.getInstance(MyJuncture);
   container = { };
   assembler = new StandardPropertyAssembler(container);
 });
 
 describe('PrivateDefComposer', () => {
   test('should be a class instantiable by passing a Juncture instance and a property assembler', () => {
-    const composer = new PrivateDefComposer(juncture, assembler);
+    const composer = new PrivateDefComposer(bareJuncture, assembler);
     expect(composer).toBeInstanceOf(PrivateDefComposer);
   });
 
   describe('instance', () => {
-    let composer: PrivateDefComposer<MyJuncture>;
+    let composer: PrivateDefComposer<MyBareJuncture>;
     beforeEach(() => {
-      composer = new PrivateDefComposer(juncture, assembler);
+      composer = new PrivateDefComposer(bareJuncture, assembler);
     });
 
     describe('"selector" property', () => {
@@ -51,7 +52,7 @@ describe('PrivateDefComposer', () => {
         expect(typeof composer.selector).toBe('function');
       });
 
-      test('should create, after property wiring, a Private DirectSelectorDef by passing a selector function', () => {
+      test('should create, after property wiring, a Private DirectSelectorDef, by passing a selector function', () => {
         container.mySelector = composer.selector(({ value }) => value());
         assembler.wire();
         expect(isDirectSelectorDef(container.mySelector)).toBe(true);
@@ -64,7 +65,7 @@ describe('PrivateDefComposer', () => {
         expect(typeof composer.paramSelector).toBe('function');
       });
 
-      test('should create, after property wiring, a Private ParamSelectorDef by passing a selector function', () => {
+      test('should create, after property wiring, a Private ParamSelectorDef, by passing a selector function', () => {
         container.mySelector = composer.paramSelector(() => (val: string) => val.length);
         assembler.wire();
         expect(isParamSelectorDef(container.mySelector)).toBe(true);
@@ -77,7 +78,7 @@ describe('PrivateDefComposer', () => {
         expect(typeof composer.reducer).toBe('function');
       });
 
-      test('should create, after property wiring, a Private PlainReducerDef by passing a reducer function', () => {
+      test('should create, after property wiring, a Private PlainReducerDef, by passing a reducer function', () => {
         container.myReducer = composer.reducer(({ value }) => () => value());
         assembler.wire();
         expect(isPlainReducerDef(container.myReducer)).toBe(true);
@@ -90,7 +91,7 @@ describe('PrivateDefComposer', () => {
         expect(typeof composer.mixReducer).toBe('function');
       });
 
-      test('should create, after property wiring, a Private MixReducerDef by passing a reducer function', () => {
+      test('should create, after property wiring, a Private MixReducerDef, by passing a reducer function', () => {
         container.myReducer = composer.mixReducer(() => () => []);
         assembler.wire();
         expect(isMixReducerDef(container.myReducer)).toBe(true);
@@ -100,21 +101,18 @@ describe('PrivateDefComposer', () => {
   });
 });
 
-describe('DefComposer', () => {
-  test('should accept a Juncture instance and a property assembler', () => {
-    const composer = new DefComposer(juncture, assembler);
-    expect(composer).toBeInstanceOf(DefComposer);
-  });
-
-  test('should accept a Juncture instance only without the need to provided an additional property assembler', () => {
-    const composer = new DefComposer(juncture);
-    expect(composer).toBeInstanceOf(DefComposer);
+describe('BareDefComposer', () => {
+  describe('constructor', () => {
+    test('should accept a Juncture instance and a property assembler', () => {
+      const composer = new BareDefComposer(bareJuncture, assembler);
+      expect(composer).toBeInstanceOf(BareDefComposer);
+    });
   });
 
   describe('instance', () => {
-    let composer: DefComposer<MyJuncture>;
+    let composer: BareDefComposer<MyBareJuncture>;
     beforeEach(() => {
-      composer = new DefComposer(juncture, assembler);
+      composer = new BareDefComposer(bareJuncture, assembler);
     });
 
     test('"private" property should return a PrivateDefComposer instance', () => {
@@ -126,7 +124,7 @@ describe('DefComposer', () => {
         expect(typeof composer.selector).toBe('function');
       });
 
-      test('should create, after property wiring, a DirectSelectorDef by passing a selector function', () => {
+      test('should create, after property wiring, a DirectSelectorDef, by passing a selector function', () => {
         container.mySelector = composer.selector(({ value }) => value());
         assembler.wire();
         expect(isDirectSelectorDef(container.mySelector)).toBe(true);
@@ -138,7 +136,7 @@ describe('DefComposer', () => {
         expect(typeof composer.paramSelector).toBe('function');
       });
 
-      test('should create, after property wiring, a ParamSelectorDef by passing a selector function', () => {
+      test('should create, after property wiring, a ParamSelectorDef, by passing a selector function', () => {
         container.mySelector = composer.paramSelector(() => (val: string) => val.length);
         assembler.wire();
         expect(isParamSelectorDef(container.mySelector)).toBe(true);
@@ -150,7 +148,7 @@ describe('DefComposer', () => {
         expect(typeof composer.reducer).toBe('function');
       });
 
-      test('should create, after property wiring, a PlainReducerDef by passing a reducer function', () => {
+      test('should create, after property wiring, a PlainReducerDef, by passing a reducer function', () => {
         container.myReducer = composer.reducer(({ value }) => () => value());
         assembler.wire();
         expect(isPlainReducerDef(container.myReducer)).toBe(true);
@@ -162,7 +160,7 @@ describe('DefComposer', () => {
         expect(typeof composer.mixReducer).toBe('function');
       });
 
-      test('should create, after property wiring, a MixReducerDef by passing a reducer function', () => {
+      test('should create, after property wiring, a MixReducerDef, by passing a reducer function', () => {
         container.myReducer = composer.mixReducer(() => () => []);
         assembler.wire();
         expect(isMixReducerDef(container.myReducer)).toBe(true);
@@ -197,7 +195,7 @@ describe('DefComposer', () => {
         });
       });
 
-      describe('when passing a DirectSelectorDef as type argument proxy should proviced access to', () => {
+      describe('when passing a DirectSelectorDef as type argument, proxy should provide access to', () => {
         let myOriginalSelector: DirectSelectorDef<string>;
         beforeEach(() => {
           myOriginalSelector = container.mySelector = composer.selector(() => 'original');
@@ -211,7 +209,7 @@ describe('DefComposer', () => {
             expect(typeof proxy.selector).toBe('function');
           });
 
-          test('should create, after property wiring, a new DirectSelectorDef assignable to the parent by passing a selector function', () => {
+          test('should create, after property wiring, a new DirectSelectorDef assignable to the parent, by passing a selector function', () => {
             const proxy = composer.override(myOriginalSelector);
             let myNewSelector: DirectSelectorDef<string> = container.mySelector = proxy.selector(({ value }) => value());
             assembler.wire();
@@ -228,7 +226,7 @@ describe('DefComposer', () => {
             expect(result).toBe('original2');
           });
 
-          test('should return a non-private selector if the parent is not private', () => {
+          test('should return a non-private DirectSelectorDef if the parent is not private', () => {
             const proxy = composer.override(myOriginalSelector);
             let myNewSelector = container.mySelector = proxy.selector(({ value }) => value());
             assembler.wire();
@@ -238,7 +236,7 @@ describe('DefComposer', () => {
             expect(isPrivate(myNewSelector)).toBe(false);
           });
 
-          test('should return a private selector if the parent is private', () => {
+          test('should return a private DirectSelectorDef if the parent is private', () => {
             let myOriginalPrivateSelector: Private<DirectSelectorDef<string>> = container.myPrivateSelector = composer.private.selector(() => 'original');
             assembler.wire();
             myOriginalPrivateSelector = container.myPrivateSelector;
@@ -263,7 +261,7 @@ describe('DefComposer', () => {
         });
       });
 
-      describe('when passing a ParamSelectorDef as type argument proxy should proviced access to', () => {
+      describe('when passing a ParamSelectorDef as type argument, proxy should provide access to', () => {
         let myOriginalSelector: ParamSelectorDef<(value: string) => number>;
         beforeEach(() => {
           myOriginalSelector = container.mySelector = composer.paramSelector(() => (value: string) => value.length);
@@ -277,7 +275,7 @@ describe('DefComposer', () => {
             expect(typeof proxy.paramSelector).toBe('function');
           });
 
-          test('should create, after property wiring, a new ParamSelectorDef assignable to the parent by passing a selector function', () => {
+          test('should create, after property wiring, a new ParamSelectorDef assignable to the parent, by passing a selector function', () => {
             const proxy = composer.override(myOriginalSelector);
             let myNewSelector: ParamSelectorDef<(value: string) => number> = container.mySelector = proxy.paramSelector(() => () => 0);
             assembler.wire();
@@ -294,7 +292,7 @@ describe('DefComposer', () => {
             expect(result).toBe(3);
           });
 
-          test('should return a non-private selector if the parent is not private', () => {
+          test('should return a non-private ParamSelectorDef if the parent is not private', () => {
             const proxy = composer.override(myOriginalSelector);
             let myNewSelector: ParamSelectorDef<(value: string) => number> = container.mySelector = proxy.paramSelector(() => () => 0);
             assembler.wire();
@@ -304,7 +302,7 @@ describe('DefComposer', () => {
             expect(isPrivate(myNewSelector)).toBe(false);
           });
 
-          test('should return a private selector if the parent is private', () => {
+          test('should return a private ParamSelectorDef if the parent is private', () => {
             let myOriginalPrivateSelector: Private<ParamSelectorDef<(value: string) => number>> = container
               .myPrivateSelector = composer.private.paramSelector(() => (value: string) => value.length);
             assembler.wire();
@@ -330,7 +328,7 @@ describe('DefComposer', () => {
         });
       });
 
-      describe('when passing a PlainReducerDef as type argument proxy should proviced access to', () => {
+      describe('when passing a PlainReducerDef as type argument, proxy should provide access to', () => {
         let myOriginalReducer: PlainReducerDef<(value: string) => string>;
         beforeEach(() => {
           myOriginalReducer = container.myReducer = composer.reducer(() => (value: string) => value.toUpperCase());
@@ -344,7 +342,7 @@ describe('DefComposer', () => {
             expect(typeof proxy.reducer).toBe('function');
           });
 
-          test('should create, after property wiring, a new PlainReducerDef assignable to the parent by passing a reducer function', () => {
+          test('should create, after property wiring, a new PlainReducerDef assignable to the parent, by passing a reducer function', () => {
             const proxy = composer.override(myOriginalReducer);
             let myNewReducer: PlainReducerDef<(value: string) => string> = container.myReducer = proxy
               .reducer(() => (value: string) => value);
@@ -362,7 +360,7 @@ describe('DefComposer', () => {
             expect(result).toBe('ABC2');
           });
 
-          test('should return a non-private reducer if the parent is not private', () => {
+          test('should return a non-private PlainReducerDef if the parent is not private', () => {
             const proxy = composer.override(myOriginalReducer);
             let myNewReducer = container.myReducer = proxy.reducer(() => (value: string) => value);
             assembler.wire();
@@ -372,7 +370,7 @@ describe('DefComposer', () => {
             expect(isPrivate(myNewReducer)).toBe(false);
           });
 
-          test('should return a private reducer if the parent is private', () => {
+          test('should return a private PlainReducerDef if the parent is private', () => {
             let myOriginalPrivateReducer: Private<PlainReducerDef<(value: string) => string>> = container.myPrivateReducer = composer
               .private.reducer(() => (value: string) => value.toUpperCase());
             assembler.wire();
@@ -399,7 +397,7 @@ describe('DefComposer', () => {
         });
       });
 
-      describe('when passing a MixReducerDef as type argument proxy should proviced access to', () => {
+      describe('when passing a MixReducerDef as type argument, proxy should provide access to', () => {
         let myOriginalReducer: MixReducerDef<(value: string) => Action[]>;
         beforeEach(() => {
           myOriginalReducer = container.myReducer = composer.mixReducer(() => (value: string) => [{
@@ -417,7 +415,7 @@ describe('DefComposer', () => {
             expect(typeof proxy.mixReducer).toBe('function');
           });
 
-          test('should create, after property wiring, a new MixReducerDef assignable to the parent by passing a reducer function', () => {
+          test('should create, after property wiring, a new MixReducerDef assignable to the parent, by passing a reducer function', () => {
             const proxy = composer.override(myOriginalReducer);
             let myNewReducer: MixReducerDef<(value: string) => Action[]> = container.myReducer = proxy
               .mixReducer(() => () => []);
@@ -439,7 +437,7 @@ describe('DefComposer', () => {
             }]);
           });
 
-          test('should return a non-private reducer if the parent is not private', () => {
+          test('should return a non-private MixReducerDef if the parent is not private', () => {
             const proxy = composer.override(myOriginalReducer);
             let myNewReducer = container.myReducer = proxy.mixReducer(() => () => []);
             assembler.wire();
@@ -449,7 +447,7 @@ describe('DefComposer', () => {
             expect(isPrivate(myNewReducer)).toBe(false);
           });
 
-          test('should return a private reducer if the parent is private', () => {
+          test('should return a private MixReducerDef if the parent is private', () => {
             let myOriginalPrivateReducer: Private<MixReducerDef<(value: string) => Action[]>> = container.myPrivateReducer = composer
               .private.mixReducer(() => (value: string) => [{
                 target: [],
@@ -479,6 +477,23 @@ describe('DefComposer', () => {
           });
         });
       });
+    });
+  });
+});
+
+describe('DefComposer', () => {
+  test('should be a subclass of BareDefComposer', () => {
+    expect(DefComposer.prototype).toBeInstanceOf(BareDefComposer);
+  });
+
+  describe('constructor', () => {
+    test('should accept a Juncture instance only without the need to provided an additional property assembler', () => {
+      class MyJuncture extends Juncture {
+        schema = createSchemaDef(() => new Schema(''));
+      }
+      const juncture = new MyJuncture();
+      const composer = new DefComposer(juncture);
+      expect(composer).toBeInstanceOf(DefComposer);
     });
   });
 });

@@ -23,16 +23,6 @@ describe('createPlainReducerDef', () => {
   });
 });
 
-describe('createMixRedicerDef', () => {
-  test('should create a MixReducerDefby passing a selector', () => {
-    const myReducer = () => () => [];
-    const def = createMixReducerDef(myReducer);
-    expect(def.defKind).toBe(DefKind.reducer);
-    expect(def.defSubKind).toBe(ReducerDefSubKind.mix);
-    expect(def[jSymbols.defPayload]).toBe(myReducer);
-  });
-});
-
 describe('isPlainReducerDef', () => {
   test('should return true if an object is a PlainReducerDef', () => {
     const myReducer = () => () => undefined;
@@ -51,6 +41,16 @@ describe('isPlainReducerDef', () => {
     expect(isPlainReducerDef(null)).toBe(false);
     expect(isPlainReducerDef(undefined)).toBe(false);
     expect(isPlainReducerDef('dummy')).toBe(false);
+  });
+});
+
+describe('createMixRedicerDef', () => {
+  test('should create a MixReducerDefby passing a reducer', () => {
+    const myReducer = () => () => [];
+    const def = createMixReducerDef(myReducer);
+    expect(def.defKind).toBe(DefKind.reducer);
+    expect(def.defSubKind).toBe(ReducerDefSubKind.mix);
+    expect(def[jSymbols.defPayload]).toBe(myReducer);
   });
 });
 

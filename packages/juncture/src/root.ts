@@ -6,9 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { ValueOfType } from './bare-juncture';
 import { BindedContext } from './context/context';
 import { Juncture, JunctureType } from './juncture';
-import { ValueOfType } from './schema-host';
 
 export class Root<JT extends JunctureType> {
   protected readonly juncture: InstanceType<JT>;

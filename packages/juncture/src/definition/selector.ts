@@ -12,7 +12,7 @@ import {
 } from './def';
 
 // #region Def
-export const notASelectorDef = '!!NOT-A-SELECTOR!!';
+export const notASelectorDef = '⚠ ERROR: NOT A SELECTOR';
 
 export enum SelectorDefSubKind {
   direct = 'direct',

@@ -6,9 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BareJuncture, PrivateCursorOf, ValueOf } from '../bare-juncture';
 import { Cursor, JunctureOfCursor, ValueOfCursor } from '../frame/cursor';
-import { Juncture, PrivateCursorOf } from '../juncture';
-import { ValueOf } from '../schema-host';
 import { PrepareBin, PrivatePrepareBin } from './bin/prepare-bin';
 import { PrivateReduceBin, ReduceBin } from './bin/reduce-bin';
 import { PrivateSelectBin, SelectBin } from './bin/select-bin';
@@ -31,7 +30,7 @@ export interface PrivateContextRoleConsumer<B> {
   (ctx: PrivateContextRole): B;
 }
 
-export interface PrivateContext<J extends Juncture> extends PrivateContextRole {
+export interface PrivateContext<J extends BareJuncture> extends PrivateContextRole {
   readonly _ : PrivateCursorOf<J>;
 
   value(): ValueOf<J>;
@@ -42,28 +41,32 @@ export interface PrivateContext<J extends Juncture> extends PrivateContextRole {
   select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
 }
 
-export interface SelectorContext<J extends Juncture> extends PrivateContext<J> { }
+export interface SelectorContext<J extends BareJuncture> extends PrivateContext<J> { }
 
-export interface OverrideSelectorContext<J extends Juncture, P> extends SelectorContext<J> {
-  readonly parent: P;
+export interface OverrideSelectorContext<J extends BareJuncture, S> extends SelectorContext<J> {
+  readonly parent: S;
 }
 
-export interface ReducerContext<J extends Juncture> extends PrivateContext<J> {
+export interface ReducerContext<J extends BareJuncture> extends PrivateContext<J> {
   reduce(): PrivateReduceBin<J, ValueOf<J>>;
   reduce(_: this['_']): PrivateReduceBin<J, ValueOf<J>>;
   reduce<C extends Cursor>(_: C): ReduceBin<JunctureOfCursor<C>, ValueOfCursor<C>>;
 }
 
-export interface OverrideReducerContext<J extends Juncture, P> extends ReducerContext<J> {
-  readonly parent: P;
+export interface OverrideReducerContext<J extends BareJuncture, S> extends ReducerContext<J> {
+  readonly parent: S;
 }
 
-export interface MixReducerContext<J extends Juncture> extends ReducerContext<J> {
+export interface MixReducerContext<J extends BareJuncture> extends ReducerContext<J> {
   prepare(): PrivatePrepareBin<J>;
   prepare(_: this['_']): PrivatePrepareBin<J>;
   prepare<C extends Cursor>(_: C): PrepareBin<JunctureOfCursor<C>>;
 }
 
-export interface OverrideMixReducerContext<J extends Juncture, P> extends MixReducerContext<J> {
-  readonly parent: P;
+export interface OverrideMixReducerContext<J extends BareJuncture, S> extends MixReducerContext<J> {
+  readonly parent: S;
+}
+
+export interface OverrideSchemaContext<S> {
+  readonly parent: S;
 }

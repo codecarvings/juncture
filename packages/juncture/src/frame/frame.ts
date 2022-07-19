@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../juncture';
+import { BareJuncture } from '../bare-juncture';
 import { defineLazyProperty } from '../util/object';
 import { createCursor, Cursor } from './cursor';
 import { Path } from './path';
@@ -22,7 +22,7 @@ export interface FrameConfig {
   readonly layout: FrameLayout;
 }
 
-export class Frame<J extends Juncture = Juncture> {
+export class Frame<J extends BareJuncture = BareJuncture> {
   readonly layout: FrameLayout;
 
   constructor(readonly juncture: J, config: FrameConfig) {

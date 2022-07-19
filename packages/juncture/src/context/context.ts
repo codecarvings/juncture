@@ -6,9 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BareJuncture, CursorOf, ValueOf } from '../bare-juncture';
 import { Cursor, JunctureOfCursor } from '../frame/cursor';
-import { CursorOf, Juncture } from '../juncture';
-import { ValueOf } from '../schema-host';
 import { DispatchBin } from './bin/dispatch-bin';
 import { SelectBin } from './bin/select-bin';
 
@@ -21,7 +20,7 @@ export interface Context<Z> {
 }
 
 // Cannot use interface extends... because methods are overriden (not overloaded)
-export type BindedContext<J extends Juncture> = Context<CursorOf<J>> & {
+export type BindedContext<J extends BareJuncture> = Context<CursorOf<J>> & {
   value(): ValueOf<J>;
   select(): SelectBin<J>;
   dispach(): DispatchBin<J>;

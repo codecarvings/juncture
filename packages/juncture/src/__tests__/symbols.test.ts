@@ -18,7 +18,7 @@ describe('jSymbols', () => {
   });
 
   test('should contain the propertyAssembler symbol', () => {
-    expect(typeof jSymbols.propertyAssembler).toBe('symbol');
+    expect(typeof jSymbols.createPropertyAssembler).toBe('symbol');
   });
 
   test('should contain the createDefComposer symbol', () => {

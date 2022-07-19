@@ -16,7 +16,11 @@ describe('Driver', () => {
 
     mySelector = this.DEF.selector(() => 0);
 
+    myPrivateSelector = this.DEF.private.selector(() => 0);
+
     myReducer = this.DEF.reducer(() => (value: string) => value);
+
+    myPrivateReducer = this.DEF.private.reducer(() => (value: string) => value);
   }
 
   class MyJuncture2 extends MyJuncture {
@@ -41,38 +45,55 @@ describe('Driver', () => {
       driver = new Driver(juncture);
     });
 
-    test('should have a property "juncture" that refers to the original juncture instance', () => {
+    test('should have a "juncture" property that refers to the original juncture instance', () => {
       expect(driver.juncture).toBe(juncture);
     });
 
-    test('should have a property "schema" with the schema object', () => {
+    test('should have a "schema" property with the schema object', () => {
       expect(driver.schema).toBeInstanceOf(Schema);
     });
 
-    test('should have a property selector.defs containing the map of each declared selector', () => {
-      expect(driver.selector.defs.defaultValue).toBe(juncture.defaultValue);
-      expect(driver.selector.defs.path).toBe(juncture.path);
-      expect(driver.selector.defs.isMounted).toBe(juncture.isMounted);
-      expect(driver.selector.defs.value).toBe(juncture.value);
-      expect(driver.selector.defs.mySelector).toBe(juncture.mySelector);
-      expect(driver.selector.defs.myParamSelector).toBe(juncture.myParamSelector);
-      expect(Object.keys(driver.selector.defs)).toHaveLength(6);
+    describe('"selector" property', () => {
+      test('should have a "keys" property containing all the selector keys', () => {
+        expect((driver.selector.keys as string[]).sort())
+          .toEqual(['defaultValue', 'path', 'isMounted', 'value',
+            'myPrivateSelector', 'mySelector', 'myParamSelector'].sort());
+      });
+
+      test('should have a "pubKeys" property containing the key of every selector publicly available', () => {
+        expect((driver.selector.pubKeys as string[]).sort())
+          .toEqual(['defaultValue', 'path', 'isMounted', 'value', 'mySelector', 'myParamSelector'].sort());
+      });
+
+      test('should have a "defs" property containing the map of each declared selector', () => {
+        expect(driver.selector.defs.defaultValue).toBe(juncture.defaultValue);
+        expect(driver.selector.defs.path).toBe(juncture.path);
+        expect(driver.selector.defs.isMounted).toBe(juncture.isMounted);
+        expect(driver.selector.defs.value).toBe(juncture.value);
+        expect(driver.selector.defs.myPrivateSelector).toBe(juncture.myPrivateSelector);
+        expect(driver.selector.defs.mySelector).toBe(juncture.mySelector);
+        expect(driver.selector.defs.myParamSelector).toBe(juncture.myParamSelector);
+        expect(Object.keys(driver.selector.defs)).toHaveLength(7);
+      });
     });
 
-    test('should have a property selector.keys containing the selector keys', () => {
-      expect((driver.selector.keys as string[]).sort())
-        .toEqual(['defaultValue', 'path', 'isMounted', 'value', 'mySelector', 'myParamSelector'].sort());
-    });
+    describe('"reducer" property', () => {
+      test('should have a "keys" property containing all the reducer keys', () => {
+        expect((driver.reducer.keys as string[]).sort())
+          .toEqual(['myPrivateReducer', 'myReducer', 'myMixReducer'].sort());
+      });
 
-    test('should have a property reducer.defs containing the map of each declared reducer', () => {
-      expect(driver.reducer.defs.myReducer).toBe(juncture.myReducer);
-      expect(driver.reducer.defs.myMixReducer).toBe(juncture.myMixReducer);
-      expect(Object.keys(driver.reducer.defs)).toHaveLength(2);
-    });
+      test('should have a "pubKeys" property containing the keys of every reducer publicly available', () => {
+        expect((driver.reducer.pubKeys as string[]).sort())
+          .toEqual(['myReducer', 'myMixReducer'].sort());
+      });
 
-    test('should have a property reducer.keys containing the reducer keys', () => {
-      expect((driver.reducer.keys as string[]).sort())
-        .toEqual(['myReducer', 'myMixReducer'].sort());
+      test('should have a "defs" property containing the map of each declared reducer', () => {
+        expect(driver.reducer.defs.myReducer).toBe(juncture.myReducer);
+        expect(driver.reducer.defs.myPrivateReducer).toBe(juncture.myPrivateReducer);
+        expect(driver.reducer.defs.myMixReducer).toBe(juncture.myMixReducer);
+        expect(Object.keys(driver.reducer.defs)).toHaveLength(3);
+      });
     });
   });
 });

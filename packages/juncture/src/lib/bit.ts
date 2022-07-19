@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -7,24 +6,57 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { ValueOf } from '../bare-juncture';
+import { OverrideSchemaContext } from '../context/private-context';
 import { CreateDefForOverrideArgs, DefComposer } from '../definition/composer';
-import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
+import {
+  createSchemaDef, isSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
+} from '../definition/schema';
 import { Juncture, JunctureType } from '../juncture';
-import { ValueOf } from '../schema-host';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
-export class BitSchema<V = any> extends Schema<V> { }
+let createBitSchema: <V>(defaultValue: V) => BitSchema<V>;
+export class BitSchema<V = any> extends Schema<V> {
+  // Constructor is protected because type of the value cannot be changed in an inherited class
+  // to avoid problems with reducers in the super class
+  // Example:
+  // Super class type is { firstName: string }), if sub - class is chaged to { firstName: string, lastName: string }
+  // reducers in the super class will cause inexpected problems
+  protected constructor(defaultValue: V) {
+    super(defaultValue);
+  }
+
+  // Initialization without static block
+  static #staticInit = (() => {
+    createBitSchema = <V2>(defaultValue: V2) => new BitSchema<V2>(defaultValue);
+  })();
+}
 // #endregion
 
 // #region Composer
 export class BitDefComposer<J extends Bit> extends DefComposer<J> {
   protected createDefForOverride(args: CreateDefForOverrideArgs) {
+    if (isSchemaDef(args.parentDef)) {
+      if (args.fnName === 'setDefaultValue') {
+        return createSchemaDef(() => {
+          const parent = args.parentDef[jSymbols.defPayload]();
+          const ctx2 = { parent };
+          const defaultValue2 = args.fnArgs[0](ctx2);
+          return createBitSchema(defaultValue2);
+        });
+      }
+    }
+
     return super.createDefForOverride(args);
   }
 
   readonly override!: DefComposer<J>['override'] & {
-    <D extends SchemaDef<BitSchema<any>>>(parent: D): 'BIT SCHEMA';
+    <D extends SchemaDef<BitSchema<any>>>(parent: D): {
+      setDefaultValue<F extends (ctx: OverrideSchemaContext<SchemaOfSchemaDef<D>>)
+      => ValueOfSchema<SchemaOfSchemaDef<D>>>
+      (selectorFn: F): D;
+    };
   };
 }
 // #endregion
@@ -122,7 +154,7 @@ interface StatedSettableSymbolBitType extends JunctureType<StatedSettableSymbolB
 // #region Builder
 function createBitType<JT extends abstract new(...args: any) => Bit>(Type: JT, defaultValue: any) {
   abstract class BuiltBit extends Type {
-    schema = createSchemaDef(() => new BitSchema(defaultValue));
+    schema = createSchemaDef(() => createBitSchema(defaultValue));
   }
   return BuiltBit;
 }

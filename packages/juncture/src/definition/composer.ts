@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BareJuncture, HandledValueOf } from '../bare-juncture';
 import {
   MixReducerContext, OverrideMixReducerContext, OverrideReducerContext,
   OverrideSelectorContext, ReducerContext, SelectorContext
 } from '../context/private-context';
 import { Juncture } from '../juncture';
-import { HandledValueOf } from '../schema-host';
 import { jSymbols } from '../symbols';
 import { Def, isDef } from './def';
 import {
@@ -34,34 +34,31 @@ export interface CreateDefForOverrideArgs {
   readonly fnArgs: any[]
 }
 
-export class PrivateDefComposer<J extends Juncture> {
+export class PrivateDefComposer<J extends BareJuncture> {
   constructor(protected readonly juncture: J, protected readonly assembler: PropertyAssembler) { }
 
-  selector<P extends (ctx: SelectorContext<J>) => any>(selectorFn: P): Private<DirectSelectorDef<ReturnType<P>>> {
+  selector<F extends (ctx: SelectorContext<J>) => any>(selectorFn: F): Private<DirectSelectorDef<ReturnType<F>>> {
     return this.assembler.registerStaticProperty(asPrivate(createDirectSelectorDef(selectorFn as any)));
   }
 
-  paramSelector<P extends (ctx: SelectorContext<J>) => (...args: any) => any>(
-    selectorFn: P): Private<ParamSelectorDef<ReturnType<P>>> {
+  paramSelector<F extends (ctx: SelectorContext<J>) => (...args: any) => any>(
+    selectorFn: F): Private<ParamSelectorDef<ReturnType<F>>> {
     return this.assembler.registerStaticProperty(asPrivate(createParamSelectorDef(selectorFn as any)));
   }
 
-  reducer<P extends (ctx: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
-    reducerFn: P): Private<PlainReducerDef<ReturnType<P>>> {
+  reducer<F extends (ctx: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
+    reducerFn: F): Private<PlainReducerDef<ReturnType<F>>> {
     return this.assembler.registerStaticProperty(asPrivate(createPlainReducerDef(reducerFn as any)));
   }
 
-  mixReducer<P extends (ctx: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: P): Private<MixReducerDef<ReturnType<P>>> {
+  mixReducer<F extends (ctx: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn: F): Private<MixReducerDef<ReturnType<F>>> {
     return this.assembler.registerStaticProperty(asPrivate(createMixReducerDef(reducerFn as any)));
   }
 }
 
-export class DefComposer<J extends Juncture> {
-  constructor(
-    protected readonly juncture: J,
-    protected readonly assembler: PropertyAssembler = juncture[jSymbols.propertyAssembler]
-  ) { }
+export class BareDefComposer<J extends BareJuncture> {
+  constructor(protected readonly juncture: J, protected readonly assembler: PropertyAssembler) { }
 
   // eslint-disable-next-line class-methods-use-this
   protected createOverrideProxy(): any {
@@ -153,47 +150,53 @@ export class DefComposer<J extends Juncture> {
   // eslint-disable-next-line class-methods-use-this
   readonly override: {
     <D extends DirectSelectorDef<any>>(parent : D): {
-      selector<P extends (ctx: OverrideSelectorContext<J, SelectorOfSelectorDef<D>>) => any>
-      (selectorFn: P): SameAccess<D, DirectSelectorDef<ReturnType<P>>>;
+      selector<F extends (ctx: OverrideSelectorContext<J, SelectorOfSelectorDef<D>>) => any>
+      (selectorFn: F): SameAccess<D, DirectSelectorDef<ReturnType<F>>>;
     };
 
     <D extends ParamSelectorDef<any>>(parent: D): {
-      paramSelector<P extends (ctx: OverrideSelectorContext<J, SelectorOfSelectorDef<D>>)
+      paramSelector<F extends (ctx: OverrideSelectorContext<J, SelectorOfSelectorDef<D>>)
       => (...args: any) => any>(
-        selectorFn: P): SameAccess<D, ParamSelectorDef<ReturnType<P>>>;
+        selectorFn: F): SameAccess<D, ParamSelectorDef<ReturnType<F>>>;
     };
 
     <D extends PlainReducerDef<any>>(parent: D): {
-      reducer<P extends (ctx: OverrideReducerContext<J, ReducerOfReducerDef<D>>)
+      reducer<F extends (ctx: OverrideReducerContext<J, ReducerOfReducerDef<D>>)
       => (...args: any) => HandledValueOf<J>>(
-        reducerFn: P): SameAccess<D, PlainReducerDef<ReturnType<P>>>
+        reducerFn: F): SameAccess<D, PlainReducerDef<ReturnType<F>>>
     };
 
     <D extends MixReducerDef<any>>(parent: D): {
-      mixReducer<P extends (ctx: OverrideMixReducerContext<J, ReducerOfReducerDef<D>>)
+      mixReducer<F extends (ctx: OverrideMixReducerContext<J, ReducerOfReducerDef<D>>)
       => (...args: any) => ReadonlyArray<Action>>(
-        reducerFn: P): SameAccess<D, MixReducerDef<ReturnType<P>>>
+        reducerFn: F): SameAccess<D, MixReducerDef<ReturnType<F>>>
     };
   } = this.createOverrideProxy;
 
   readonly private = new PrivateDefComposer(this.juncture, this.assembler);
 
-  selector<P extends (ctx: SelectorContext<J>) => any>(selectorFn: P): DirectSelectorDef<ReturnType<P>> {
+  selector<F extends (ctx: SelectorContext<J>) => any>(selectorFn: F): DirectSelectorDef<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createDirectSelectorDef(selectorFn as any));
   }
 
-  paramSelector<P extends (ctx: SelectorContext<J>) => (...args: any) => any>(
-    selectorFn: P): ParamSelectorDef<ReturnType<P>> {
+  paramSelector<F extends (ctx: SelectorContext<J>) => (...args: any) => any>(
+    selectorFn: F): ParamSelectorDef<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createParamSelectorDef(selectorFn as any));
   }
 
-  reducer<P extends (ctx: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
-    reducerFn: P): PlainReducerDef<ReturnType<P>> {
+  reducer<F extends (ctx: ReducerContext<J>) => (...args: any) => HandledValueOf<J>>(
+    reducerFn: F): PlainReducerDef<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createPlainReducerDef(reducerFn as any));
   }
 
-  mixReducer<P extends (ctx: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: P): MixReducerDef<ReturnType<P>> {
+  mixReducer<F extends (ctx: MixReducerContext<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn: F): MixReducerDef<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createMixReducerDef(reducerFn as any));
+  }
+}
+
+export class DefComposer<J extends Juncture> extends BareDefComposer<J> {
+  constructor(juncture: J) {
+    super(juncture, Juncture.getPropertyAssembler(juncture));
   }
 }
