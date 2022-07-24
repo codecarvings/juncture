@@ -17,7 +17,13 @@ describe('PropertyAssembler', () => {
     });
   });
 
-  describe('registerStaticProperty method', () => {
+  describe('registerStaticProperty', () => {
+    test('should be a method', () => {
+      const container: any = {};
+      const assembler = new PropertyAssembler(container);
+      expect(typeof assembler.registerStaticProperty).toBe('function');
+    });
+
     test('should return an unique symbol', () => {
       const container: any = {};
       const assembler = new PropertyAssembler(container);
@@ -44,7 +50,13 @@ describe('PropertyAssembler', () => {
     });
   });
 
-  describe('registerDynamicProperty method', () => {
+  describe('registerDynamicProperty', () => {
+    test('should be a method', () => {
+      const container: any = {};
+      const assembler = new PropertyAssembler(container);
+      expect(typeof assembler.registerDynamicProperty).toBe('function');
+    });
+
     test('should return an unique symbol', () => {
       const container: any = {};
       const assembler = new PropertyAssembler(container);
@@ -79,7 +91,13 @@ describe('PropertyAssembler', () => {
     });
   });
 
-  describe('wire method', () => {
+  describe('wire', () => {
+    test('should be a method', () => {
+      const container: any = {};
+      const assembler = new PropertyAssembler(container);
+      expect(typeof assembler.wire).toBe('function');
+    });
+
     test('should set the value of a property registerd via registerStaticProperty', () => {
       const container: any = {};
       const assembler = new PropertyAssembler(container);

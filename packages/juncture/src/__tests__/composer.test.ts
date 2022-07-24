@@ -45,8 +45,8 @@ describe('PrivateComposer', () => {
       composer = new PrivateComposer<MyJuncture>(assembler);
     });
 
-    describe('"selector" property', () => {
-      test('should be a function', () => {
+    describe('selector', () => {
+      test('should be a method', () => {
         expect(typeof composer.selector).toBe('function');
       });
 
@@ -58,8 +58,8 @@ describe('PrivateComposer', () => {
       });
     });
 
-    describe('"paramSelector" property', () => {
-      test('should be a function', () => {
+    describe('paramSelector', () => {
+      test('should be a method', () => {
         expect(typeof composer.paramSelector).toBe('function');
       });
 
@@ -71,8 +71,8 @@ describe('PrivateComposer', () => {
       });
     });
 
-    describe('"reducer" property', () => {
-      test('should be a function', () => {
+    describe('reducer', () => {
+      test('should be a method', () => {
         expect(typeof composer.reducer).toBe('function');
       });
 
@@ -84,8 +84,8 @@ describe('PrivateComposer', () => {
       });
     });
 
-    describe('"mixReducer" property', () => {
-      test('should be a function', () => {
+    describe('mixReducer', () => {
+      test('should be a method', () => {
         expect(typeof composer.mixReducer).toBe('function');
       });
 
@@ -117,8 +117,8 @@ describe('Composer', () => {
       expect(composer.private).toBeInstanceOf(PrivateComposer);
     });
 
-    describe('"selector" property', () => {
-      test('should be a function', () => {
+    describe('selector', () => {
+      test('should be a method', () => {
         expect(typeof composer.selector).toBe('function');
       });
 
@@ -129,8 +129,8 @@ describe('Composer', () => {
       });
     });
 
-    describe('"paramSelector" property', () => {
-      test('should be a function', () => {
+    describe('paramSelector', () => {
+      test('should be a method', () => {
         expect(typeof composer.paramSelector).toBe('function');
       });
 
@@ -141,8 +141,8 @@ describe('Composer', () => {
       });
     });
 
-    describe('"reducer" property', () => {
-      test('should be a function', () => {
+    describe('reducer', () => {
+      test('should be a method', () => {
         expect(typeof composer.reducer).toBe('function');
       });
 
@@ -153,8 +153,8 @@ describe('Composer', () => {
       });
     });
 
-    describe('"mixReducer" property', () => {
-      test('should be a function', () => {
+    describe('mixReducer', () => {
+      test('should be a method', () => {
         expect(typeof composer.mixReducer).toBe('function');
       });
 
@@ -165,8 +165,8 @@ describe('Composer', () => {
       });
     });
 
-    describe('"override" property', () => {
-      test('should be a function', () => {
+    describe('override', () => {
+      test('should be a method', () => {
         expect(typeof composer.override).toBe('function');
       });
 
@@ -202,7 +202,7 @@ describe('Composer', () => {
         });
 
         describe('a "selector" property that', () => {
-          test('should be a function', () => {
+          test('should be a method', () => {
             const proxy = composer.override(myOriginalSelector);
             expect(typeof proxy.selector).toBe('function');
           });
@@ -268,7 +268,7 @@ describe('Composer', () => {
         });
 
         describe('a "paramSelector" property that', () => {
-          test('should be a function', () => {
+          test('should be a method', () => {
             const proxy = composer.override(myOriginalSelector);
             expect(typeof proxy.paramSelector).toBe('function');
           });
@@ -335,7 +335,7 @@ describe('Composer', () => {
         });
 
         describe('a "reducer" property that', () => {
-          test('should be a function', () => {
+          test('should be a method', () => {
             const proxy = composer.override(myOriginalReducer);
             expect(typeof proxy.reducer).toBe('function');
           });
@@ -408,7 +408,7 @@ describe('Composer', () => {
         });
 
         describe('a "mixReducer" property that', () => {
-          test('should be a function', () => {
+          test('should be a method', () => {
             const proxy = composer.override(myOriginalReducer);
             expect(typeof proxy.mixReducer).toBe('function');
           });

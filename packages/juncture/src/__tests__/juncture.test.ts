@@ -114,7 +114,11 @@ describe('Juncture', () => {
   });
 
   describe('static', () => {
-    describe('getInstance method', () => {
+    describe('getInstance', () => {
+      test('should be a method', () => {
+        expect(typeof Juncture.getInstance).toBe('function');
+      });
+
       test('should return an instance of the provided Juncture type', () => {
         const juncture = Juncture.getInstance(MyJuncture);
         expect(juncture).toBeInstanceOf(MyJuncture);
@@ -156,7 +160,11 @@ describe('Juncture', () => {
       });
     });
 
-    describe('getPropertyAssembler method', () => {
+    describe('getPropertyAssembler', () => {
+      test('should be a method', () => {
+        expect(typeof Juncture.getPropertyAssembler).toBe('function');
+      });
+
       test('should return the property assembler of the Juncture', () => {
         const juncture = Juncture.getInstance(MyJuncture);
         const assembler = Juncture.getPropertyAssembler(juncture);
@@ -190,7 +198,11 @@ describe('Juncture', () => {
       });
     });
 
-    describe('getSchema method', () => {
+    describe('getSchema', () => {
+      test('should be a method', () => {
+        expect(typeof Juncture.getSchema).toBe('function');
+      });
+
       describe('when passing a Juncture Type', () => {
         test('should return the schema for the provided Juncture Type', () => {
           const schema = Juncture.getSchema(MyJuncture);
@@ -248,7 +260,7 @@ describe('Juncture', () => {
       });
     });
 
-    describe('createCtx method', () => {
+    describe('createCtx', () => {
       const config: CtxConfig = {
         layout: {
           parent: null,
@@ -257,6 +269,10 @@ describe('Juncture', () => {
           isUnivocal: true
         }
       };
+
+      test('should be a method', () => {
+        expect(typeof Juncture.createCtx).toBe('function');
+      });
 
       test('should create a new Ctx for the provided Juncture type and config', () => {
         const ctx = Juncture.createCtx(MyJuncture, config);

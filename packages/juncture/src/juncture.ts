@@ -78,21 +78,9 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
 
   static getSchema<JT extends JunctureType>(Type: JT): SchemaOfType<JT>;
   static getSchema<J extends Juncture>(Type: J): SchemaOf<J>;
-  static getSchema<T extends JunctureType | Juncture>(intance_or_Type: T) {
-    let juncture: Juncture;
-    if (typeof intance_or_Type === 'function') {
-      juncture = Juncture.getInstance(intance_or_Type);
-    } else {
-      juncture = intance_or_Type;
-    }
-
-    if ((juncture as any)[junctureSymbols.schemaCache]) {
-      return (juncture as any)[junctureSymbols.schemaCache];
-    }
-
-    const result = juncture.schema[jSymbols.defPayload]() as any;
-    (juncture as any)[junctureSymbols.schemaCache] = result;
-    return result;
+  static getSchema() {
+    // method implemented below
+    return undefined!;
   }
 
   static createCtx<JT extends JunctureType>(Type: JT, config: CtxConfig) {
@@ -100,6 +88,11 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     return juncture[jSymbols.createCtx](config);
   }
 }
+
+(Juncture as any).getSchema = Singleton.getSingletonPropertyAccessor(
+  junctureSymbols.schemaCache,
+  juncture => juncture.schema[jSymbols.defPayload]()
+);
 
 // ---  Derivations
 export type SchemaOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>;

@@ -9,6 +9,7 @@
 
 import { Singleton } from '../../fabric/singleton';
 import { jSymbols } from '../../symbols';
+import { Constructable } from '../../util/object';
 
 class MyType {}
 
@@ -25,7 +26,11 @@ describe('Singleton', () => {
   });
 
   describe('static', () => {
-    describe('get method', () => {
+    describe('get', () => {
+      test('should be a method', () => {
+        expect(typeof Singleton.get).toBe('function');
+      });
+
       test('should return a Singleton object ', () => {
         const singleton = Singleton.get(MyType);
         expect(singleton).toBeInstanceOf(Singleton);
@@ -70,6 +75,111 @@ describe('Singleton', () => {
 
           Singleton.get(MyInitializableType);
           expect(totCalls).toBe(1);
+        });
+      });
+    });
+
+    describe('getSingletonPropertyAccessor', () => {
+      const cacheKey = Symbol('test');
+      const staticValue = { value: 1 };
+      interface MyTestInstance {
+        value: typeof staticValue;
+      }
+      let MyTest: Constructable<MyTestInstance>;
+      function getNewMyTestClass() {
+        return class NewMyTest {
+          value = staticValue;
+        };
+      }
+
+      beforeEach(() => {
+        MyTest = getNewMyTestClass();
+      });
+
+      test('should be a method', () => {
+        expect(typeof Singleton.getSingletonPropertyAccessor).toBe('function');
+      });
+
+      describe('when providing a cache key and a resolver', () => {
+        test('should return a function', () => {
+          const f = Singleton.getSingletonPropertyAccessor(Symbol('test'), () => undefined);
+          expect(typeof f).toBe('function');
+        });
+
+        describe('the returned function', () => {
+          test('should accept a Type as unique paramter', () => {
+            const resolver = jest.fn((instance: MyTestInstance) => instance.value);
+
+            const f = Singleton.getSingletonPropertyAccessor(cacheKey, resolver);
+            expect(f(MyTest)).toBe(staticValue);
+          });
+
+          test('should accept an instance as unique parameter', () => {
+            const resolver = jest.fn((instance: MyTestInstance) => instance.value);
+
+            const f = Singleton.getSingletonPropertyAccessor(cacheKey, resolver);
+            expect(f(Singleton.get(MyTest).instance)).toBe(staticValue);
+          });
+
+          test('should return the same value returned by the resolver', () => {
+            const resolver = jest.fn((instance: MyTestInstance) => instance.value);
+
+            const f = Singleton.getSingletonPropertyAccessor(cacheKey, resolver);
+            expect(f(MyTest)).toBe(staticValue);
+          });
+
+          test('should always return the same value', () => {
+            const resolver = jest.fn((instance: MyTestInstance) => instance.value);
+
+            const f = Singleton.getSingletonPropertyAccessor(cacheKey, resolver);
+            const v1 = f(MyTest);
+            const v2 = f(MyTest);
+            expect(v2).toBe(v1);
+          });
+
+          test('should use the resolver only one time the first time that is invoked', () => {
+            const resolver = jest.fn(() => undefined);
+
+            const f = Singleton.getSingletonPropertyAccessor(cacheKey, resolver);
+            expect(resolver).toBeCalledTimes(0);
+            f(MyTest);
+            expect(resolver).toBeCalledTimes(1);
+            f(MyTest);
+            expect(resolver).toBeCalledTimes(1);
+          });
+
+          describe('when invokes the resolver, this', () => {
+            test('should receive the instance as property', () => {
+              const resolver = jest.fn((instance: MyTestInstance) => instance.value);
+
+              const f = Singleton.getSingletonPropertyAccessor(cacheKey, resolver);
+              f(MyTest);
+              expect(resolver).toHaveBeenCalledWith(Singleton.get(MyTest).instance);
+            });
+          });
+        });
+      });
+
+      describe('when providing a different cache key but the same resolver', () => {
+        describe('the returned function', () => {
+          test('should use a different cache', () => {
+            const resolver = jest.fn((instance: MyTestInstance) => instance.value);
+
+            const f1 = Singleton.getSingletonPropertyAccessor(cacheKey, resolver);
+            expect(resolver).toBeCalledTimes(0);
+            f1(MyTest);
+            expect(resolver).toBeCalledTimes(1);
+
+            const cacheKey2 = Symbol('test');
+            const f2 = Singleton.getSingletonPropertyAccessor(cacheKey2, resolver);
+            f1(MyTest);
+            expect(resolver).toBeCalledTimes(1);
+            f2(MyTest);
+            expect(resolver).toBeCalledTimes(2);
+            f1(MyTest);
+            f2(MyTest);
+            expect(resolver).toBeCalledTimes(2);
+          });
         });
       });
     });

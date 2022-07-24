@@ -77,7 +77,7 @@ describe('BitComposer', () => {
         });
 
         describe('a "setDefaultValue" property that', () => {
-          test('should be a function', () => {
+          test('should be a method', () => {
             const proxy = composer.override(myOriginalSchema);
             expect(typeof proxy.setDefaultValue).toBe('function');
           });
@@ -317,7 +317,7 @@ describe('jBit - Bit Builder', () => {
   });
 
   describe('Of', () => {
-    test('should be a function', () => {
+    test('should be a method', () => {
       expect(typeof jBit.Of).toBe('function');
     });
 
@@ -597,7 +597,7 @@ describe('jBit - Bit Builder', () => {
     });
 
     describe('Of', () => {
-      test('should be a function', () => {
+      test('should be a method', () => {
         expect(typeof jBit.settable.Of).toBe('function');
       });
 

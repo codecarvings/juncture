@@ -39,4 +39,26 @@ export class Singleton<T extends Constructable> {
     (Type as any)[singletonSymbols.singletonCache] = result;
     return result;
   }
+
+  static getSingletonPropertyAccessor(
+    cacheKey: symbol,
+    resolverFn: (instance: any) => any
+  ): (intance_or_Type: any) => any {
+    return (intance_or_Type: any) => {
+      let instance: any;
+      if (typeof intance_or_Type === 'function') {
+        instance = Singleton.get(intance_or_Type).instance;
+      } else {
+        instance = intance_or_Type;
+      }
+
+      if (instance[cacheKey]) {
+        return instance[cacheKey].val;
+      }
+
+      const val = resolverFn(instance);
+      instance[cacheKey] = { val };
+      return val;
+    };
+  }
 }
