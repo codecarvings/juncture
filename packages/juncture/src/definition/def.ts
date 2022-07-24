@@ -8,6 +8,7 @@
 
 import { jSymbols } from '../symbols';
 import { isObject } from '../util/object';
+import { isPrivate } from './private';
 
 export enum DefKind {
   schema = 'schema',
@@ -54,4 +55,17 @@ export function isDef(obj: any, kind?: DefKind, subKind?: string): obj is Def<an
   }
 
   return true;
+}
+
+export function getFilteredDefKeys(obj: object, privateUse: boolean, kind: DefKind, subKind?: string): string[] {
+  return Object.keys(obj).filter(key => {
+    const prop = (obj as any)[key];
+    if (!isDef(prop, kind, subKind)) {
+      return false;
+    }
+    if (!privateUse && isPrivate(prop)) {
+      return false;
+    }
+    return true;
+  });
 }

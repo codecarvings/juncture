@@ -8,8 +8,8 @@
 
 import { Cursor, JunctureOfCursor } from '../context/cursor';
 import { CursorOf, Juncture, ValueOf } from '../juncture';
-import { DispatchBin } from './bin/dispatch-bin';
-import { SelectBin } from './bin/select-bin';
+import { DispatchBin } from './bins/dispatch-bin';
+import { SelectBin } from './bins/select-bin';
 
 export interface Frame<Z> {
   readonly _: Z;

@@ -55,7 +55,9 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
       .registerStaticProperty(createDirectSelectorDef(() => true)); // TODO: Implement this
 
     this.value = assembler
-      .registerStaticProperty(createDirectSelectorDef(() => undefined)); // TODO: Implement this
+      .registerStaticProperty(createDirectSelectorDef((
+        frame: any
+      ) => getCtx(frame._).getValue()));
   }
 
   abstract readonly schema: SchemaDef<Schema>;

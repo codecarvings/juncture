@@ -7,10 +7,12 @@
  */
 
 import { Cursor, JunctureOfCursor, ValueOfCursor } from '../context/cursor';
+import { AccessorKit } from '../context/kits/accessor-kit';
 import { Juncture, PrivateCursorOf, ValueOf } from '../juncture';
-import { PrepareBin, PrivatePrepareBin } from './bin/prepare-bin';
-import { PrivateReduceBin, ReduceBin } from './bin/reduce-bin';
-import { PrivateSelectBin, SelectBin } from './bin/select-bin';
+import { defineLazyProperty } from '../util/object';
+import { PrepareBin, PrivatePrepareBin } from './bins/prepare-bin';
+import { PrivateReduceBin, ReduceBin } from './bins/reduce-bin';
+import { PrivateSelectBin, SelectBin } from './bins/select-bin';
 
 // --- Symbols
 const privateFrameSymbol = Symbol('privateFrame');
@@ -42,6 +44,16 @@ export interface PrivateFrame<J extends Juncture> extends PrivateFrameRole {
 }
 
 export interface SelectorFrame<J extends Juncture> extends PrivateFrame<J> { }
+
+export function createSelectorFrame<J extends Juncture>(
+  privateCursor: PrivateCursorOf<J>,
+  accessors: AccessorKit<J>
+): SelectorFrame<J> {
+  const frame: any = { };
+  defineLazyProperty(frame, '_', () => privateCursor);
+  defineLazyProperty(frame, 'select', () => accessors.select);
+  return frame;
+}
 
 export interface OverrideSelectorFrame<J extends Juncture, S> extends SelectorFrame<J> {
   readonly parent: S;
