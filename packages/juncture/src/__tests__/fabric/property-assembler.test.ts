@@ -6,21 +6,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { StandardPropertyAssembler } from '../../definition/property-assembler';
+import { PropertyAssembler } from '../../fabric/property-assembler';
 
-describe('StandardPropertyAssembler', () => {
+describe('PropertyAssembler', () => {
   describe('constructor', () => {
     test('should accept the container object as the only argument', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
-      expect(assembler).toBeInstanceOf(StandardPropertyAssembler);
+      const assembler = new PropertyAssembler(container);
+      expect(assembler).toBeInstanceOf(PropertyAssembler);
     });
   });
 
   describe('registerStaticProperty method', () => {
     test('should return an unique symbol', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const value1 = { value: 'test1' };
       const s1 = assembler.registerStaticProperty(value1);
       container.s1 = s1;
@@ -33,7 +33,7 @@ describe('StandardPropertyAssembler', () => {
 
     test('should automatically invoke the wire method', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const originalWire = assembler.wire.bind(assembler);
       const wire = jest.fn(originalWire);
       (assembler as any).wire = wire;
@@ -47,7 +47,7 @@ describe('StandardPropertyAssembler', () => {
   describe('registerDynamicProperty method', () => {
     test('should return an unique symbol', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const factory1 = () => null;
       const s1 = assembler.registerDynamicProperty(factory1);
       container.s1 = s1;
@@ -60,7 +60,7 @@ describe('StandardPropertyAssembler', () => {
 
     test('should not invoke the provided factory', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const factory1 = jest.fn(() => null);
       container.s1 = assembler.registerDynamicProperty(factory1);
       expect(factory1).not.toHaveBeenCalled();
@@ -68,7 +68,7 @@ describe('StandardPropertyAssembler', () => {
 
     test('should automatically invoke the wire method', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const originalWire = assembler.wire.bind(assembler);
       const wire = jest.fn(originalWire);
       (assembler as any).wire = wire;
@@ -82,7 +82,7 @@ describe('StandardPropertyAssembler', () => {
   describe('wire method', () => {
     test('should set the value of a property registerd via registerStaticProperty', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const value1 = { value: 'test1' };
       container.s1 = assembler.registerStaticProperty(value1);
       expect(typeof container.s1).toBe('symbol');
@@ -94,7 +94,7 @@ describe('StandardPropertyAssembler', () => {
 
     test('should invoke the factory registerd via registerDynamicProperty', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const factory1 = jest.fn(() => null);
       container.s1 = assembler.registerDynamicProperty(factory1);
       expect(factory1).toHaveBeenCalledTimes(0);
@@ -105,7 +105,7 @@ describe('StandardPropertyAssembler', () => {
     describe('when invoke the factory registered by registerDynamicProperty', () => {
       test('should provide the key as first argument', () => {
         const container: any = {};
-        const assembler = new StandardPropertyAssembler(container);
+        const assembler = new PropertyAssembler(container);
         const originalWire = assembler.wire.bind(assembler);
         const wire = jest.fn(originalWire);
         (assembler as any).wire = wire;
@@ -120,7 +120,7 @@ describe('StandardPropertyAssembler', () => {
       describe('when no parent is present', () => {
         test('should provide undefined as parent via the second argument', () => {
           const container: any = {};
-          const assembler = new StandardPropertyAssembler(container);
+          const assembler = new PropertyAssembler(container);
           const originalWire = assembler.wire.bind(assembler);
           const wire = jest.fn(originalWire);
           (assembler as any).wire = wire;
@@ -136,7 +136,7 @@ describe('StandardPropertyAssembler', () => {
       describe('when a parent has been previously registered via registerStaticProperty', () => {
         test('should provide the parent value via the second argument', () => {
           const container: any = {};
-          const assembler = new StandardPropertyAssembler(container);
+          const assembler = new PropertyAssembler(container);
           const originalWire = assembler.wire.bind(assembler);
           const wire = jest.fn(originalWire);
           (assembler as any).wire = wire;
@@ -155,7 +155,7 @@ describe('StandardPropertyAssembler', () => {
       describe('when a parent has been previously registered with registerDynamicProperty', () => {
         test('should provide the parent value via the second argument', () => {
           const container: any = {};
-          const assembler = new StandardPropertyAssembler(container);
+          const assembler = new PropertyAssembler(container);
           const originalWire = assembler.wire.bind(assembler);
           const wire = jest.fn(originalWire);
           (assembler as any).wire = wire;
@@ -173,7 +173,7 @@ describe('StandardPropertyAssembler', () => {
 
       test('should provide the container as third argument', () => {
         const container: any = {};
-        const assembler = new StandardPropertyAssembler(container);
+        const assembler = new PropertyAssembler(container);
         const originalWire = assembler.wire.bind(assembler);
         const wire = jest.fn(originalWire);
         (assembler as any).wire = wire;
@@ -188,7 +188,7 @@ describe('StandardPropertyAssembler', () => {
 
     test('should set the value of a property registerd via registerDynamicProperty', () => {
       const container: any = {};
-      const assembler = new StandardPropertyAssembler(container);
+      const assembler = new PropertyAssembler(container);
       const value1 = { value: 'test1' };
       container.s1 = assembler.registerDynamicProperty(() => value1);
       expect(typeof container.s1).toBe('symbol');
@@ -201,13 +201,13 @@ describe('StandardPropertyAssembler', () => {
     describe('when no pending property is present', () => {
       test('should not throw error', () => {
         const container1: any = {};
-        const assembler1 = new StandardPropertyAssembler(container1);
+        const assembler1 = new PropertyAssembler(container1);
         expect(() => {
           assembler1.wire();
         }).not.toThrow();
 
         const container2: any = {};
-        const assembler2 = new StandardPropertyAssembler(container2);
+        const assembler2 = new PropertyAssembler(container2);
         expect(() => {
           const value1 = { value: 'test1' };
           container2.s1 = assembler2.registerStaticProperty(value1);

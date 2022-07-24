@@ -9,42 +9,40 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-assign */
 
-import { BareJuncture } from '../../bare-juncture';
-import { BareDefComposer, DefComposer, PrivateDefComposer } from '../../definition/composer';
-import { isPrivate, Private } from '../../definition/private';
-import { PropertyAssembler, StandardPropertyAssembler } from '../../definition/property-assembler';
+import { Composer, PrivateComposer } from '../composer';
+import { isPrivate, Private } from '../definition/private';
 import {
   Action, isMixReducerDef, isPlainReducerDef, MixReducerDef, PlainReducerDef
-} from '../../definition/reducer';
-import { createSchemaDef, Schema, SchemaDef } from '../../definition/schema';
+} from '../definition/reducer';
+import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import {
   DirectSelectorDef, isDirectSelectorDef, isParamSelectorDef, ParamSelectorDef
-} from '../../definition/selector';
-import { Juncture } from '../../juncture';
-import { jSymbols } from '../../symbols';
+} from '../definition/selector';
+import { PropertyAssembler } from '../fabric/property-assembler';
+import { Juncture } from '../juncture';
+import { jSymbols } from '../symbols';
 
-interface MyBareJuncture extends BareJuncture {
+interface MyJuncture extends Juncture {
   schema: SchemaDef<Schema<string>>;
 }
 
-const bareJuncture: MyBareJuncture = undefined!;
 let container: any;
 let assembler: PropertyAssembler;
 beforeEach(() => {
   container = { };
-  assembler = new StandardPropertyAssembler(container);
+  assembler = new PropertyAssembler(container);
 });
 
-describe('PrivateDefComposer', () => {
-  test('should be a class instantiable by passing a Juncture instance and a property assembler', () => {
-    const composer = new PrivateDefComposer(bareJuncture, assembler);
-    expect(composer).toBeInstanceOf(PrivateDefComposer);
+describe('PrivateComposer', () => {
+  test('should be a class instantiable by passing a property assembler', () => {
+    const composer = new PrivateComposer(assembler);
+    expect(composer).toBeInstanceOf(PrivateComposer);
   });
 
   describe('instance', () => {
-    let composer: PrivateDefComposer<MyBareJuncture>;
+    let composer: PrivateComposer<MyJuncture>;
     beforeEach(() => {
-      composer = new PrivateDefComposer(bareJuncture, assembler);
+      composer = new PrivateComposer<MyJuncture>(assembler);
     });
 
     describe('"selector" property', () => {
@@ -101,22 +99,22 @@ describe('PrivateDefComposer', () => {
   });
 });
 
-describe('BareDefComposer', () => {
+describe('Composer', () => {
   describe('constructor', () => {
-    test('should accept a Juncture instance and a property assembler', () => {
-      const composer = new BareDefComposer(bareJuncture, assembler);
-      expect(composer).toBeInstanceOf(BareDefComposer);
+    test('should accept a property assembler', () => {
+      const composer = new Composer(assembler);
+      expect(composer).toBeInstanceOf(Composer);
     });
   });
 
   describe('instance', () => {
-    let composer: BareDefComposer<MyBareJuncture>;
+    let composer: Composer<MyJuncture>;
     beforeEach(() => {
-      composer = new BareDefComposer(bareJuncture, assembler);
+      composer = new Composer<MyJuncture>(assembler);
     });
 
-    test('"private" property should return a PrivateDefComposer instance', () => {
-      expect(composer.private).toBeInstanceOf(PrivateDefComposer);
+    test('"private" property should return a PrivateComposer instance', () => {
+      expect(composer.private).toBeInstanceOf(PrivateComposer);
     });
 
     describe('"selector" property', () => {
@@ -477,23 +475,6 @@ describe('BareDefComposer', () => {
           });
         });
       });
-    });
-  });
-});
-
-describe('DefComposer', () => {
-  test('should be a subclass of BareDefComposer', () => {
-    expect(DefComposer.prototype).toBeInstanceOf(BareDefComposer);
-  });
-
-  describe('constructor', () => {
-    test('should accept a Juncture instance only without the need to provided an additional property assembler', () => {
-      class MyJuncture extends Juncture {
-        schema = createSchemaDef(() => new Schema(''));
-      }
-      const juncture = new MyJuncture();
-      const composer = new DefComposer(juncture);
-      expect(composer).toBeInstanceOf(DefComposer);
     });
   });
 });

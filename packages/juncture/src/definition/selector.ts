@@ -6,13 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateContextRoleConsumer } from '../context/private-context';
+import { PrivateFrameConsumer } from '../frame/private-frame';
 import {
   createDef, Def, DefKind, isDef
 } from './def';
 
 // #region Def
-export const notASelectorDef = '⚠ ERROR: NOT A SELECTOR';
+export const notASelectorDef = '\u26A0 ERROR: NOT A SELECTOR';
 
 export enum SelectorDefSubKind {
   direct = 'direct',
@@ -20,11 +20,11 @@ export enum SelectorDefSubKind {
 }
 
 export interface SelectorDef<T extends SelectorDefSubKind, B>
-  extends Def<DefKind.selector, T, PrivateContextRoleConsumer<B>> { }
+  extends Def<DefKind.selector, T, PrivateFrameConsumer<B>> { }
 
 function createSelectorDef<T extends SelectorDefSubKind, B>(
   subKind: T,
-  selectorFn: PrivateContextRoleConsumer<B>
+  selectorFn: PrivateFrameConsumer<B>
 ): SelectorDef<T, B> {
   return createDef(DefKind.selector, subKind, selectorFn);
 }
@@ -34,10 +34,6 @@ function isSelectorDef(obj: any, subKind?: SelectorDefSubKind): obj is SelectorD
 }
 
 // ---  Derivations
-export type SelectorDefsOf<O> = {
-  readonly [K in keyof O as O[K] extends SelectorDef<any, any> ? K : never]: O[K];
-};
-
 export type SelectorOfSelectorDef<D extends SelectorDef<any, any>>
   = D extends SelectorDef<any, infer B> ? B : never;
 
@@ -46,7 +42,7 @@ export interface DirectSelectorDef<B>
   extends SelectorDef<SelectorDefSubKind.direct, B> { }
 
 export function createDirectSelectorDef
-  <B>(selectorFn: PrivateContextRoleConsumer<B>): DirectSelectorDef<B> {
+  <B>(selectorFn: PrivateFrameConsumer<B>): DirectSelectorDef<B> {
   return createSelectorDef(SelectorDefSubKind.direct, selectorFn);
 }
 
@@ -59,7 +55,7 @@ export interface ParamSelectorDef<B extends (...args: any) => any>
   extends SelectorDef<SelectorDefSubKind.param, B> { }
 
 export function createParamSelectorDef<B extends (...args: any) => any>(
-  selectorFn: PrivateContextRoleConsumer<B>): ParamSelectorDef<B> {
+  selectorFn: PrivateFrameConsumer<B>): ParamSelectorDef<B> {
   return createSelectorDef(SelectorDefSubKind.param, selectorFn);
 }
 

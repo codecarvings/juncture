@@ -6,45 +6,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { BareJuncture } from '../bare-juncture';
-import { defineLazyProperty } from '../util/object';
-import { createCursor, Cursor } from './cursor';
-import { Path } from './path';
+import { Cursor, JunctureOfCursor } from '../context/cursor';
+import { CursorOf, Juncture, ValueOf } from '../juncture';
+import { DispatchBin } from './bin/dispatch-bin';
+import { SelectBin } from './bin/select-bin';
 
-export interface FrameLayout {
-  readonly parent: Frame | null;
-  readonly path: Path;
-  readonly isUnivocal: boolean;
-  readonly isDivergent: boolean;
+export interface Frame<Z> {
+  readonly _: Z;
+
+  value<C extends Cursor>(_: C): ValueOf<JunctureOfCursor<C>>;
+  select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
+  dispach<C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
 }
 
-export interface FrameConfig {
-  readonly layout: FrameLayout;
-}
-
-export class Frame<J extends BareJuncture = BareJuncture> {
-  readonly layout: FrameLayout;
-
-  constructor(readonly juncture: J, config: FrameConfig) {
-    this.layout = config.layout;
-
-    defineLazyProperty(this, 'privateCursor', () => this.createPrivateCursor());
-    defineLazyProperty(this, 'cursor', () => this.createCursor());
-  }
-
-  protected createPrivateCursor(): Cursor<this['juncture']> {
-    return createCursor(this);
-  }
-
-  protected createCursor(): Cursor<this['juncture']> {
-    return createCursor(this);
-  }
-
-  readonly privateCursor!: Cursor<this['juncture']>;
-
-  readonly cursor!: Cursor<this['juncture']>;
-}
-
-// ---  Derivations
-export type JunctureOfFrame<F extends Frame> = F['juncture'];
-// #endregion
+// Cannot use interface extends... because methods are overriden (not overloaded)
+export type BindedFrame<J extends Juncture> = Frame<CursorOf<J>> & {
+  value(): ValueOf<J>;
+  select(): SelectBin<J>;
+  dispach(): DispatchBin<J>;
+};

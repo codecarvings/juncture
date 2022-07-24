@@ -8,7 +8,7 @@
 
 import {
   formatPath, isSameOrDescendantPath, Path, pathFragmentToString
-} from '../../frame/path';
+} from '../../context/path';
 
 declare function BigInt(x: any): bigint;
 

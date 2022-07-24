@@ -6,17 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValueOfType } from './bare-juncture';
-import { BindedContext } from './context/context';
-import { Juncture, JunctureType } from './juncture';
+import { BindedFrame } from './frame/frame';
+import { Juncture, JunctureType, ValueOfType } from './juncture';
 
 export class Root<JT extends JunctureType> {
-  protected readonly juncture: InstanceType<JT>;
-
   constructor(public readonly Type: JT, state?: ValueOfType<JT>) {
-    this.juncture = Juncture.getInstance(Type);
-    const driver = Juncture.getDriver(this.juncture);
-    const initialState = state === undefined ? driver.schema.defaultValue : state;
+    const schema = Juncture.getSchema(Type);
+    const initialState = state === undefined ? schema.defaultValue : state;
     this._state = initialState;
   }
 
@@ -26,6 +22,9 @@ export class Root<JT extends JunctureType> {
     return this._state;
   }
 
-  // TODO: Implemen getContext and remove static context...
-  readonly context: BindedContext<InstanceType<JT>> = undefined!;
+  // TODO: Implement getFrame and remove static frame...
+  readonly frame: BindedFrame<InstanceType<JT>> = undefined!;
+
+  // TODO: Implement this
+  // unmount(): void {}
 }

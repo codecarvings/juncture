@@ -6,104 +6,133 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { BareJuncture, ValueOf } from './bare-juncture';
-import { DefComposer } from './definition/composer';
-import { PropertyAssembler, StandardPropertyAssembler } from './definition/property-assembler';
-import { Schema, SchemaDef } from './definition/schema';
-import { Driver } from './driver';
-import { getFrame } from './frame/cursor';
-import { Frame, FrameConfig } from './frame/frame';
-import { jSymbols } from './symbols';
+import { Ctx, CtxConfig } from './context/ctx';
+import { getCtx } from './context/cursor';
+import { Path } from './context/path';
+import { Schema, SchemaDef, SchemaOfSchemaDef } from './definition/schema';
+import { createDirectSelectorDef, DirectSelectorDef } from './definition/selector';
+import { Initializable } from './fabric/initializable';
+import { PropertyAssembler, PropertyAssemblerHost } from './fabric/property-assembler';
+import { Singleton } from './fabric/singleton';
+import { JSymbols, jSymbols } from './symbols';
 
 // --- Symbols
-const propertyAssemblerSymbol = Symbol('propertyAssembler');
-const instanceSymbol = Symbol('instance');
-const driverSymbol = Symbol('driver');
+const schemaCacheSymbol = Symbol('schemaCache');
 interface JunctureSymbols {
-  readonly propertyAssembler: typeof propertyAssemblerSymbol;
-  readonly instance: typeof instanceSymbol;
-  readonly driver: typeof driverSymbol;
+  readonly schemaCache: typeof schemaCacheSymbol;
 }
 const junctureSymbols: JunctureSymbols = {
-  propertyAssembler: propertyAssemblerSymbol,
-  instance: instanceSymbol,
-  driver: driverSymbol
+  schemaCache: schemaCacheSymbol
 };
 
-// #region Juncture
-export abstract class Juncture implements BareJuncture {
-  protected [jSymbols.createPropertyAssembler](): PropertyAssembler {
-    return new StandardPropertyAssembler(this);
+export abstract class Juncture implements PropertyAssemblerHost, Initializable {
+  [jSymbols.createPropertyAssembler](): PropertyAssembler {
+    return new PropertyAssembler(this);
   }
 
-  protected [jSymbols.createDefComposer]() {
-    return new DefComposer(this);
+  [jSymbols.init]() {
+    PropertyAssembler.get(this).wire();
   }
 
-  protected [jSymbols.createDriver]() {
-    return new Driver<this>(this);
+  [jSymbols.createCtx](config: CtxConfig): Ctx<this> {
+    return new Ctx(this, config);
   }
 
-  [jSymbols.createFrame](config: FrameConfig): Frame<this> {
-    return new Frame(this, config);
+  constructor() {
+    const assembler = Juncture.getPropertyAssembler(this);
+
+    this.defaultValue = assembler
+      .registerStaticProperty(createDirectSelectorDef((
+        frame: any
+      ) => getCtx(frame._).schema.defaultValue));
+
+    this.path = assembler
+      .registerStaticProperty(createDirectSelectorDef((
+        frame: any
+      ) => getCtx(frame._).layout.path));
+
+    this.isMounted = assembler
+      .registerStaticProperty(createDirectSelectorDef(() => true)); // TODO: Implement this
+
+    this.value = assembler
+      .registerStaticProperty(createDirectSelectorDef(() => undefined)); // TODO: Implement this
   }
 
-  protected readonly DEF: DefComposer<this> = this[jSymbols.createDefComposer]();
+  abstract readonly schema: SchemaDef<Schema>;
 
-  readonly abstract schema: SchemaDef<Schema>;
+  readonly defaultValue: DirectSelectorDef<ValueOf<this>>;
 
-  readonly defaultValue = this.DEF.selector(() => Juncture.getDriver(this).schema.defaultValue as ValueOf<this>);
+  readonly path: DirectSelectorDef<Path>;
 
-  readonly path = this.DEF.selector(({ _ }) => getFrame(_).layout.path);
+  readonly isMounted: DirectSelectorDef<boolean>;
 
-  readonly isMounted = this.DEF.selector(() => true); // TODO: Impement this
-
-  readonly value = this.DEF.selector(() => undefined as ValueOf<this>);// TODO: Impement this
+  readonly value: DirectSelectorDef<ValueOf<this>>;
 
   static getInstance<JT extends JunctureType>(Type: JT): InstanceType<JT> {
-    if ((Type as any)[junctureSymbols.instance]) {
-      const cache = (Type as any)[junctureSymbols.instance] as { Type: JunctureType, instance: Juncture };
-      // When subclassng a Juncture that already has the instance cache
-      if (cache.Type === Type) {
-        return cache.instance as InstanceType<JT>;
-      }
-    }
-    const instance: InstanceType<JT> = new Type() as InstanceType<JT>;
-    Juncture.getPropertyAssembler(instance).wire();
-
-    // eslint-disable-next-line no-param-reassign
-    (Type as any)[junctureSymbols.instance] = { Type, instance };
-    return instance;
+    return Singleton.get(Type).instance;
   }
 
-  static getPropertyAssembler<J extends Juncture>(juncture: J): PropertyAssembler {
-    if ((juncture as any)[junctureSymbols.propertyAssembler]) {
-      return (juncture as any)[junctureSymbols.propertyAssembler];
+  static getPropertyAssembler(juncture: Juncture): PropertyAssembler {
+    return PropertyAssembler.get(juncture);
+  }
+
+  static getSchema<JT extends JunctureType>(Type: JT): SchemaOfType<JT>;
+  static getSchema<J extends Juncture>(Type: J): SchemaOf<J>;
+  static getSchema<T extends JunctureType | Juncture>(intance_or_Type: T) {
+    let juncture: Juncture;
+    if (typeof intance_or_Type === 'function') {
+      juncture = Juncture.getInstance(intance_or_Type);
+    } else {
+      juncture = intance_or_Type;
     }
-    const result = juncture[jSymbols.createPropertyAssembler]();
-    // eslint-disable-next-line no-param-reassign
-    (juncture as any)[junctureSymbols.propertyAssembler] = result;
+
+    if ((juncture as any)[junctureSymbols.schemaCache]) {
+      return (juncture as any)[junctureSymbols.schemaCache];
+    }
+
+    const result = juncture.schema[jSymbols.defPayload]() as any;
+    (juncture as any)[junctureSymbols.schemaCache] = result;
     return result;
   }
 
-  static getDriver<J extends Juncture>(juncture: J): Driver<J> {
-    if ((juncture as any)[junctureSymbols.driver]) {
-      return (juncture as any)[junctureSymbols.driver];
-    }
-    const result = juncture[jSymbols.createDriver]();
-    // eslint-disable-next-line no-param-reassign
-    (juncture as any)[junctureSymbols.driver] = result;
-    return result;
-  }
-
-  static createFrame<J extends Juncture>(juncture: J, config: FrameConfig) {
-    return juncture[jSymbols.createFrame](config);
+  static createCtx<JT extends JunctureType>(Type: JT, config: CtxConfig) {
+    const juncture = Juncture.getInstance(Type);
+    return juncture[jSymbols.createCtx](config);
   }
 }
+
+// ---  Derivations
+export type SchemaOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>;
+export type ValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>['defaultValue'];
+export type HandledValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>[JSymbols['handledValue']];
+
+export type CtxOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createCtx]>;
+export type PrivateCursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createCtx]>['privateCursor'];
+export type CursorOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createCtx]>['cursor'];
 // #endregion
 
 // #region JunctureType
 export interface JunctureType<J extends Juncture = Juncture> {
   new(): J;
 }
+
+// ---  Derivations
+export type SchemaOfType<JT extends JunctureType> = SchemaOf<InstanceType<JT>>;
+export type ValueOfType<JT extends JunctureType> = ValueOf<InstanceType<JT>>;
+export type HandledValueOfType<JT extends JunctureType> = HandledValueOf<InstanceType<JT>>;
+
+export type CtxOfType<JT extends JunctureType> = CtxOf<InstanceType<JT>>;
+export type PrivateCursorOfType<JT extends JunctureType> = PrivateCursorOf<InstanceType<JT>>;
+export type CursorOfType<JT extends JunctureType> = CursorOf<InstanceType<JT>>;
+// #endregion
+
+// #region JunctureTypeMap
+export interface JunctureTypeMap {
+  readonly [key: string]: JunctureType;
+}
+
+// ---  Derivations
+export type CursorMapOfJunctureTypeMap<JTM extends JunctureTypeMap> = {
+  readonly [K in keyof JTM]: CursorOfType<JTM[K]>;
+};
 // #endregion

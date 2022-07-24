@@ -7,6 +7,7 @@
  */
 
 import { jSymbols } from '../symbols';
+import { isObject } from '../util/object';
 
 export enum DefKind {
   schema = 'schema',
@@ -32,10 +33,7 @@ export function createDef<K extends DefKind, Q extends string, P>(kind: K, subKi
 }
 
 export function isDef(obj: any, kind?: DefKind, subKind?: string): obj is Def<any, any, any> {
-  if (typeof obj !== 'object') {
-    return false;
-  }
-  if (obj === null) {
+  if (!isObject(obj)) {
     return false;
   }
 

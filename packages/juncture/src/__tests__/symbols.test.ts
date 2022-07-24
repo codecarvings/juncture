@@ -17,20 +17,20 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.handledValue).toBe('symbol');
   });
 
+  test('should contain the init symbol', () => {
+    expect(typeof jSymbols.init).toBe('symbol');
+  });
+
   test('should contain the propertyAssembler symbol', () => {
     expect(typeof jSymbols.createPropertyAssembler).toBe('symbol');
   });
 
-  test('should contain the createDefComposer symbol', () => {
-    expect(typeof jSymbols.createDefComposer).toBe('symbol');
+  test('should contain the createComposer symbol', () => {
+    expect(typeof jSymbols.createComposer).toBe('symbol');
   });
 
-  test('should contain the createDriver symbol', () => {
-    expect(typeof jSymbols.createDriver).toBe('symbol');
-  });
-
-  test('should contain the createFrame symbol', () => {
-    expect(typeof jSymbols.createFrame).toBe('symbol');
+  test('should contain the createCtx symbol', () => {
+    expect(typeof jSymbols.createCtx).toBe('symbol');
   });
 
   test('should contain the bitDefault symbol', () => {

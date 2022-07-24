@@ -33,3 +33,18 @@ export function mappedAssign(object: any, keys: ReadonlyArray<string>, mapFn: (k
   keys.forEach(key => { object[key] = mapFn(key); });
   return object;
 }
+
+export function isObject(obj: any): obj is any {
+  if (typeof obj !== 'object') {
+    return false;
+  }
+  if (obj === null) {
+    return false;
+  }
+
+  return true;
+}
+
+export interface Constructable<T = any> {
+  new(): T;
+}

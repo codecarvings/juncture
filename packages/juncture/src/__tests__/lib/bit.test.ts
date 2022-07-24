@@ -9,15 +9,16 @@
 /* eslint-disable no-multi-assign */
 /* eslint-disable max-len */
 
+import { ComposableJuncture } from '../../composable-juncture';
 import { asPrivate, isPrivate, Private } from '../../definition/private';
-import { PropertyAssembler } from '../../definition/property-assembler';
 import {
   createSchemaDef, isSchemaDef, Schema, SchemaDef
 } from '../../definition/schema';
 import { createDirectSelectorDef } from '../../definition/selector';
+import { PropertyAssembler } from '../../fabric/property-assembler';
 import { Juncture } from '../../juncture';
 import {
-  Bit, BitDefComposer, BitSchema, jBit, SettableBit,
+  Bit, BitComposer, BitSchema, jBit, SettableBit,
   SettableBooleanBit, SettableNumberBit, SettableStringBit, SettableSymbolBit
 } from '../../lib/bit';
 import { jSymbols } from '../../symbols';
@@ -43,15 +44,9 @@ describe('BitSchema', () => {
     expect(typeof new TestBitSchema(undefined)).toBe('object');
     expect(typeof new TestBitSchema(null)).toBe('object');
   });
-
-  test('should have a "defaultProperty" contianing the same value passed to the constructor', () => {
-    const defaultValue = { myValue: 1 };
-    const schema = new TestBitSchema(defaultValue);
-    expect(schema.defaultValue).toBe(defaultValue);
-  });
 });
 
-describe('BitDefComposer', () => {
+describe('BitComposer', () => {
   class MyBit extends Bit {
     schema = createSchemaDef(() => new Schema({
       firstName: ''
@@ -59,15 +54,13 @@ describe('BitDefComposer', () => {
   }
 
   describe('instance', () => {
-    let juncture: MyBit;
     let container: any;
     let assembler: PropertyAssembler;
-    let composer: BitDefComposer<MyBit>;
+    let composer: BitComposer<MyBit>;
     beforeEach(() => {
-      juncture = new MyBit();
-      container = juncture;
-      assembler = Juncture.getPropertyAssembler(juncture);
-      composer = new BitDefComposer(juncture);
+      container = { };
+      assembler = new PropertyAssembler(container);
+      composer = new BitComposer<MyBit>(assembler);
     });
 
     describe('override', () => {
@@ -172,16 +165,24 @@ describe('BitDefComposer', () => {
 });
 
 describe('Bit', () => {
-  test('should be a subclass of Juncture', () => {
-    expect(jBit.String.prototype).toBeInstanceOf(Juncture);
+  test('should be a subclass of ComposableJuncture', () => {
+    expect(Bit.prototype).toBeInstanceOf(ComposableJuncture);
   });
 
-  test('should have BitDefComposer as composer', () => {
+  test('should be a class instantiable without arguments', () => {
     class MyBit extends Bit {
       schema = createSchemaDef(() => new TestBitSchema(undefined));
     }
-    const myBit = Juncture.getInstance(MyBit);
-    expect((myBit as any).DEF).toBeInstanceOf(BitDefComposer);
+    const juncture = new MyBit();
+    expect(juncture).toBeInstanceOf(Juncture);
+  });
+
+  test('should have BitComposer as composer', () => {
+    class MyBit extends Bit {
+      schema = createSchemaDef(() => new TestBitSchema(undefined));
+    }
+    const juncture = Juncture.getInstance(MyBit);
+    expect((juncture as any).DEF).toBeInstanceOf(BitComposer);
   });
 });
 
@@ -259,9 +260,8 @@ describe('jBit - Bit Builder', () => {
     });
 
     test('should return a Juncture with default value ""', () => {
-      const instance = Juncture.getInstance(jBit.String);
-      const driver = Juncture.getDriver(instance);
-      expect(driver.schema.defaultValue).toBe('');
+      const schema = Juncture.getSchema(jBit.String);
+      expect(schema.defaultValue).toBe('');
     });
   });
 
@@ -277,9 +277,8 @@ describe('jBit - Bit Builder', () => {
     });
 
     test('should return a Juncture with default value 0', () => {
-      const instance = Juncture.getInstance(jBit.Number);
-      const driver = Juncture.getDriver(instance);
-      expect(driver.schema.defaultValue).toBe(0);
+      const schema = Juncture.getSchema(jBit.Number);
+      expect(schema.defaultValue).toBe(0);
     });
   });
 
@@ -295,9 +294,8 @@ describe('jBit - Bit Builder', () => {
     });
 
     test('should return a Juncture with default value false', () => {
-      const instance = Juncture.getInstance(jBit.Boolean);
-      const driver = Juncture.getDriver(instance);
-      expect(driver.schema.defaultValue).toBe(false);
+      const schema = Juncture.getSchema(jBit.Boolean);
+      expect(schema.defaultValue).toBe(false);
     });
   });
 
@@ -313,9 +311,8 @@ describe('jBit - Bit Builder', () => {
     });
 
     test('should return a Juncture with default value jSymbols.bitDefault', () => {
-      const instance = Juncture.getInstance(jBit.Symbol);
-      const driver = Juncture.getDriver(instance);
-      expect(driver.schema.defaultValue).toBe(jSymbols.bitDefault);
+      const schema = Juncture.getSchema(jBit.Symbol);
+      expect(schema.defaultValue).toBe(jSymbols.bitDefault);
     });
   });
 
@@ -336,9 +333,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value ""', () => {
-        const instance = Juncture.getInstance(jBit.Of(''));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe('');
+        const schema = Juncture.getSchema(jBit.Of(''));
+        expect(schema.defaultValue).toBe('');
       });
     });
 
@@ -356,9 +352,8 @@ describe('jBit - Bit Builder', () => {
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = 'X';
-        const instance = Juncture.getInstance(jBit.Of(defaultValue));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(defaultValue);
+        const schema = Juncture.getSchema(jBit.Of(defaultValue));
+        expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
@@ -374,9 +369,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value 0', () => {
-        const instance = Juncture.getInstance(jBit.Of(0));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(0);
+        const schema = Juncture.getSchema(jBit.Of(0));
+        expect(schema.defaultValue).toBe(0);
       });
     });
 
@@ -394,9 +388,8 @@ describe('jBit - Bit Builder', () => {
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = 2;
-        const instance = Juncture.getInstance(jBit.Of(defaultValue));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(defaultValue);
+        const schema = Juncture.getSchema(jBit.Of(defaultValue));
+        expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
@@ -412,9 +405,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value "false"', () => {
-        const instance = Juncture.getInstance(jBit.Of(false));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(false);
+        const schema = Juncture.getSchema(jBit.Of(false));
+        expect(schema.defaultValue).toBe(false);
       });
     });
 
@@ -432,9 +424,8 @@ describe('jBit - Bit Builder', () => {
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = true;
-        const instance = Juncture.getInstance(jBit.Of(defaultValue));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(defaultValue);
+        const schema = Juncture.getSchema(jBit.Of(defaultValue));
+        expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
@@ -450,9 +441,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value jSymbols.bitDefault', () => {
-        const instance = Juncture.getInstance(jBit.Of(jSymbols.bitDefault));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(jSymbols.bitDefault);
+        const schema = Juncture.getSchema(jBit.Of(jSymbols.bitDefault));
+        expect(schema.defaultValue).toBe(jSymbols.bitDefault);
       });
     });
 
@@ -470,9 +460,8 @@ describe('jBit - Bit Builder', () => {
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = Symbol('test');
-        const instance = Juncture.getInstance(jBit.Of(defaultValue));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(defaultValue);
+        const schema = Juncture.getSchema(jBit.Of(defaultValue));
+        expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
@@ -490,9 +479,8 @@ describe('jBit - Bit Builder', () => {
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = { myValue: 1 };
-        const instance = Juncture.getInstance(jBit.Of(defaultValue));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(defaultValue);
+        const schema = Juncture.getSchema(jBit.Of(defaultValue));
+        expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
@@ -510,9 +498,8 @@ describe('jBit - Bit Builder', () => {
 
       test('should return a Juncture with default value set to null', () => {
         const defaultValue = null;
-        const instance = Juncture.getInstance(jBit.Of(defaultValue));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(defaultValue);
+        const schema = Juncture.getSchema(jBit.Of(defaultValue));
+        expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
@@ -530,9 +517,8 @@ describe('jBit - Bit Builder', () => {
 
       test('should return a Juncture with default value set to undefined', () => {
         const defaultValue = undefined;
-        const instance = Juncture.getInstance(jBit.Of(defaultValue));
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(defaultValue);
+        const schema = Juncture.getSchema(jBit.Of(defaultValue));
+        expect(schema.defaultValue).toBe(defaultValue);
       });
     });
   });
@@ -554,9 +540,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value ""', () => {
-        const instance = Juncture.getInstance(jBit.settable.String);
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe('');
+        const schema = Juncture.getSchema(jBit.settable.String);
+        expect(schema.defaultValue).toBe('');
       });
     });
 
@@ -572,9 +557,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value 0', () => {
-        const instance = Juncture.getInstance(jBit.settable.Number);
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(0);
+        const schema = Juncture.getSchema(jBit.settable.Number);
+        expect(schema.defaultValue).toBe(0);
       });
     });
 
@@ -590,9 +574,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value false', () => {
-        const instance = Juncture.getInstance(jBit.settable.Boolean);
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(false);
+        const schema = Juncture.getSchema(jBit.settable.Boolean);
+        expect(schema.defaultValue).toBe(false);
       });
     });
 
@@ -608,9 +591,8 @@ describe('jBit - Bit Builder', () => {
       });
 
       test('should return a Juncture with default value jSymbols.bitDefault', () => {
-        const instance = Juncture.getInstance(jBit.settable.Symbol);
-        const driver = Juncture.getDriver(instance);
-        expect(driver.schema.defaultValue).toBe(jSymbols.bitDefault);
+        const schema = Juncture.getSchema(jBit.settable.Symbol);
+        expect(schema.defaultValue).toBe(jSymbols.bitDefault);
       });
     });
 
@@ -631,9 +613,8 @@ describe('jBit - Bit Builder', () => {
         });
 
         test('should return a Juncture with default value ""', () => {
-          const instance = Juncture.getInstance(jBit.settable.Of(''));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe('');
+          const schema = Juncture.getSchema(jBit.settable.Of(''));
+          expect(schema.defaultValue).toBe('');
         });
       });
 
@@ -651,9 +632,8 @@ describe('jBit - Bit Builder', () => {
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = 'X';
-          const instance = Juncture.getInstance(jBit.settable.Of(defaultValue));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(defaultValue);
+          const schema = Juncture.getSchema(jBit.settable.Of(defaultValue));
+          expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
@@ -669,9 +649,8 @@ describe('jBit - Bit Builder', () => {
         });
 
         test('should return a Juncture with default value 0', () => {
-          const instance = Juncture.getInstance(jBit.settable.Of(0));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(0);
+          const schema = Juncture.getSchema(jBit.settable.Of(0));
+          expect(schema.defaultValue).toBe(0);
         });
       });
 
@@ -689,9 +668,8 @@ describe('jBit - Bit Builder', () => {
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = 2;
-          const instance = Juncture.getInstance(jBit.settable.Of(defaultValue));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(defaultValue);
+          const schema = Juncture.getSchema(jBit.settable.Of(defaultValue));
+          expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
@@ -707,9 +685,8 @@ describe('jBit - Bit Builder', () => {
         });
 
         test('should return a Juncture with default value "false"', () => {
-          const instance = Juncture.getInstance(jBit.settable.Of(false));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(false);
+          const schema = Juncture.getSchema(jBit.settable.Of(false));
+          expect(schema.defaultValue).toBe(false);
         });
       });
 
@@ -727,9 +704,8 @@ describe('jBit - Bit Builder', () => {
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = true;
-          const instance = Juncture.getInstance(jBit.settable.Of(defaultValue));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(defaultValue);
+          const schema = Juncture.getSchema(jBit.settable.Of(defaultValue));
+          expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
@@ -745,9 +721,8 @@ describe('jBit - Bit Builder', () => {
         });
 
         test('should return a Juncture with default value jSymbols.bitDefault', () => {
-          const instance = Juncture.getInstance(jBit.settable.Of(jSymbols.bitDefault));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(jSymbols.bitDefault);
+          const schema = Juncture.getSchema(jBit.settable.Of(jSymbols.bitDefault));
+          expect(schema.defaultValue).toBe(jSymbols.bitDefault);
         });
       });
 
@@ -765,9 +740,8 @@ describe('jBit - Bit Builder', () => {
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = Symbol('test');
-          const instance = Juncture.getInstance(jBit.settable.Of(defaultValue));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(defaultValue);
+          const schema = Juncture.getSchema(jBit.settable.Of(defaultValue));
+          expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
@@ -785,9 +759,8 @@ describe('jBit - Bit Builder', () => {
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = { myValue: 1 };
-          const instance = Juncture.getInstance(jBit.settable.Of(defaultValue));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(defaultValue);
+          const schema = Juncture.getSchema(jBit.settable.Of(defaultValue));
+          expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
@@ -805,9 +778,8 @@ describe('jBit - Bit Builder', () => {
 
         test('should return a Juncture with default value set to null', () => {
           const defaultValue = null;
-          const instance = Juncture.getInstance(jBit.settable.Of(defaultValue));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(defaultValue);
+          const schema = Juncture.getSchema(jBit.settable.Of(defaultValue));
+          expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
@@ -825,9 +797,8 @@ describe('jBit - Bit Builder', () => {
 
         test('should return a Juncture with default value set to undefined', () => {
           const defaultValue = undefined;
-          const instance = Juncture.getInstance(jBit.settable.Of(defaultValue));
-          const driver = Juncture.getDriver(instance);
-          expect(driver.schema.defaultValue).toBe(defaultValue);
+          const schema = Juncture.getSchema(jBit.settable.Of(defaultValue));
+          expect(schema.defaultValue).toBe(defaultValue);
         });
       });
     });

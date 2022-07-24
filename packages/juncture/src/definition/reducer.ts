@@ -6,20 +6,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PrivateContextRoleConsumer } from '../context/private-context';
-import { Path } from '../frame/path';
+import { Path } from '../context/path';
+import { PrivateFrameConsumer } from '../frame/private-frame';
 import {
   createDef, Def, DefKind, isDef
 } from './def';
 
 export interface Action {
-  readonly target: Path; // TODO | FrameRef;
+  readonly target: Path; // TODO | CtxRef;
   readonly key: string;
   readonly args: any;
 }
 
 // #region Def
-export const notAReducerDef = '⚠ ERROR: NOT A REDUCER';
+export const notAReducerDef = '\u26A0 ERROR: NOT A REDUCER';
 
 export enum ReducerDefSubKind {
   plain = 'plain',
@@ -27,10 +27,10 @@ export enum ReducerDefSubKind {
 }
 
 export interface ReducerDef<T extends ReducerDefSubKind, B extends (...args: any) => any>
-  extends Def<DefKind.reducer, T, PrivateContextRoleConsumer<B>> { }
+  extends Def<DefKind.reducer, T, PrivateFrameConsumer<B>> { }
 
 function createReducerDef<T extends ReducerDefSubKind, B extends (...args: any) => any>(
-  subKind: T, reducerFn: PrivateContextRoleConsumer<B>): ReducerDef<T, B> {
+  subKind: T, reducerFn: PrivateFrameConsumer<B>): ReducerDef<T, B> {
   return createDef(DefKind.reducer, subKind, reducerFn);
 }
 
@@ -39,10 +39,6 @@ function isReducerDef(obj: any, subKind?: ReducerDefSubKind): obj is ReducerDef<
 }
 
 // ---  Derivations
-export type ReducerDefsOf<O> = {
-  readonly [K in keyof O as O[K] extends ReducerDef<any, any> ? K : never]: O[K];
-};
-
 export type ReducerOfReducerDef<D extends ReducerDef<any, any>>
   = D extends ReducerDef<any, infer B> ? B : never;
 
@@ -51,7 +47,7 @@ export interface PlainReducerDef<B extends (...args: any) => any>
   extends ReducerDef<ReducerDefSubKind.plain, B> { }
 
 export function createPlainReducerDef<B extends (...args: any) => any>(
-  reducerFn: PrivateContextRoleConsumer<B>): PlainReducerDef<B> {
+  reducerFn: PrivateFrameConsumer<B>): PlainReducerDef<B> {
   return createReducerDef(ReducerDefSubKind.plain, reducerFn);
 }
 
@@ -65,7 +61,7 @@ export interface MixReducerDef<B extends (...args: any) => ReadonlyArray<Action>
   extends ReducerDef<ReducerDefSubKind.mix, B> { }
 
 export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
-  reducerFn: PrivateContextRoleConsumer<B>): MixReducerDef<B> {
+  reducerFn: PrivateFrameConsumer<B>): MixReducerDef<B> {
   return createReducerDef(ReducerDefSubKind.mix, reducerFn);
 }
 

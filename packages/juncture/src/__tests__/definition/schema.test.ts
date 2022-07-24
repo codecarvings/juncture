@@ -18,7 +18,7 @@ describe('Schema', () => {
   });
 
   describe('instance', () => {
-    test('should have a defaultValue property that returns the value provided in the constructor', () => {
+    test('should have a "defaultValue" property that returns the value provided in the constructor', () => {
       const schema = new Schema(defaultValue);
       expect(schema.defaultValue).toBe(defaultValue);
     });

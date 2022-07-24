@@ -6,17 +6,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValueOf } from '../bare-juncture';
-import { OverrideSchemaContext } from '../context/private-context';
-import { CreateDefForOverrideArgs, DefComposer } from '../definition/composer';
+import { ComposableJuncture } from '../composable-juncture';
+import { Composer, CreateDefForOverrideArgs } from '../composer';
 import {
   createSchemaDef, isSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
 } from '../definition/schema';
-import { Juncture, JunctureType } from '../juncture';
+import { OverrideSchemaFrame } from '../frame/private-frame';
+import { Juncture, JunctureType, ValueOf } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
 let createBitSchema: <V>(defaultValue: V) => BitSchema<V>;
+
 export class BitSchema<V = any> extends Schema<V> {
   // Constructor is protected because type of the value cannot be changed in an inherited class
   // to avoid problems with reducers in the super class
@@ -35,14 +36,14 @@ export class BitSchema<V = any> extends Schema<V> {
 // #endregion
 
 // #region Composer
-export class BitDefComposer<J extends Bit> extends DefComposer<J> {
+export class BitComposer<J extends Bit> extends Composer<J> {
   protected createDefForOverride(args: CreateDefForOverrideArgs) {
     if (isSchemaDef(args.parentDef)) {
       if (args.fnName === 'setDefaultValue') {
         return createSchemaDef(() => {
           const parent = args.parentDef[jSymbols.defPayload]();
-          const ctx2 = { parent };
-          const defaultValue2 = args.fnArgs[0](ctx2);
+          const frame2 = { parent };
+          const defaultValue2 = args.fnArgs[0](frame2);
           return createBitSchema(defaultValue2);
         });
       }
@@ -51,9 +52,9 @@ export class BitDefComposer<J extends Bit> extends DefComposer<J> {
     return super.createDefForOverride(args);
   }
 
-  readonly override!: DefComposer<J>['override'] & {
+  readonly override!: Composer<J>['override'] & {
     <D extends SchemaDef<BitSchema<any>>>(parent: D): {
-      setDefaultValue<F extends (ctx: OverrideSchemaContext<SchemaOfSchemaDef<D>>)
+      setDefaultValue<F extends (frame: OverrideSchemaFrame<SchemaOfSchemaDef<D>>)
       => ValueOfSchema<SchemaOfSchemaDef<D>>>
       (selectorFn: F): D;
     };
@@ -62,14 +63,14 @@ export class BitDefComposer<J extends Bit> extends DefComposer<J> {
 // #endregion
 
 // #region Juncture
-export abstract class Bit extends Juncture {
+export abstract class Bit extends ComposableJuncture {
   abstract readonly schema: SchemaDef<BitSchema>;
 
-  protected [jSymbols.createDefComposer]() {
-    return new BitDefComposer(this);
+  protected [jSymbols.createComposer](): BitComposer<this> {
+    return new BitComposer<this>(Juncture.getPropertyAssembler(this));
   }
 
-  protected readonly DEF!: BitDefComposer<this>;
+  protected readonly DEF!: BitComposer<this>;
 }
 // #endregion
 
@@ -152,8 +153,8 @@ interface StatedSettableSymbolBitType extends JunctureType<StatedSettableSymbolB
 // #endregion
 
 // #region Builder
-function createBitType<JT extends abstract new(...args: any) => Bit>(Type: JT, defaultValue: any) {
-  abstract class BuiltBit extends Type {
+function createBitType<JT extends abstract new(...args: any) => Bit>(BaseType: JT, defaultValue: any) {
+  abstract class BuiltBit extends BaseType {
     schema = createSchemaDef(() => createBitSchema(defaultValue));
   }
   return BuiltBit;

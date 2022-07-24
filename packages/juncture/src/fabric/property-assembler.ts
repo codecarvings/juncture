@@ -6,6 +6,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { jSymbols } from '../symbols';
+
+// --- Symbols
+const propertyAssemblerCacheSymbol = Symbol('propertyAssemblerCache');
+interface PropertyAssemblerSymbols {
+  readonly propertyAssemblerCache: typeof propertyAssemblerCacheSymbol;
+}
+const propertyAssemblerSymbols: PropertyAssemblerSymbols = {
+  propertyAssemblerCache: propertyAssemblerCacheSymbol
+};
+
 export interface AssemblablePropertyFactory {
   (key: string, parentValue: any, container: any): any;
 }
@@ -24,19 +35,13 @@ interface DynamicAssemblableProperty {
 
 type AssemblableProperty = StaticAssemblableProperty | DynamicAssemblableProperty;
 
-export interface PropertyAssembler {
-  registerStaticProperty<V>(value: V): V;
-  registerDynamicProperty(factory: AssemblablePropertyFactory): any;
-  wire(): void;
-}
-
 let placeholderCounter = 0;
 function createPlaceholder() {
   placeholderCounter += 1;
   return Symbol(`Placeholder #${placeholderCounter}`);
 }
 
-export class StandardPropertyAssembler implements PropertyAssembler {
+export class PropertyAssembler {
   protected pendingProperty: AssemblableProperty | undefined;
 
   protected readonly valueCache = new Map<string, object>();
@@ -96,4 +101,19 @@ export class StandardPropertyAssembler implements PropertyAssembler {
       throw Error(`Unable to wire assemblable property: The same value has been used multiple times (${totPropertyKeys}) in the container: [${propertyKeys.join(', ')}] - placeholder: "${property.placeholder.toString()}".`);
     }
   }
+
+  static get(host: PropertyAssemblerHost): PropertyAssembler {
+    if ((host as any)[propertyAssemblerSymbols.propertyAssemblerCache]) {
+      return (host as any)[propertyAssemblerSymbols.propertyAssemblerCache];
+    }
+
+    const result = host[jSymbols.createPropertyAssembler]();
+    // eslint-disable-next-line no-param-reassign
+    (host as any)[propertyAssemblerSymbols.propertyAssemblerCache] = result;
+    return result;
+  }
+}
+
+export interface PropertyAssemblerHost {
+  [jSymbols.createPropertyAssembler](): PropertyAssembler;
 }

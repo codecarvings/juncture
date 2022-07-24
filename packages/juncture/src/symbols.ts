@@ -9,18 +9,18 @@
 const defPayload = Symbol('defPayload');
 const handledValue = Symbol('handledValue');
 const createPropertyAssembler = Symbol('createPropertyAssembler');
-const createDefComposer = Symbol('createDefComposer');
-const createDriver = Symbol('createDriver');
-const createFrame = Symbol('createFrame');
+const createComposer = Symbol('createComposer');
+const init = Symbol('init');
+const createCtx = Symbol('createCtx');
 const bitDefault = Symbol('bitDefault');
 
 export interface JSymbols {
   readonly defPayload: typeof defPayload;
   readonly handledValue: typeof handledValue;
   readonly createPropertyAssembler: typeof createPropertyAssembler;
-  readonly createDefComposer: typeof createDefComposer;
-  readonly createDriver: typeof createDriver;
-  readonly createFrame: typeof createFrame;
+  readonly createComposer: typeof createComposer;
+  readonly init: typeof init;
+  readonly createCtx: typeof createCtx;
   readonly bitDefault: typeof bitDefault;
 }
 
@@ -28,8 +28,8 @@ export const jSymbols: JSymbols = {
   defPayload,
   handledValue,
   createPropertyAssembler,
-  createDefComposer,
-  createDriver,
-  createFrame,
+  createComposer,
+  init,
+  createCtx,
   bitDefault
 };
