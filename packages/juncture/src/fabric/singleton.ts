@@ -40,7 +40,7 @@ export class Singleton<T extends Constructable> {
     return result;
   }
 
-  static getSingletonPropertyAccessor(
+  static getSingletonAttachment(
     cacheKey: symbol,
     resolverFn: (instance: any) => any
   ): (intance_or_Type: any) => any {

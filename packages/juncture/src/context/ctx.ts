@@ -8,6 +8,7 @@
 
 import { Schema } from '../definition/schema';
 import { Juncture } from '../juncture';
+import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../util/object';
 import { Cursor } from './cursor';
 import { createFrame, Frame } from './frames/frame';
@@ -67,9 +68,8 @@ export class Ctx {
     this.getValue = this.getValue.bind(this);
     this.childCtxResolver = this.childCtxResolver.bind(this);
 
-    defineLazyProperty(this, 'cursor', () => Juncture.createCursor(this.juncture, this, this.childCtxResolver));
-    defineLazyProperty(this, 'privateCursor', () => Juncture.createPrivateCursor(
-      this.juncture,
+    defineLazyProperty(this, 'cursor', () => this.juncture[jSymbols.createCursor](this, this.childCtxResolver));
+    defineLazyProperty(this, 'privateCursor', () => this.juncture[jSymbols.createPrivateCursor](
       this,
       this.childCtxResolver
     ));
