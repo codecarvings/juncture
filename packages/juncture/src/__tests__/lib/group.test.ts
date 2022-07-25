@@ -110,7 +110,7 @@ describe('GroupCtx', () => {
   });
 
   describe('instance', () => {
-    let ctx: GroupCtx<MyJuncture>;
+    let ctx: GroupCtx;
     beforeEach(() => {
       ctx = new GroupCtx(juncture, config);
     });

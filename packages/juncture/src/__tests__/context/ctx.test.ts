@@ -34,7 +34,7 @@ describe('Ctx', () => {
   });
 
   describe('instance', () => {
-    let ctx: Ctx<MyJuncture>;
+    let ctx: Ctx;
     beforeEach(() => {
       ctx = new Ctx(juncture, config);
     });

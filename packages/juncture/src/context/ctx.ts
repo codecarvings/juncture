@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture, SchemaOf, ValueOf } from '../juncture';
+import { Schema } from '../definition/schema';
+import { Juncture } from '../juncture';
 import { defineLazyProperty } from '../util/object';
-import { createCursor, Cursor } from './cursor';
+import { Cursor } from './cursor';
 import { createFrame, Frame } from './frames/frame';
 import {
   AccessorKit, prepareAccessorKit, preparePrivateAccessorKit, PrivateAccessorKit
@@ -32,63 +33,67 @@ export interface CtxConfig {
 }
 // #endregion
 
+export interface CtxResolver {
+  (key: any): Ctx;
+}
+
 // #region Ctx
-export class Ctx<J extends Juncture = Juncture> {
-  readonly schema: SchemaOf<J>;
+export class Ctx {
+  readonly schema: Schema;
 
   readonly layout: CtxLayout;
 
-  readonly cursor!: Cursor<J>;
+  readonly cursor!: any; // Cursor
 
-  readonly privateCursor!: Cursor<J>;
+  protected readonly privateCursor!: Cursor;
 
-  readonly frame!: Frame<Juncture>;
+  readonly frame!: Frame;
 
-  readonly bins: BinKit<Juncture> = {} as any;
+  readonly bins: BinKit = {} as any;
 
-  protected readonly accessors: AccessorKit<Juncture> = {} as any;
+  protected readonly accessors: AccessorKit = {} as any;
 
-  protected readonly privateFrames: PrivateFrameKit<Juncture> = {} as any;
+  protected readonly privateFrames: PrivateFrameKit = {} as any;
 
-  protected readonly privateBins: PrivateBinKit<Juncture> = {} as any;
+  protected readonly privateBins: PrivateBinKit = {} as any;
 
-  protected readonly privateAccessors: PrivateAccessorKit<Juncture> = {} as any;
+  protected readonly privateAccessors: PrivateAccessorKit = {} as any;
 
-  constructor(readonly juncture: J, config: CtxConfig) {
+  constructor(readonly juncture: Juncture, config: CtxConfig) {
     this.schema = Juncture.getSchema(juncture);
 
     this.layout = config.layout;
 
-    defineLazyProperty(this, 'cursor', () => this.createCursor());
-    defineLazyProperty(this, 'privateCursor', () => this.createPrivateCursor());
+    this.getValue = this.getValue.bind(this);
+    this.childCtxResolver = this.childCtxResolver.bind(this);
+
+    defineLazyProperty(this, 'cursor', () => Juncture.createCursor(this.juncture, this, this.childCtxResolver));
+    defineLazyProperty(this, 'privateCursor', () => Juncture.createPrivateCursor(
+      this.juncture,
+      this,
+      this.childCtxResolver
+    ));
     defineLazyProperty(this, 'frame', () => createFrame(this, this.accessors));
 
     prepareBinKit(this.bins, this.juncture, this.privateFrames);
     prepareAccessorKit(this.accessors, this);
 
-    preparePrivateFrameKit(this.privateFrames, this, this.privateAccessors);
+    preparePrivateFrameKit(this.privateFrames, this as any, this.privateAccessors);
     preparePrivateBinKit(this.privateBins, this.juncture, this.privateFrames);
     preparePrivateAccessorKit(this.privateAccessors, this, this.privateBins);
-
-    this.getValue = this.getValue.bind(this);
   }
 
-  protected createCursor(): Cursor<J> {
-    return createCursor(this);
+  // eslint-disable-next-line class-methods-use-this
+  protected childCtxResolver(key: any): Ctx {
+    throw Error(`Unable to resolve child Ctx with key: ${key}`);
   }
 
-  protected createPrivateCursor(): Cursor<J> {
-    return this.cursor;
-  }
-
-  getValue(): ValueOf<J> {
+  getValue(): any {
     // TODO: implement this
     return this.schema.defaultValue;
   }
 }
 
-// ---  Derivations
-export type JunctureOfCtx<C extends Ctx> = C['juncture'];
 // #endregion
 
 // #region CtxMap

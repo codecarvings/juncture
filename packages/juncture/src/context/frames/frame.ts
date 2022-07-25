@@ -20,7 +20,7 @@ import { AccessorKit } from '../kits/accessor-kit';
 //   dispach<C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
 // }
 
-export interface Frame<J extends Juncture> {
+export interface Frame<J extends Juncture = Juncture> {
   readonly _ : CursorOf<J>;
 
   value(): ValueOf<J>;

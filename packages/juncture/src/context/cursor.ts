@@ -7,9 +7,10 @@
  */
 
 import {
-  CtxOf, CursorOf, Juncture, PrivateCursorOf, ValueOf
+  CursorOf, Juncture, PrivateCursorOf, ValueOf
 } from '../juncture';
-import { Ctx, JunctureOfCtx } from './ctx';
+import { jSymbols } from '../symbols';
+import { Ctx } from './ctx';
 
 // --- Symbols
 const ctxSymbol = Symbol('ctx');
@@ -21,21 +22,22 @@ const cursorSymbols: CursorSymbols = {
 };
 
 export interface Cursor<J extends Juncture = Juncture> {
-  readonly [cursorSymbols.ctx]: CtxOf<J>;
+  readonly [jSymbols.typeParam1]: J; // Preserve type param
+  readonly [cursorSymbols.ctx]: Ctx;
 }
 
-export function createCursor<C extends Ctx>(ctx: C): Cursor<JunctureOfCtx<C>> {
+export function createCursor<J extends Juncture, C extends Ctx>(ctx: C): Cursor<J> {
   return {
-    [cursorSymbols.ctx]: ctx as any
-  };
+    [cursorSymbols.ctx]: ctx
+  } as any;
 }
 
-export function getCtx<C extends Cursor>(_: C) {
+export function getCtx<C extends Cursor>(_: C): Ctx {
   return _[cursorSymbols.ctx];
 }
 
 export function isCursor(obj: any): obj is Cursor;
-export function isCursor<C extends Ctx>(obj: any, ctx: C): obj is Cursor<JunctureOfCtx<C>>;
+export function isCursor<C extends Ctx>(obj: any, ctx: C): obj is Cursor;
 export function isCursor<C extends Ctx>(obj: any, ctx?: C) {
   if (!obj) {
     return false;
@@ -47,8 +49,8 @@ export function isCursor<C extends Ctx>(obj: any, ctx?: C) {
 }
 
 // ---  Derivations
-export type JunctureOfCursor<C extends Cursor> = C[CursorSymbols['ctx']]['juncture'];
-export type ValueOfCursor<C extends Cursor> = ValueOf<C[CursorSymbols['ctx']]['juncture']>;
+export type JunctureOfCursor<C extends Cursor> = C extends Cursor<infer J> ? J : never;
+export type ValueOfCursor<C extends Cursor> = C extends Cursor<infer J> ? ValueOf<J> : never;
 // #endregion
 
 export interface CursorProvider<J extends Juncture = Juncture> {
