@@ -65,12 +65,9 @@ export class GroupComposer<J extends Group> extends Composer<J> {
 // #endregion
 
 // #region Ctx & Cursors
-export class GroupCtx extends Ctx {
-  readonly schema!: GroupSchema;
-
-  constructor(juncture: Juncture, config: CtxConfig) {
-    super(juncture, config);
-    this.childCtxs = mappedAssign(
+export class GroupCtx<J extends Group = Group> extends Ctx<J> {
+  protected createChildCtxs(): CtxMap {
+    return mappedAssign(
       {},
       this.schema.childKeys,
       key => Juncture.createCtx(this.schema.Children[key], {
@@ -84,11 +81,14 @@ export class GroupCtx extends Ctx {
     );
   }
 
-  protected readonly childCtxs: CtxMap;
+  protected readonly childCtxs = this.createChildCtxs();
+
+  protected childCtxResolver(key: any): Ctx {
+    return this.childCtxs[key];
+  }
 }
 
 export type GroupCursor<J extends Group> = Cursor<J> & CursorMapOfJunctureTypeMap<ChildrenOf<J>>;
-
 // #endregion
 
 // #region Juncture
@@ -97,12 +97,12 @@ export abstract class Group extends ComposableJuncture {
     return new GroupComposer<this>(Juncture.getPropertyAssembler(this));
   }
 
-  [jSymbols.createCtx](config: CtxConfig): GroupCtx {
+  [jSymbols.createCtx](config: CtxConfig): GroupCtx<this> {
     return new GroupCtx(this, config);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](ctx: GroupCtx, childCtxResolver: CtxResolver): GroupCursor<this> {
+  [jSymbols.createCursor](ctx: GroupCtx<this>, childCtxResolver: CtxResolver): GroupCursor<this> {
     const _: any = super[jSymbols.createCursor](ctx, childCtxResolver);
     ctx.schema.childKeys.forEach(key => {
       defineLazyProperty(_, key, () => childCtxResolver(key).cursor, true);
@@ -111,7 +111,7 @@ export abstract class Group extends ComposableJuncture {
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createPrivateCursor](ctx: GroupCtx, childCtxResolver: CtxResolver): GroupCursor<this> {
+  [jSymbols.createPrivateCursor](ctx: GroupCtx<this>, childCtxResolver: CtxResolver): GroupCursor<this> {
     return ctx.cursor;
   }
 

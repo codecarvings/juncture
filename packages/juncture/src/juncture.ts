@@ -40,17 +40,17 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     PropertyAssembler.get(this).wire();
   }
 
-  [jSymbols.createCtx](config: CtxConfig): Ctx {
+  [jSymbols.createCtx](config: CtxConfig): Ctx<this> {
     return new Ctx(this, config);
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createCursor](ctx: Ctx, childCtxResolver: CtxResolver): Cursor<this> {
+  [jSymbols.createCursor](ctx: Ctx<this>, childCtxResolver: CtxResolver): Cursor<this> {
     return createCursor(ctx);
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createPrivateCursor](ctx: Ctx, childCtxResolver: CtxResolver): Cursor<this> {
+  [jSymbols.createPrivateCursor](ctx: Ctx<this>, childCtxResolver: CtxResolver): Cursor<this> {
     return ctx.cursor;
   }
 
@@ -143,6 +143,9 @@ export type ValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>['defaul
 export type HandledValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>[JSymbols['handledValue']];
 
 // Use inference to keep type name
+export type CtxOf<J extends Juncture> = J extends {
+  [jSymbols.createCtx](...args : any) : infer C
+} ? C : never;
 export type CursorOf<J extends Juncture> = J extends {
   [jSymbols.createCursor](...args : any) : infer C
 } ? C : never;

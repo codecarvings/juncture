@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Schema } from '../definition/schema';
-import { Juncture } from '../juncture';
+import {
+  CursorOf, Juncture, PrivateCursorOf, SchemaOf
+} from '../juncture';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../util/object';
-import { Cursor } from './cursor';
 import { createFrame, Frame } from './frames/frame';
 import {
   AccessorKit, prepareAccessorKit, preparePrivateAccessorKit, PrivateAccessorKit
@@ -39,31 +39,31 @@ export interface CtxResolver {
 }
 
 // #region Ctx
-export class Ctx {
-  readonly schema: Schema;
-
+export class Ctx<J extends Juncture = Juncture> {
   readonly layout: CtxLayout;
 
-  readonly cursor!: any; // Cursor
+  readonly schema: SchemaOf<J>;
 
-  protected readonly privateCursor!: Cursor;
+  readonly cursor!: CursorOf<J>;
 
-  readonly frame!: Frame;
+  protected readonly privateCursor!: PrivateCursorOf<J>;
 
-  readonly bins: BinKit = {} as any;
+  readonly frame!: Frame<J>;
 
-  protected readonly accessors: AccessorKit = {} as any;
+  readonly bins: BinKit<J> = {} as any;
 
-  protected readonly privateFrames: PrivateFrameKit = {} as any;
+  protected readonly accessors: AccessorKit<J> = {} as any;
 
-  protected readonly privateBins: PrivateBinKit = {} as any;
+  protected readonly privateFrames: PrivateFrameKit<J> = {} as any;
 
-  protected readonly privateAccessors: PrivateAccessorKit = {} as any;
+  protected readonly privateBins: PrivateBinKit<J> = {} as any;
 
-  constructor(readonly juncture: Juncture, config: CtxConfig) {
-    this.schema = Juncture.getSchema(juncture);
+  protected readonly privateAccessors: PrivateAccessorKit<J> = {} as any;
 
+  constructor(readonly juncture: J, config: CtxConfig) {
     this.layout = config.layout;
+
+    this.schema = Juncture.getSchema(juncture) as any;
 
     this.getValue = this.getValue.bind(this);
     this.childCtxResolver = this.childCtxResolver.bind(this);
@@ -94,6 +94,8 @@ export class Ctx {
   }
 }
 
+// ---  Derivations
+export type JunctureOfCtx<C extends Ctx> = C['juncture'];
 // #endregion
 
 // #region CtxMap

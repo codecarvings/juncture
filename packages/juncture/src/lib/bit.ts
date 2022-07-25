@@ -8,6 +8,7 @@
 
 import { ComposableJuncture } from '../composable-juncture';
 import { Composer, CreateDefForOverrideArgs } from '../composer';
+import { Ctx, CtxConfig } from '../context/ctx';
 import { OverrideSchemaFrame } from '../context/frames/schema-frame';
 import {
   createSchemaDef, isSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
@@ -62,12 +63,26 @@ export class BitComposer<J extends Bit> extends Composer<J> {
 }
 // #endregion
 
+// #region Ctx & Cursors
+export class BitCtx extends Ctx {
+  readonly schema!: BitSchema;
+
+  constructor(readonly juncture: Bit, config: CtxConfig) {
+    super(juncture, config);
+  }
+}
+// #endregion
+
 // #region Juncture
 export abstract class Bit extends ComposableJuncture {
   abstract readonly schema: SchemaDef<BitSchema>;
 
   protected [jSymbols.createComposer](): BitComposer<this> {
     return new BitComposer<this>(Juncture.getPropertyAssembler(this));
+  }
+
+  [jSymbols.createCtx](config: CtxConfig): BitCtx {
+    return new BitCtx(this, config);
   }
 
   protected readonly DEF!: BitComposer<this>;

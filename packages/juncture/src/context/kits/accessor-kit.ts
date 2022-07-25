@@ -21,7 +21,7 @@ export interface AccessorKit<J extends Juncture = Juncture> {
   readonly select: SelectAccessor<J>;
 }
 
-export function prepareAccessorKit(accessors: any, ctx: Ctx) {
+export function prepareAccessorKit<C extends Ctx>(accessors: any, ctx: C) {
   defineLazyProperty(accessors, 'value', () => createValueAccessor(ctx));
   defineLazyProperty(accessors, 'select', () => createSelectAccessor(ctx));
 }
