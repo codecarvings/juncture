@@ -6,6 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { MixReducerFrame, OverrideMixReducerFrame } from './context/frames/mix-reducer-frame';
+import { OverrideReducerFrame, ReducerFrame } from './context/frames/reducer-frame';
+import { OverrideSelectorFrame, SelectorFrame } from './context/frames/selector-frame';
 import { Def, isDef } from './definition/def';
 import {
   asPrivate, isPrivate, Private, SameAccess
@@ -19,10 +22,6 @@ import {
   isDirectSelectorDef, isParamSelectorDef, ParamSelectorDef, SelectorOfSelectorDef
 } from './definition/selector';
 import { PropertyAssembler } from './fabric/property-assembler';
-import {
-  MixReducerFrame, OverrideMixReducerFrame, OverrideReducerFrame,
-  OverrideSelectorFrame, ReducerFrame, SelectorFrame
-} from './frame/private-frame';
 import { HandledValueOf, Juncture } from './juncture';
 import { jSymbols } from './symbols';
 

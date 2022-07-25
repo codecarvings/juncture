@@ -12,26 +12,10 @@ import { isDirectSelectorDef, notASelectorDef, SelectorDef } from '../../definit
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
 import { defineGetter, defineLazyProperty } from '../../util/object';
-import { SelectorFrame } from '../private-frame';
+import { SelectorFrameProvider } from '../frames/selector-frame';
 
+// #region Common
 type SelectBinItem<D> = D extends SelectorDef<any, infer B> ? B : typeof notASelectorDef;
-
-export type SelectBin<J> = {
-  readonly [K in keyof J as
-  J[K] extends PrivateSuffix ? never :
-    J[K] extends SelectorDef<any, any> ? K : never
-  ]: SelectBinItem<J[K]>;
-};
-
-// Conditional type required as a workoaround for problems with key remapping
-export type PrivateSelectBin<J> = J extends any ? {
-  // readonly [K in keyof J as J[K] extends SelectorDef<any, any> ? K : never]: SelectBinItem<J[K]>;
-  readonly [K in keyof J as K extends string ? K : never]: SelectBinItem<J[K]>;
-} : never;
-
-interface SelectorFrameProvider<J extends Juncture> {
-  readonly selector: SelectorFrame<J>;
-}
 
 function createSelectBinBase<J extends Juncture>(
   juncture: J,
@@ -54,12 +38,33 @@ function createSelectBinBase<J extends Juncture>(
   });
   return bin;
 }
+// #endregion
+
+// #region SelectBin
+export type SelectBin<J> = {
+  readonly [K in keyof J as
+  J[K] extends PrivateSuffix ? never :
+    J[K] extends SelectorDef<any, any> ? K : never
+  ]: SelectBinItem<J[K]>;
+};
 
 export function createSelectBin<J extends Juncture>(
   juncture: J,
   selectorFrameProvider: SelectorFrameProvider<J>
 ): SelectBin<J> {
   return createSelectBinBase(juncture, selectorFrameProvider, false);
+}
+// #endregion
+
+// #region PrivateSelectBin
+// Conditional type required as a workoaround for problems with key remapping
+export type PrivateSelectBin<J> = J extends any ? {
+  // readonly [K in keyof J as J[K] extends SelectorDef<any, any> ? K : never]: SelectBinItem<J[K]>;
+  readonly [K in keyof J as K extends string ? K : never]: SelectBinItem<J[K]>;
+} : never;
+
+export interface PrivateSelectBinProvider<J> {
+  readonly select: PrivateSelectBin<J>;
 }
 
 export function createPrivateSelectBin<J extends Juncture>(
@@ -68,3 +73,4 @@ export function createPrivateSelectBin<J extends Juncture>(
 ): PrivateSelectBin<J> {
   return createSelectBinBase(juncture, selectorFrameProvider, true);
 }
+// #endregion

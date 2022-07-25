@@ -91,7 +91,7 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
   }
 }
 
-(Juncture as any).getSchema = Singleton.getSingletonPropertyAccessor(
+(Juncture as any).getSchema = Singleton.getSingletonAttachment(
   junctureSymbols.schemaCache,
   juncture => juncture.schema[jSymbols.defPayload]()
 );

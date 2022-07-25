@@ -6,7 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CtxOf, Juncture, ValueOf } from '../juncture';
+import {
+  CtxOf, CursorOf, Juncture, PrivateCursorOf, ValueOf
+} from '../juncture';
 import { Ctx, JunctureOfCtx } from './ctx';
 
 // --- Symbols
@@ -45,7 +47,14 @@ export function isCursor<C extends Ctx>(obj: any, ctx?: C) {
 }
 
 // ---  Derivations
-export type CtxOfCursor<C extends Cursor> = C[CursorSymbols['ctx']];
 export type JunctureOfCursor<C extends Cursor> = C[CursorSymbols['ctx']]['juncture'];
 export type ValueOfCursor<C extends Cursor> = ValueOf<C[CursorSymbols['ctx']]['juncture']>;
 // #endregion
+
+export interface CursorProvider<J extends Juncture = Juncture> {
+  readonly cursor: CursorOf<J>;
+}
+
+export interface PrivateCursorProvider<J extends Juncture = Juncture> {
+  readonly privateCursor: PrivateCursorOf<J>;
+}
