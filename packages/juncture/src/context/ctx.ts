@@ -9,10 +9,14 @@
 import { Juncture, SchemaOf, ValueOf } from '../juncture';
 import { defineLazyProperty } from '../util/object';
 import { createCursor, Cursor } from './cursor';
-import { AccessorKit, prepareAccessorKit } from './kits/accessor-kit';
-import { BinKit, prepareBinKit } from './kits/bin-kit';
-import { FrameKit, prepareFrameKit } from './kits/frame-kit';
-import { preparePrivateBinKit, PrivateBinKit } from './kits/private-bin-kit';
+import { createFrame, Frame } from './frames/frame';
+import {
+  AccessorKit, prepareAccessorKit, preparePrivateAccessorKit, PrivateAccessorKit
+} from './kits/accessor-kit';
+import {
+  BinKit, prepareBinKit, preparePrivateBinKit, PrivateBinKit
+} from './kits/bin-kit';
+import { preparePrivateFrameKit, PrivateFrameKit } from './kits/frame-kit';
 import { Path } from './path';
 
 // #region Layout & Config
@@ -38,13 +42,17 @@ export class Ctx<J extends Juncture = Juncture> {
 
   readonly privateCursor!: Cursor<J>;
 
-  readonly bins: BinKit<Juncture> = {} as any;
+  readonly frame!: Frame<Juncture>;
 
-  protected readonly privateBins: PrivateBinKit<Juncture> = {} as any;
+  readonly bins: BinKit<Juncture> = {} as any;
 
   protected readonly accessors: AccessorKit<Juncture> = {} as any;
 
-  protected readonly frames: FrameKit<Juncture> = {} as any;
+  protected readonly privateFrames: PrivateFrameKit<Juncture> = {} as any;
+
+  protected readonly privateBins: PrivateBinKit<Juncture> = {} as any;
+
+  protected readonly privateAccessors: PrivateAccessorKit<Juncture> = {} as any;
 
   constructor(readonly juncture: J, config: CtxConfig) {
     this.schema = Juncture.getSchema(juncture);
@@ -53,11 +61,14 @@ export class Ctx<J extends Juncture = Juncture> {
 
     defineLazyProperty(this, 'cursor', () => this.createCursor());
     defineLazyProperty(this, 'privateCursor', () => this.createPrivateCursor());
+    defineLazyProperty(this, 'frame', () => createFrame(this, this.accessors));
 
-    prepareBinKit(this.bins, this.juncture, this.frames);
-    preparePrivateBinKit(this.privateBins, this.juncture, this.frames);
-    prepareAccessorKit(this.accessors, this, this.privateBins);
-    prepareFrameKit(this.frames, this.privateCursor, this.accessors);
+    prepareBinKit(this.bins, this.juncture, this.privateFrames);
+    prepareAccessorKit(this.accessors, this);
+
+    preparePrivateFrameKit(this.privateFrames, this, this.privateAccessors);
+    preparePrivateBinKit(this.privateBins, this.juncture, this.privateFrames);
+    preparePrivateAccessorKit(this.privateAccessors, this, this.privateBins);
 
     this.getValue = this.getValue.bind(this);
   }

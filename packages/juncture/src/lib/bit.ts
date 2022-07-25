@@ -8,10 +8,10 @@
 
 import { ComposableJuncture } from '../composable-juncture';
 import { Composer, CreateDefForOverrideArgs } from '../composer';
+import { OverrideSchemaFrame } from '../context/frames/schema-frame';
 import {
   createSchemaDef, isSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
 } from '../definition/schema';
-import { OverrideSchemaFrame } from '../frame/private-frame';
 import { Juncture, JunctureType, ValueOf } from '../juncture';
 import { jSymbols } from '../symbols';
 

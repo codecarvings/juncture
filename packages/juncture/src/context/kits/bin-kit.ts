@@ -6,15 +6,29 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSelectBin, SelectBin } from '../../frame/bins/select-bin';
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
-import { FrameKit } from './frame-kit';
+import {
+  createPrivateSelectBin, createSelectBin, PrivateSelectBin, SelectBin
+} from '../bins/select-bin';
+import { PrivateFrameKit } from './frame-kit';
 
+// #region BinKit
 export interface BinKit<J extends Juncture = Juncture> {
   readonly select: SelectBin<J>;
 }
 
-export function prepareBinKit(bins: any, juncture: Juncture, frames: FrameKit) {
+export function prepareBinKit(bins: any, juncture: Juncture, frames: PrivateFrameKit) {
   defineLazyProperty(bins, 'select', () => createSelectBin(juncture, frames));
 }
+// #endregion
+
+// #region PrivateBinKit
+export interface PrivateBinKit<J extends Juncture = Juncture> {
+  readonly select: PrivateSelectBin<J>;
+}
+
+export function preparePrivateBinKit(privateBins: any, juncture: Juncture, frames: PrivateFrameKit) {
+  defineLazyProperty(privateBins, 'select', () => createPrivateSelectBin(juncture, frames));
+}
+// #endregion

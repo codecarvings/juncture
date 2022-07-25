@@ -7,21 +7,26 @@
  */
 
 import { PrivateSuffix } from '../../definition/private';
-import { Action, notAReducerDef, ReducerDef } from '../../definition/reducer';
+import { notAReducerDef, ReducerDef } from '../../definition/reducer';
 import { OverloadParameters } from '../../util/overloaed-function-types';
 
-type PrepareBinItem<D> =
-  D extends ReducerDef<any, infer B>
-    ? (...args : OverloadParameters<B>) => Action : typeof notAReducerDef;
+// #region Common
+type DispatchBinItem<D> =
+  D extends ReducerDef<any, infer B> ? (...args : OverloadParameters<B>) => void : typeof notAReducerDef;
+// #endregion
 
-export type PrepareBin<J> = {
+// #region DispatchBin
+export type DispatchBin<J> = {
   readonly [K in keyof J as
   J[K] extends PrivateSuffix ? never :
     J[K] extends ReducerDef<any, any> ? K : never
-  ]: PrepareBinItem<J[K]>;
+  ]: DispatchBinItem<J[K]>;
 };
+// #endregion
 
+// #region PrivateDispatchBin
 // Conditional type required as a workoaround for problems with key remapping
-export type PrivatePrepareBin<J> = J extends any ? {
-  readonly [K in keyof J as K extends string ? K : never]: PrepareBinItem<J[K]>;
+export type PrivateDispatchBin<J> = J extends any ? {
+  readonly [K in keyof J as K extends string ? K : never]: DispatchBinItem<J[K]>;
 } : never;
+// #endregion

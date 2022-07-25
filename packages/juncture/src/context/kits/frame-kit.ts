@@ -6,16 +6,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSelectorFrame, SelectorFrame } from '../../frame/private-frame';
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
-import { Cursor } from '../cursor';
-import { AccessorKit } from './accessor-kit';
+import { PrivateCursorProvider } from '../cursor';
+import { createSelectorFrame, SelectorFrame } from '../frames/selector-frame';
+import { PrivateAccessorKit } from './accessor-kit';
 
-export interface FrameKit<J extends Juncture = Juncture> {
+// #region PrivateFrameKit
+export interface PrivateFrameKit<J extends Juncture = Juncture> {
   readonly selector: SelectorFrame<J>;
 }
 
-export function prepareFrameKit(frames: any, privateCursor: Cursor, accessors: AccessorKit) {
-  defineLazyProperty(frames, 'selector', () => createSelectorFrame(privateCursor, accessors));
+export function preparePrivateFrameKit(
+  frames: any,
+  privateCursorProviuder: PrivateCursorProvider,
+  accessors: PrivateAccessorKit
+) {
+  defineLazyProperty(frames, 'selector', () => createSelectorFrame(privateCursorProviuder, accessors));
 }
+// #endregion

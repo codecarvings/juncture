@@ -8,6 +8,8 @@
 
 import { createSchemaDef, Schema } from '../definition/schema';
 import { Juncture } from '../juncture';
+import { jBit } from '../lib/bit';
+import { jGroup } from '../lib/group';
 import { Root } from '../root';
 
 const myDefaultValue = { myValue: '' };
@@ -21,7 +23,7 @@ describe('Root', () => {
     expect(typeof root).toBe('object');
   });
 
-  test('should be instantiable by passing a Juncture Type and a custom initial state', () => {
+  test('should be instantiable by passing a Juncture Type and a custom initial value', () => {
     const initialState = { myValue: 'custom' };
     const root = new Root(MyJuncture, initialState);
     expect(typeof root).toBe('object');
@@ -37,17 +39,35 @@ describe('Root', () => {
       expect(root.Type).toBe(MyJuncture);
     });
 
-    describe('"state" property', () => {
+    describe('"value" property', () => {
       describe('when the instance has been create', () => {
         test('should contain the defaultValue of the Juncture if no other value is passed in the constructor', () => {
-          expect(root.state).toBe(myDefaultValue);
+          expect(root.value).toBe(myDefaultValue);
         });
-        test('should contain the state passed in the constructor', () => {
+        test('should contain the value passed in the constructor', () => {
           const initialState = { myValue: 'custom' };
           const root2 = new Root(MyJuncture, initialState);
-          expect(root2.state).toBe(initialState);
+          expect(root2.value).toBe(initialState);
         });
       });
     });
   });
+});
+
+test.only('experiment with frames', () => {
+  class J1 extends jGroup.of({
+    name: jBit.Of('Sergio'),
+    age: jBit.Of(46)
+  }) {
+    displayName = this.DEF.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
+  }
+  const root = new Root(J1);
+  const { _, select } = root.frame;
+  expect(select(_).displayName).toBe('Sergio 46');
+  expect(select(_).value).toEqual({
+    name: 'Sergio',
+    age: 46
+  });
+  expect(select(_.name).value).toBe('Sergio');
+  expect(select(_.age).value).toBe(46);
 });

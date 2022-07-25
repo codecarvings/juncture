@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { PrivateFrameConsumer } from '../context/frames/private-frame';
 import { Path } from '../context/path';
-import { PrivateFrameConsumer } from '../frame/private-frame';
 import {
   createDef, Def, DefKind, isDef
 } from './def';

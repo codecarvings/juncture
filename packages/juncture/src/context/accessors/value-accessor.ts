@@ -1,5 +1,5 @@
-import { Cursor, getCtx, JunctureOfCursor } from '../../context/cursor';
 import { CtxOf, Juncture, ValueOf } from '../../juncture';
+import { Cursor, getCtx, JunctureOfCursor } from '../cursor';
 
 export interface ValueAccessor<J extends Juncture> {
   value(): ValueOf<J>;
