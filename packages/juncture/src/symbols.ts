@@ -12,6 +12,8 @@ const createPropertyAssembler = Symbol('createPropertyAssembler');
 const createComposer = Symbol('createComposer');
 const init = Symbol('init');
 const createCtx = Symbol('createCtx');
+const createCursor = Symbol('createCursor');
+const createPrivateCursor = Symbol('createPrivateCursor');
 const bitDefault = Symbol('bitDefault');
 
 export interface JSymbols {
@@ -21,6 +23,8 @@ export interface JSymbols {
   readonly createComposer: typeof createComposer;
   readonly init: typeof init;
   readonly createCtx: typeof createCtx;
+  readonly createCursor: typeof createCursor;
+  readonly createPrivateCursor: typeof createPrivateCursor;
   readonly bitDefault: typeof bitDefault;
 }
 
@@ -31,5 +35,7 @@ export const jSymbols: JSymbols = {
   createComposer,
   init,
   createCtx,
+  createCursor,
+  createPrivateCursor,
   bitDefault
 };

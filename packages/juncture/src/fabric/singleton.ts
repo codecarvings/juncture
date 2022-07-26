@@ -9,7 +9,7 @@
 import { Constructable } from '../util/object';
 import { initialize, isInitializable } from './initializable';
 
-// --- Symbols
+// #region Symbols
 const singletonCacheSymbol = Symbol('singletonCache');
 interface SingletonSymbols {
   readonly singletonCache: typeof singletonCacheSymbol;
@@ -17,6 +17,7 @@ interface SingletonSymbols {
 const singletonSymbols: SingletonSymbols = {
   singletonCache: singletonCacheSymbol
 };
+// #endregion
 
 export class Singleton<T extends Constructable> {
   protected constructor(readonly Type: T, readonly instance: InstanceType<T>) { }

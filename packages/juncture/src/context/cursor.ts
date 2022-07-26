@@ -7,11 +7,11 @@
  */
 
 import {
-  CtxOf, CursorOf, Juncture, PrivateCursorOf, ValueOf
+  CursorOf, Juncture, PrivateCursorOf, ValueOf
 } from '../juncture';
-import { Ctx, JunctureOfCtx } from './ctx';
+import { ConcreteCtx, Ctx } from './ctx';
 
-// --- Symbols
+// #region Symbols
 const ctxSymbol = Symbol('ctx');
 interface CursorSymbols {
   readonly ctx: typeof ctxSymbol;
@@ -19,13 +19,16 @@ interface CursorSymbols {
 const cursorSymbols: CursorSymbols = {
   ctx: ctxSymbol
 };
+// #endregion
 
 export interface Cursor<J extends Juncture = Juncture> {
-  readonly [cursorSymbols.ctx]: CtxOf<J>;
+  readonly juncture: J;
+  readonly [cursorSymbols.ctx]: Ctx;
 }
 
-export function createCursor<C extends Ctx>(ctx: C): Cursor<JunctureOfCtx<C>> {
+export function createCursor<C extends Ctx>(ctx: C): Cursor {
   return {
+    juncture: undefined!,
     [cursorSymbols.ctx]: ctx as any
   };
 }
@@ -35,7 +38,7 @@ export function getCtx<C extends Cursor>(_: C) {
 }
 
 export function isCursor(obj: any): obj is Cursor;
-export function isCursor<C extends Ctx>(obj: any, ctx: C): obj is Cursor<JunctureOfCtx<C>>;
+export function isCursor<C extends Ctx>(obj: any, ctx: C): obj is Cursor;
 export function isCursor<C extends Ctx>(obj: any, ctx?: C) {
   if (!obj) {
     return false;
@@ -43,18 +46,18 @@ export function isCursor<C extends Ctx>(obj: any, ctx?: C) {
   if (ctx !== undefined) {
     return obj[cursorSymbols.ctx] === ctx;
   }
-  return obj[cursorSymbols.ctx] instanceof Ctx;
+  return obj[cursorSymbols.ctx] instanceof ConcreteCtx;
 }
 
 // ---  Derivations
-export type JunctureOfCursor<C extends Cursor> = C[CursorSymbols['ctx']]['juncture'];
-export type ValueOfCursor<C extends Cursor> = ValueOf<C[CursorSymbols['ctx']]['juncture']>;
+export type JunctureOfCursor<C extends Cursor> = C['juncture'];
+export type ValueOfCursor<C extends Cursor> = ValueOf<C['juncture']>;
 // #endregion
 
-export interface CursorProvider<J extends Juncture = Juncture> {
+export interface CursorHost<J extends Juncture = Juncture> {
   readonly cursor: CursorOf<J>;
 }
 
-export interface PrivateCursorProvider<J extends Juncture = Juncture> {
+export interface PrivateCursorHost<J extends Juncture = Juncture> {
   readonly privateCursor: PrivateCursorOf<J>;
 }

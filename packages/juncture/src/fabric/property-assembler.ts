@@ -8,7 +8,7 @@
 
 import { jSymbols } from '../symbols';
 
-// --- Symbols
+// #region Symbols
 const propertyAssemblerCacheSymbol = Symbol('propertyAssemblerCache');
 interface PropertyAssemblerSymbols {
   readonly propertyAssemblerCache: typeof propertyAssemblerCacheSymbol;
@@ -16,6 +16,7 @@ interface PropertyAssemblerSymbols {
 const propertyAssemblerSymbols: PropertyAssemblerSymbols = {
   propertyAssemblerCache: propertyAssemblerCacheSymbol
 };
+// #endregion
 
 export interface AssemblablePropertyFactory {
   (key: string, parentValue: any, container: any): any;

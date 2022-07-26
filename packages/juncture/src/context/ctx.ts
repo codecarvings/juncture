@@ -6,20 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture, SchemaOf, ValueOf } from '../juncture';
-import { defineLazyProperty } from '../util/object';
-import { createCursor, Cursor } from './cursor';
-import { createFrame, Frame } from './frames/frame';
-import {
-  AccessorKit, prepareAccessorKit, preparePrivateAccessorKit, PrivateAccessorKit
-} from './kits/accessor-kit';
-import {
-  BinKit, prepareBinKit, preparePrivateBinKit, PrivateBinKit
-} from './kits/bin-kit';
-import { preparePrivateFrameKit, PrivateFrameKit } from './kits/frame-kit';
+import { Schema } from '../definition/schema';
+import { Juncture } from '../juncture';
+import { CtxKernel } from './ctx-kernel';
+import { Cursor } from './cursor';
+import { Frame } from './frames/frame';
+import { BinKit } from './kits/bin-kit';
 import { Path } from './path';
 
-// #region Layout & Config
 export interface CtxLayout {
   readonly parent: Ctx | null;
   readonly path: Path;
@@ -30,69 +24,52 @@ export interface CtxLayout {
 export interface CtxConfig {
   readonly layout: CtxLayout;
 }
-// #endregion
 
-// #region Ctx
-export class Ctx<J extends Juncture = Juncture> {
-  readonly schema: SchemaOf<J>;
+export interface CtxResolver {
+  (key: any): Ctx;
+}
+
+export interface Ctx {
+  readonly juncture: Juncture;
+
+  readonly schema: Schema;
 
   readonly layout: CtxLayout;
 
-  readonly cursor!: Cursor<J>;
+  readonly cursor: Cursor;
 
-  readonly privateCursor!: Cursor<J>;
+  readonly privateCursor: Cursor;
 
-  readonly frame!: Frame<Juncture>;
+  readonly frame: Frame;
 
-  readonly bins: BinKit<Juncture> = {} as any;
+  readonly bins: BinKit;
 
-  protected readonly accessors: AccessorKit<Juncture> = {} as any;
+  getValue(): any;
+}
 
-  protected readonly privateFrames: PrivateFrameKit<Juncture> = {} as any;
+export class ConcreteCtx implements Ctx {
+  readonly juncture: Juncture = this.kernel.juncture;
 
-  protected readonly privateBins: PrivateBinKit<Juncture> = {} as any;
+  readonly schema: Schema = this.kernel.schema;
 
-  protected readonly privateAccessors: PrivateAccessorKit<Juncture> = {} as any;
+  readonly layout: CtxLayout = this.kernel.layout;
 
-  constructor(readonly juncture: J, config: CtxConfig) {
-    this.schema = Juncture.getSchema(juncture);
+  readonly cursor: Cursor = this.kernel.cursor;
 
-    this.layout = config.layout;
+  readonly privateCursor: Cursor = this.kernel.privateCursor;
 
-    defineLazyProperty(this, 'cursor', () => this.createCursor());
-    defineLazyProperty(this, 'privateCursor', () => this.createPrivateCursor());
-    defineLazyProperty(this, 'frame', () => createFrame(this, this.accessors));
+  readonly frame: Frame = this.kernel.frame;
 
-    prepareBinKit(this.bins, this.juncture, this.privateFrames);
-    prepareAccessorKit(this.accessors, this);
+  readonly bins: BinKit = this.kernel.bins;
 
-    preparePrivateFrameKit(this.privateFrames, this, this.privateAccessors);
-    preparePrivateBinKit(this.privateBins, this.juncture, this.privateFrames);
-    preparePrivateAccessorKit(this.privateAccessors, this, this.privateBins);
+  constructor(protected readonly kernel: CtxKernel) { }
 
-    this.getValue = this.getValue.bind(this);
-  }
-
-  protected createCursor(): Cursor<J> {
-    return createCursor(this);
-  }
-
-  protected createPrivateCursor(): Cursor<J> {
-    return this.cursor;
-  }
-
-  getValue(): ValueOf<J> {
-    // TODO: implement this
-    return this.schema.defaultValue;
+  getValue(): any {
+    return this.kernel.getValue();
   }
 }
 
 // ---  Derivations
-export type JunctureOfCtx<C extends Ctx> = C['juncture'];
-// #endregion
-
-// #region CtxMap
 export interface CtxMap {
   readonly [key: string]: Ctx;
 }
-// #endregion

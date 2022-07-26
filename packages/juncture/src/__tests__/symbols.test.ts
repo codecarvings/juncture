@@ -33,6 +33,14 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createCtx).toBe('symbol');
   });
 
+  test('should contain the createCursor symbol', () => {
+    expect(typeof jSymbols.createCursor).toBe('symbol');
+  });
+
+  test('should contain the createPrivateCursor symbol', () => {
+    expect(typeof jSymbols.createPrivateCursor).toBe('symbol');
+  });
+
   test('should contain the bitDefault symbol', () => {
     expect(typeof jSymbols.bitDefault).toBe('symbol');
   });

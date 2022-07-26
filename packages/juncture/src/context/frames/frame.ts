@@ -9,7 +9,7 @@
 import { CursorOf, Juncture, ValueOf } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
 import { SelectBin } from '../bins/select-bin';
-import { Cursor, CursorProvider, JunctureOfCursor } from '../cursor';
+import { Cursor, CursorHost, JunctureOfCursor } from '../cursor';
 import { AccessorKit } from '../kits/accessor-kit';
 
 // export interface UnbindedFrame<Z> {
@@ -20,7 +20,7 @@ import { AccessorKit } from '../kits/accessor-kit';
 //   dispach<C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
 // }
 
-export interface Frame<J extends Juncture> {
+export interface Frame<J extends Juncture = Juncture> {
   readonly _ : CursorOf<J>;
 
   value(): ValueOf<J>;
@@ -31,11 +31,11 @@ export interface Frame<J extends Juncture> {
 }
 
 export function createFrame<J extends Juncture>(
-  cursorProvider: CursorProvider<J>,
+  cursorHost: CursorHost<J>,
   accessors: AccessorKit<J>
 ): Frame<J> {
   const frame: any = { };
-  defineLazyProperty(frame, '_', () => cursorProvider.cursor);
+  defineLazyProperty(frame, '_', () => cursorHost.cursor);
   defineLazyProperty(frame, 'value', () => accessors.value);
   defineLazyProperty(frame, 'select', () => accessors.select);
   return frame;

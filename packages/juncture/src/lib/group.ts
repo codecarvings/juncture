@@ -8,7 +8,10 @@
 
 import { ComposableJuncture } from '../composable-juncture';
 import { Composer } from '../composer';
-import { Ctx, CtxConfig, CtxMap } from '../context/ctx';
+import {
+  ConcreteCtx, Ctx, CtxConfig, CtxMap
+} from '../context/ctx';
+import { CtxKernel } from '../context/ctx-kernel';
 import { createCursor, Cursor } from '../context/cursor';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import {
@@ -63,7 +66,7 @@ export class GroupComposer<J extends Group> extends Composer<J> {
 // #endregion
 
 // #region Ctx & Cursors
-export class GroupCtx<J extends Group = Group> extends Ctx<J> {
+export class GroupCtxKernel<J extends Group = Group> extends CtxKernel<J> {
   constructor(juncture: J, config: CtxConfig) {
     super(juncture, config);
     this.childCtxs = mappedAssign(
@@ -105,8 +108,8 @@ export abstract class Group extends ComposableJuncture {
     return new GroupComposer<this>(Juncture.getPropertyAssembler(this));
   }
 
-  [jSymbols.createCtx](config: CtxConfig): GroupCtx<this> {
-    return new GroupCtx(this, config);
+  [jSymbols.createCtx](config: CtxConfig): Ctx {
+    return new ConcreteCtx(new GroupCtxKernel(this, config));
   }
 
   protected readonly DEF!: GroupComposer<this>;

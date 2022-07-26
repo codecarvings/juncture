@@ -10,7 +10,7 @@ import { Juncture, PrivateCursorOf, ValueOf } from '../../juncture';
 import { PrivateSelectBin, SelectBin } from '../bins/select-bin';
 import { Cursor, JunctureOfCursor } from '../cursor';
 
-// --- Symbols
+// #region Symbols
 const privateFrameSymbol = Symbol('privateFrame');
 
 interface PrivateFrameSymbols {
@@ -19,6 +19,7 @@ interface PrivateFrameSymbols {
 const privateFrameSymbols: PrivateFrameSymbols = {
   privateFrame: privateFrameSymbol
 };
+// #endregion
 
 export interface PrivateFrameConsumer<B> {
   (frame: PrivateFrameRole): B;
