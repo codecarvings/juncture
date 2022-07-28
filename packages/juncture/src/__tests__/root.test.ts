@@ -54,7 +54,7 @@ describe('Root', () => {
   });
 });
 
-test.only('experiment with frames', () => {
+test('experiment with frames', () => {
   class J1 extends jGroup.of({
     name: jBit.Of('Sergio'),
     age: jBit.Of(46)

@@ -12,14 +12,14 @@ import { isDirectSelectorDef, notASelectorDef, SelectorDef } from '../../definit
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
 import { defineGetter, defineLazyProperty } from '../../util/object';
-import { SelectorFrameProvider } from '../frames/selector-frame';
+import { SelectorFrameHost } from '../frames/selector-frame';
 
 // #region Common
 type SelectBinItem<D> = D extends SelectorDef<any, infer B> ? B : typeof notASelectorDef;
 
 function createSelectBinBase<J extends Juncture>(
   juncture: J,
-  selectorFrameProvider: SelectorFrameProvider<J>,
+  selectorFrameHost: SelectorFrameHost<J>,
   privateUse: boolean
 ) {
   const keys = getFilteredDefKeys(juncture, privateUse, DefKind.selector);
@@ -27,12 +27,12 @@ function createSelectBinBase<J extends Juncture>(
   keys.forEach(key => {
     const def = (juncture as any)[key];
     if (isDirectSelectorDef(def)) {
-      defineGetter(bin, key, () => def[jSymbols.defPayload](selectorFrameProvider.selector));
+      defineGetter(bin, key, () => def[jSymbols.defPayload](selectorFrameHost.selector));
     } else {
       defineLazyProperty(
         bin,
         key,
-        () => (...args: any) => def[jSymbols.defPayload](selectorFrameProvider.selector)(...args)
+        () => (...args: any) => def[jSymbols.defPayload](selectorFrameHost.selector)(...args)
       );
     }
   });
@@ -50,9 +50,9 @@ export type SelectBin<J> = {
 
 export function createSelectBin<J extends Juncture>(
   juncture: J,
-  selectorFrameProvider: SelectorFrameProvider<J>
+  selectorFrameHost: SelectorFrameHost<J>
 ): SelectBin<J> {
-  return createSelectBinBase(juncture, selectorFrameProvider, false);
+  return createSelectBinBase(juncture, selectorFrameHost, false);
 }
 // #endregion
 
@@ -63,14 +63,14 @@ export type PrivateSelectBin<J> = J extends any ? {
   readonly [K in keyof J as K extends string ? K : never]: SelectBinItem<J[K]>;
 } : never;
 
-export interface PrivateSelectBinProvider<J> {
+export interface PrivateSelectBinHost<J> {
   readonly select: PrivateSelectBin<J>;
 }
 
 export function createPrivateSelectBin<J extends Juncture>(
   juncture: J,
-  selectorFrameProvider: SelectorFrameProvider<J>
+  selectorFrameHost: SelectorFrameHost<J>
 ): PrivateSelectBin<J> {
-  return createSelectBinBase(juncture, selectorFrameProvider, true);
+  return createSelectBinBase(juncture, selectorFrameHost, true);
 }
 // #endregion

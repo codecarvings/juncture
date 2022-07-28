@@ -9,6 +9,7 @@
 import { ComposableJuncture } from '../composable-juncture';
 import { Composer } from '../composer';
 import { Ctx, CtxConfig, CtxMap } from '../context/ctx';
+import { CtxHub } from '../context/ctx-hub';
 import { createCursor, Cursor } from '../context/cursor';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import {
@@ -63,17 +64,19 @@ export class GroupComposer<J extends Group> extends Composer<J> {
 // #endregion
 
 // #region Ctx & Cursors
-export class GroupCtx<J extends Group = Group> extends Ctx<J> {
-  constructor(juncture: J, config: CtxConfig) {
-    super(juncture, config);
+export class GroupCtxHub extends CtxHub {
+  readonly schema!: GroupSchema;
+
+  constructor(ctx: Ctx, config: CtxConfig) {
+    super(ctx, config);
     this.childCtxs = mappedAssign(
       {},
       this.schema.childKeys,
       key => Juncture.createCtx(this.schema.Children[key], {
         layout: {
-          parent: this,
-          path: [...this.layout.path, key],
-          isUnivocal: this.layout.isUnivocal,
+          parent: this.ctx,
+          path: [...config.layout.path, key],
+          isUnivocal: config.layout.isUnivocal,
           isDivergent: false
         }
       })
@@ -82,17 +85,9 @@ export class GroupCtx<J extends Group = Group> extends Ctx<J> {
 
   protected readonly childCtxs: CtxMap;
 
-  protected createCursor(): GroupCursor<J> {
-    const _: any = createCursor(this);
-    this.schema.childKeys.forEach(key => {
-      defineLazyProperty(_, key, () => this.childCtxs[key].cursor, true);
-    });
-    return _;
+  resolve(key: string): Ctx {
+    return this.childCtxs[key];
   }
-
-  readonly cursor!: GroupCursor<J>;
-
-  readonly privateCursor!: GroupCursor<J>;
 }
 
 export type GroupCursor<J extends Group> = Cursor<J> & CursorMapOfJunctureTypeMap<ChildrenOf<J>>;
@@ -105,8 +100,23 @@ export abstract class Group extends ComposableJuncture {
     return new GroupComposer<this>(Juncture.getPropertyAssembler(this));
   }
 
-  [jSymbols.createCtx](config: CtxConfig): GroupCtx<this> {
-    return new GroupCtx(this, config);
+  // eslint-disable-next-line class-methods-use-this
+  [jSymbols.createCtxHub](ctx: Ctx, config: CtxConfig): GroupCtxHub {
+    return new GroupCtxHub(ctx, config);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  [jSymbols.createCursor](hub: GroupCtxHub): GroupCursor<this> {
+    const _: any = createCursor(hub.ctx);
+    hub.schema.childKeys.forEach(key => {
+      defineLazyProperty(_, key, () => hub.resolve(key).cursor, true);
+    });
+    return _;
+  }
+
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  [jSymbols.createPrivateCursor](hub: CtxHub): GroupCursor<this> {
+    return hub.ctx.cursor as GroupCursor<this>;
   }
 
   protected readonly DEF!: GroupComposer<this>;

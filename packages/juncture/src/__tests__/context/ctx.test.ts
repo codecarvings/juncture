@@ -7,6 +7,7 @@
  */
 
 import { Ctx, CtxConfig } from '../../context/ctx';
+import { CtxHub } from '../../context/ctx-hub';
 import { createCursor, Cursor, isCursor } from '../../context/cursor';
 import { createSchemaDef, Schema } from '../../definition/schema';
 import { Juncture } from '../../juncture';
@@ -34,7 +35,7 @@ describe('Ctx', () => {
   });
 
   describe('instance', () => {
-    let ctx: Ctx<MyJuncture>;
+    let ctx: Ctx;
     beforeEach(() => {
       ctx = new Ctx(juncture, config);
     });
@@ -59,24 +60,20 @@ describe('Ctx', () => {
         });
       });
 
-      describe('when createPrivateCursor factory is overridden and return a different cursor', () => {
-        class MyCtx<J extends MyJuncture2> extends Ctx<J> {
-          protected createPrivateCursor(): Cursor<this['juncture']> {
-            return createCursor(this);
-          }
-        }
-
+      // eslint-disable-next-line max-len
+      describe('when [jSymbols.createPrivateCursor] factory is overridden in the Juncture and return a different cursor', () => {
         class MyJuncture2 extends Juncture {
-          [jSymbols.createCtx](config2: CtxConfig): MyCtx<this> {
-            return new MyCtx(this, config2);
+          // eslint-disable-next-line class-methods-use-this
+          [jSymbols.createPrivateCursor](hub: CtxHub): Cursor<this> {
+            return createCursor(hub.ctx);
           }
 
           schema = createSchemaDef(() => new Schema(''));
         }
         const juncture2 = Juncture.getInstance(MyJuncture2);
 
-        test('should give access to the new cursor', () => {
-          const ctx2 = new MyCtx(juncture2, config);
+        test('should give access to the new private cursor', () => {
+          const ctx2 = new Ctx(juncture2, config);
           expect(isCursor(ctx2.privateCursor, ctx2)).toBe(true);
           expect(ctx2.privateCursor).not.toBe(ctx.cursor);
         });

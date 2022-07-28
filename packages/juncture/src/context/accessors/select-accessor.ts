@@ -1,5 +1,6 @@
-import { CtxOf, Juncture, PrivateCursorOf } from '../../juncture';
-import { PrivateSelectBin, PrivateSelectBinProvider, SelectBin } from '../bins/select-bin';
+import { Juncture, PrivateCursorOf } from '../../juncture';
+import { PrivateSelectBin, PrivateSelectBinHost, SelectBin } from '../bins/select-bin';
+import { Ctx } from '../ctx';
 import { Cursor, getCtx, JunctureOfCursor } from '../cursor';
 
 // #region SelectAccessor
@@ -8,11 +9,11 @@ export interface SelectAccessor<J extends Juncture> {
   <C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
 }
 
-export function createSelectAccessor<J extends Juncture>(defaultCtx: CtxOf<J>) {
-  return (_?: Cursor) => {
+export function createSelectAccessor<J extends Juncture>(defaultCtx: Ctx): SelectAccessor<J> {
+  return ((_?: Cursor) => {
     const ctx = typeof _ !== 'undefined' ? getCtx(_) : defaultCtx;
     return ctx.bins.select;
-  };
+  }) as SelectAccessor<J>;
 }
 // #endregion
 
@@ -24,15 +25,15 @@ export interface PrivateSelectAccessor<J extends Juncture> {
 }
 
 export function createPrivateSelectAccessor<J extends Juncture>(
-  defaultCtx: CtxOf<J>,
-  privateSelectBinProvider: PrivateSelectBinProvider<J>
-) {
-  return (_?: Cursor) => {
+  defaultCtx: Ctx,
+  privateSelectBinHost: PrivateSelectBinHost<J>
+): PrivateSelectAccessor<J> {
+  return ((_?: Cursor) => {
     const ctx = typeof _ !== 'undefined' ? getCtx(_) : defaultCtx;
     if (ctx === defaultCtx) {
-      return privateSelectBinProvider.select;
+      return privateSelectBinHost.select;
     }
     return ctx.bins.select;
-  };
+  }) as PrivateSelectAccessor<J>;
 }
 // #endregion

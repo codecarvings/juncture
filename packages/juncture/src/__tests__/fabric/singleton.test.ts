@@ -79,7 +79,7 @@ describe('Singleton', () => {
       });
     });
 
-    describe('getSingletonAttachment', () => {
+    describe('getAttachment', () => {
       const cacheKey = Symbol('test');
       const staticValue = { value: 1 };
       interface MyTestInstance {
@@ -97,12 +97,12 @@ describe('Singleton', () => {
       });
 
       test('should be a method', () => {
-        expect(typeof Singleton.getSingletonAttachment).toBe('function');
+        expect(typeof Singleton.getAttachment).toBe('function');
       });
 
       describe('when providing a cache key and a resolver', () => {
         test('should return a function', () => {
-          const f = Singleton.getSingletonAttachment(Symbol('test'), () => undefined);
+          const f = Singleton.getAttachment(Symbol('test'), () => undefined);
           expect(typeof f).toBe('function');
         });
 
@@ -110,28 +110,28 @@ describe('Singleton', () => {
           test('should accept a Type as unique paramter', () => {
             const resolver = jest.fn((instance: MyTestInstance) => instance.value);
 
-            const f = Singleton.getSingletonAttachment(cacheKey, resolver);
+            const f = Singleton.getAttachment(cacheKey, resolver);
             expect(f(MyTest)).toBe(staticValue);
           });
 
           test('should accept an instance as unique parameter', () => {
             const resolver = jest.fn((instance: MyTestInstance) => instance.value);
 
-            const f = Singleton.getSingletonAttachment(cacheKey, resolver);
+            const f = Singleton.getAttachment(cacheKey, resolver);
             expect(f(Singleton.get(MyTest).instance)).toBe(staticValue);
           });
 
           test('should return the same value returned by the resolver', () => {
             const resolver = jest.fn((instance: MyTestInstance) => instance.value);
 
-            const f = Singleton.getSingletonAttachment(cacheKey, resolver);
+            const f = Singleton.getAttachment(cacheKey, resolver);
             expect(f(MyTest)).toBe(staticValue);
           });
 
           test('should always return the same value', () => {
             const resolver = jest.fn((instance: MyTestInstance) => instance.value);
 
-            const f = Singleton.getSingletonAttachment(cacheKey, resolver);
+            const f = Singleton.getAttachment(cacheKey, resolver);
             const v1 = f(MyTest);
             const v2 = f(MyTest);
             expect(v2).toBe(v1);
@@ -140,7 +140,7 @@ describe('Singleton', () => {
           test('should use the resolver only one time the first time that is invoked', () => {
             const resolver = jest.fn(() => undefined);
 
-            const f = Singleton.getSingletonAttachment(cacheKey, resolver);
+            const f = Singleton.getAttachment(cacheKey, resolver);
             expect(resolver).toBeCalledTimes(0);
             f(MyTest);
             expect(resolver).toBeCalledTimes(1);
@@ -152,7 +152,7 @@ describe('Singleton', () => {
             test('should receive the instance as property', () => {
               const resolver = jest.fn((instance: MyTestInstance) => instance.value);
 
-              const f = Singleton.getSingletonAttachment(cacheKey, resolver);
+              const f = Singleton.getAttachment(cacheKey, resolver);
               f(MyTest);
               expect(resolver).toHaveBeenCalledWith(Singleton.get(MyTest).instance);
             });
@@ -165,13 +165,13 @@ describe('Singleton', () => {
           test('should use a different cache', () => {
             const resolver = jest.fn((instance: MyTestInstance) => instance.value);
 
-            const f1 = Singleton.getSingletonAttachment(cacheKey, resolver);
+            const f1 = Singleton.getAttachment(cacheKey, resolver);
             expect(resolver).toBeCalledTimes(0);
             f1(MyTest);
             expect(resolver).toBeCalledTimes(1);
 
             const cacheKey2 = Symbol('test');
-            const f2 = Singleton.getSingletonAttachment(cacheKey2, resolver);
+            const f2 = Singleton.getAttachment(cacheKey2, resolver);
             f1(MyTest);
             expect(resolver).toBeCalledTimes(1);
             f2(MyTest);

@@ -8,7 +8,7 @@
 
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
-import { PrivateCursorProvider } from '../cursor';
+import { PrivateCursorHost } from '../cursor';
 import { createSelectorFrame, SelectorFrame } from '../frames/selector-frame';
 import { PrivateAccessorKit } from './accessor-kit';
 
@@ -19,7 +19,7 @@ export interface PrivateFrameKit<J extends Juncture = Juncture> {
 
 export function preparePrivateFrameKit(
   frames: any,
-  privateCursorProviuder: PrivateCursorProvider,
+  privateCursorProviuder: PrivateCursorHost,
   accessors: PrivateAccessorKit
 ) {
   defineLazyProperty(frames, 'selector', () => createSelectorFrame(privateCursorProviuder, accessors));

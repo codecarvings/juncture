@@ -7,18 +7,20 @@
  */
 
 import { Juncture, PrivateCursorOf, ValueOf } from '../../juncture';
+import { defineLazyProperty } from '../../util/object';
 import { PrivateSelectBin, SelectBin } from '../bins/select-bin';
-import { Cursor, JunctureOfCursor } from '../cursor';
+import { Cursor, JunctureOfCursor, PrivateCursorHost } from '../cursor';
+import { PrivateAccessorKit } from '../kits/accessor-kit';
 
-// --- Symbols
+// #region Symbols
 const privateFrameSymbol = Symbol('privateFrame');
-
 interface PrivateFrameSymbols {
   readonly privateFrame: typeof privateFrameSymbol;
 }
 const privateFrameSymbols: PrivateFrameSymbols = {
   privateFrame: privateFrameSymbol
 };
+// #endregion
 
 export interface PrivateFrameConsumer<B> {
   (frame: PrivateFrameRole): B;
@@ -37,4 +39,14 @@ export interface PrivateFrame<J extends Juncture> extends PrivateFrameRole {
   select(): PrivateSelectBin<J>;
   select(_: this['_']): PrivateSelectBin<J>;
   select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
+}
+
+export function createPrivateFrame<J extends Juncture>(
+  privateCursorProviuder: PrivateCursorHost<J>,
+  accessors: PrivateAccessorKit<J>
+): PrivateFrame<J> {
+  const frame: any = { };
+  defineLazyProperty(frame, '_', () => privateCursorProviuder.privateCursor);
+  defineLazyProperty(frame, 'select', () => accessors.select);
+  return frame;
 }
