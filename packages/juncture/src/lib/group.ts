@@ -59,7 +59,7 @@ export class GroupSchema<JTM extends JunctureTypeMap = any> extends Schema<Group
 // #endregion
 
 // #region Composer
-export class GroupComposer<J extends Group> extends Composer<J> {
+export class GroupComposer<J extends GroupJuncture> extends Composer<J> {
 }
 // #endregion
 
@@ -90,12 +90,12 @@ export class GroupCtxHub extends CtxHub {
   }
 }
 
-export type GroupCursor<J extends Group> = Cursor<J> & CursorMapOfJunctureTypeMap<ChildrenOf<J>>;
+export type GroupCursor<J extends GroupJuncture> = Cursor<J> & CursorMapOfJunctureTypeMap<ChildrenOf<J>>;
 
 // #endregion
 
 // #region Juncture
-export abstract class Group extends ComposableJuncture {
+export abstract class GroupJuncture extends ComposableJuncture {
   protected [jSymbols.createComposer](): GroupComposer<this> {
     return new GroupComposer<this>(Juncture.getPropertyAssembler(this));
   }
@@ -125,34 +125,34 @@ export abstract class Group extends ComposableJuncture {
 }
 
 // ---  Derivations
-export type ChildrenOf<J extends Group> = SchemaOf<J>['Children'];
+export type ChildrenOf<J extends GroupJuncture> = SchemaOf<J>['Children'];
 // #endregion
 
 // #region Builder types
 // --- Inert
-interface StatedGroup<JTM extends JunctureTypeMap> extends Group {
+interface Group<JTM extends JunctureTypeMap> extends GroupJuncture {
   schema: SchemaDef<GroupSchema<JTM>>;
 }
-interface StatedGroupType<JTM extends JunctureTypeMap> extends JunctureType<StatedGroup<JTM>> { }
+interface GroupType<JTM extends JunctureTypeMap> extends JunctureType<Group<JTM>> { }
 // #endregion
 
 // #region Builder
-function createGroupType<JT extends abstract new(...args: any) => Group,
+function createGroupType<JT extends abstract new(...args: any) => GroupJuncture,
   JTM extends JunctureTypeMap>(BaseType: JT, Children: JTM, defaultValue?: GroupHandledValue<JTM>) {
-  abstract class StatedGroup extends BaseType {
+  abstract class Group extends BaseType {
     schema = createSchemaDef(() => createGroupSchema(Children, defaultValue));
   }
-  return StatedGroup;
+  return Group;
 }
 
 interface GroupBuilder {
-  of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: GroupHandledValue<JTM>): StatedGroupType<JTM>;
+  of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: GroupHandledValue<JTM>): GroupType<JTM>;
 }
 
 export const jGroup: GroupBuilder = {
   of: <JTM extends JunctureTypeMap>(
     Children: JTM,
     defaultValue?: GroupHandledValue<JTM>
-  ) => createGroupType(Group, Children, defaultValue) as any
+  ) => createGroupType(GroupJuncture, Children, defaultValue) as any
 };
 // #endregion

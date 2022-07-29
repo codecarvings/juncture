@@ -12,14 +12,14 @@
 import { ComposableJuncture } from '../../composable-juncture';
 import { asPrivate, isPrivate, Private } from '../../definition/private';
 import {
-  createSchemaDef, isSchemaDef, Schema, SchemaDef
+    createSchemaDef, isSchemaDef, Schema, SchemaDef
 } from '../../definition/schema';
 import { createDirectSelectorDef } from '../../definition/selector';
 import { PropertyAssembler } from '../../fabric/property-assembler';
 import { Juncture } from '../../juncture';
 import {
-  Bit, BitComposer, BitSchema, jBit, SettableBit,
-  SettableBooleanBit, SettableNumberBit, SettableStringBit, SettableSymbolBit
+    BitComposer, BitJuncture, BitSchema, jBit, SettableBitJuncture,
+    SettableBooleanBitJuncture, SettableNumberBitJuncture, SettableStringBitJuncture, SettableSymbolBitJuncture
 } from '../../lib/bit';
 import { jSymbols } from '../../symbols';
 
@@ -47,7 +47,7 @@ describe('BitSchema', () => {
 });
 
 describe('BitComposer', () => {
-  class MyBit extends Bit {
+  class MyBit extends BitJuncture {
     schema = createSchemaDef(() => new Schema({
       firstName: ''
     }));
@@ -166,11 +166,11 @@ describe('BitComposer', () => {
 
 describe('Bit', () => {
   test('should be a subclass of ComposableJuncture', () => {
-    expect(Bit.prototype).toBeInstanceOf(ComposableJuncture);
+    expect(BitJuncture.prototype).toBeInstanceOf(ComposableJuncture);
   });
 
   test('should be a class instantiable without arguments', () => {
-    class MyBit extends Bit {
+    class MyBit extends BitJuncture {
       schema = createSchemaDef(() => new TestBitSchema(undefined));
     }
     const juncture = new MyBit();
@@ -178,7 +178,7 @@ describe('Bit', () => {
   });
 
   test('should have BitComposer as composer', () => {
-    class MyBit extends Bit {
+    class MyBit extends BitJuncture {
       schema = createSchemaDef(() => new TestBitSchema(undefined));
     }
     const juncture = Juncture.getInstance(MyBit);
@@ -188,7 +188,7 @@ describe('Bit', () => {
 
 describe('SettableBit', () => {
   test('should be a subclass of Bit', () => {
-    expect(SettableBit.prototype).toBeInstanceOf(Bit);
+    expect(SettableBitJuncture.prototype).toBeInstanceOf(BitJuncture);
   });
 
   describe('reducers', () => {
@@ -203,13 +203,13 @@ describe('SettableBit', () => {
 
 describe('SettableStringBit', () => {
   test('should be a subclass of SettableBit', () => {
-    expect(SettableStringBit.prototype).toBeInstanceOf(SettableBit);
+    expect(SettableStringBitJuncture.prototype).toBeInstanceOf(SettableBitJuncture);
   });
 });
 
 describe('SettableNumberBit', () => {
   test('should be a subclass of SettableBit', () => {
-    expect(SettableNumberBit.prototype).toBeInstanceOf(SettableBit);
+    expect(SettableNumberBitJuncture.prototype).toBeInstanceOf(SettableBitJuncture);
   });
 
   describe('reducers', () => {
@@ -227,7 +227,7 @@ describe('SettableNumberBit', () => {
 
 describe('SettableBooleanBit', () => {
   test('should be a subclass of SettableBit', () => {
-    expect(SettableBooleanBit.prototype).toBeInstanceOf(SettableBit);
+    expect(SettableBooleanBitJuncture.prototype).toBeInstanceOf(SettableBitJuncture);
   });
 
   describe('reducers', () => {
@@ -239,7 +239,7 @@ describe('SettableBooleanBit', () => {
 
 describe('SettableSymbolBit', () => {
   test('should be a subclass of SettableBit', () => {
-    expect(SettableSymbolBit.prototype).toBeInstanceOf(SettableBit);
+    expect(SettableSymbolBitJuncture.prototype).toBeInstanceOf(SettableBitJuncture);
   });
 });
 
@@ -250,7 +250,7 @@ describe('jBit - Bit Builder', () => {
 
   describe('String', () => {
     test('should return a subclass of Bit', () => {
-      expect(jBit.String.prototype).toBeInstanceOf(Bit);
+      expect(jBit.String.prototype).toBeInstanceOf(BitJuncture);
     });
 
     test('should always return the same Juncture', () => {
@@ -267,7 +267,7 @@ describe('jBit - Bit Builder', () => {
 
   describe('Number', () => {
     test('should return a subclass of Bit', () => {
-      expect(jBit.Number.prototype).toBeInstanceOf(Bit);
+      expect(jBit.Number.prototype).toBeInstanceOf(BitJuncture);
     });
 
     test('should always return the same Juncture', () => {
@@ -284,7 +284,7 @@ describe('jBit - Bit Builder', () => {
 
   describe('Boolean', () => {
     test('should return a subclass of Bit', () => {
-      expect(jBit.Boolean.prototype).toBeInstanceOf(Bit);
+      expect(jBit.Boolean.prototype).toBeInstanceOf(BitJuncture);
     });
 
     test('should always return the same Juncture', () => {
@@ -301,7 +301,7 @@ describe('jBit - Bit Builder', () => {
 
   describe('Symbol', () => {
     test('should return a subclass of Bit', () => {
-      expect(jBit.Symbol.prototype).toBeInstanceOf(Bit);
+      expect(jBit.Symbol.prototype).toBeInstanceOf(BitJuncture);
     });
 
     test('should always return the same Juncture', () => {
@@ -323,7 +323,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing an empty string as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of('').prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of('').prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -340,7 +340,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing a non-empty string as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of('').prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of('').prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return a different Juncture', () => {
@@ -359,7 +359,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing the number zero as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(0).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(0).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -376,7 +376,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing a non-zero number as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(1).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(1).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return a different Juncture', () => {
@@ -395,7 +395,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing the boolean value "false" as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(false).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(false).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -412,7 +412,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing the boolean value "true" as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(true).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(true).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return a different Juncture', () => {
@@ -431,7 +431,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing the symbol jSymbols.bitDefault as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(jSymbols.bitDefault).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(jSymbols.bitDefault).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -448,7 +448,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing a symbol different from jSymbols.bitDefault as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(Symbol('test')).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(Symbol('test')).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return a different Juncture', () => {
@@ -467,7 +467,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing an object as parameter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of({ myValue: 1 }).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of({ myValue: 1 }).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return a different Juncture', () => {
@@ -486,7 +486,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing null as parameter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(null).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(null).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return a different Juncture', () => {
@@ -505,7 +505,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('when passing undefined as parameter', () => {
       test('should return a subclass of Bit', () => {
-        expect(jBit.Of(undefined).prototype).toBeInstanceOf(Bit);
+        expect(jBit.Of(undefined).prototype).toBeInstanceOf(BitJuncture);
       });
 
       test('should always return a different Juncture', () => {
@@ -530,7 +530,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('String', () => {
       test('should return a subclass of SettableStringBit', () => {
-        expect(jBit.settable.String.prototype).toBeInstanceOf(SettableStringBit);
+        expect(jBit.settable.String.prototype).toBeInstanceOf(SettableStringBitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -547,7 +547,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('Number', () => {
       test('should return a subclass of SettableNumberBit', () => {
-        expect(jBit.settable.Number.prototype).toBeInstanceOf(SettableNumberBit);
+        expect(jBit.settable.Number.prototype).toBeInstanceOf(SettableNumberBitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -564,7 +564,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('Boolean', () => {
       test('should return a subclass of SettableBooleanBit', () => {
-        expect(jBit.settable.Boolean.prototype).toBeInstanceOf(SettableBooleanBit);
+        expect(jBit.settable.Boolean.prototype).toBeInstanceOf(SettableBooleanBitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -581,7 +581,7 @@ describe('jBit - Bit Builder', () => {
 
     describe('Symbol', () => {
       test('should return a subclass of SettableSymbolBit', () => {
-        expect(jBit.settable.Symbol.prototype).toBeInstanceOf(SettableSymbolBit);
+        expect(jBit.settable.Symbol.prototype).toBeInstanceOf(SettableSymbolBitJuncture);
       });
 
       test('should always return the same Juncture', () => {
@@ -603,7 +603,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing an empty string as paramter', () => {
         test('should return a subclass of SettableStringBit', () => {
-          expect(jBit.settable.Of('').prototype).toBeInstanceOf(SettableStringBit);
+          expect(jBit.settable.Of('').prototype).toBeInstanceOf(SettableStringBitJuncture);
         });
 
         test('should always return the same Juncture', () => {
@@ -620,7 +620,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing a non-empty string as paramter', () => {
         test('should return a subclass of SettableStringBit', () => {
-          expect(jBit.settable.Of('').prototype).toBeInstanceOf(SettableStringBit);
+          expect(jBit.settable.Of('').prototype).toBeInstanceOf(SettableStringBitJuncture);
         });
 
         test('should always return a different Juncture', () => {
@@ -639,7 +639,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing the number zero as paramter', () => {
         test('should return a subclass of SettableNumberBit', () => {
-          expect(jBit.settable.Of(0).prototype).toBeInstanceOf(SettableNumberBit);
+          expect(jBit.settable.Of(0).prototype).toBeInstanceOf(SettableNumberBitJuncture);
         });
 
         test('should always return the same Juncture', () => {
@@ -656,7 +656,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing a non-zero number as paramter', () => {
         test('should return a subclass of SettableNumberBit', () => {
-          expect(jBit.settable.Of(1).prototype).toBeInstanceOf(SettableNumberBit);
+          expect(jBit.settable.Of(1).prototype).toBeInstanceOf(SettableNumberBitJuncture);
         });
 
         test('should always return a different Juncture', () => {
@@ -675,7 +675,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing the boolean value "false" as paramter', () => {
         test('should return a subclass of SettableBooleanBit', () => {
-          expect(jBit.settable.Of(false).prototype).toBeInstanceOf(SettableBooleanBit);
+          expect(jBit.settable.Of(false).prototype).toBeInstanceOf(SettableBooleanBitJuncture);
         });
 
         test('should always return the same Juncture', () => {
@@ -692,7 +692,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing the boolean value "true" as paramter', () => {
         test('should return a subclass of SettableBooleanBit', () => {
-          expect(jBit.settable.Of(true).prototype).toBeInstanceOf(SettableBooleanBit);
+          expect(jBit.settable.Of(true).prototype).toBeInstanceOf(SettableBooleanBitJuncture);
         });
 
         test('should always return a different Juncture', () => {
@@ -711,7 +711,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing the symbol jSymbols.bitDefault as paramter', () => {
         test('should return a subclass of SettableSymbolBit', () => {
-          expect(jBit.settable.Of(jSymbols.bitDefault).prototype).toBeInstanceOf(SettableSymbolBit);
+          expect(jBit.settable.Of(jSymbols.bitDefault).prototype).toBeInstanceOf(SettableSymbolBitJuncture);
         });
 
         test('should always return the same Juncture', () => {
@@ -728,7 +728,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing a symbol different from jSymbols.bitDefault as paramter', () => {
         test('should return a subclass of SettableSymbolBit', () => {
-          expect(jBit.settable.Of(Symbol('test')).prototype).toBeInstanceOf(SettableSymbolBit);
+          expect(jBit.settable.Of(Symbol('test')).prototype).toBeInstanceOf(SettableSymbolBitJuncture);
         });
 
         test('should always return a different Juncture', () => {
@@ -747,7 +747,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing an object as parameter', () => {
         test('should return a subclass of SettableBit', () => {
-          expect(jBit.settable.Of({ myValue: 1 }).prototype).toBeInstanceOf(SettableBit);
+          expect(jBit.settable.Of({ myValue: 1 }).prototype).toBeInstanceOf(SettableBitJuncture);
         });
 
         test('should always return a different Juncture', () => {
@@ -766,7 +766,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing null as parameter', () => {
         test('should return a subclass of SettableBit', () => {
-          expect(jBit.settable.Of(null).prototype).toBeInstanceOf(SettableBit);
+          expect(jBit.settable.Of(null).prototype).toBeInstanceOf(SettableBitJuncture);
         });
 
         test('should always return a different Juncture', () => {
@@ -785,7 +785,7 @@ describe('jBit - Bit Builder', () => {
 
       describe('when passing undefined as parameter', () => {
         test('should return a subclass of SettableBit', () => {
-          expect(jBit.settable.Of(undefined).prototype).toBeInstanceOf(SettableBit);
+          expect(jBit.settable.Of(undefined).prototype).toBeInstanceOf(SettableBitJuncture);
         });
 
         test('should always return a different Juncture', () => {
