@@ -130,10 +130,10 @@ export type ChildrenOf<J extends Group> = SchemaOf<J>['Children'];
 
 // #region Builder types
 // --- Inert
-interface GenericGroup<JTM extends JunctureTypeMap> extends Group {
+interface StatedGroup<JTM extends JunctureTypeMap> extends Group {
   schema: SchemaDef<GroupSchema<JTM>>;
 }
-interface GenericGroupType<JTM extends JunctureTypeMap> extends JunctureType<GenericGroup<JTM>> { }
+interface StatedGroupType<JTM extends JunctureTypeMap> extends JunctureType<StatedGroup<JTM>> { }
 // #endregion
 
 // #region Builder
@@ -146,7 +146,7 @@ function createGroupType<JT extends abstract new(...args: any) => Group,
 }
 
 interface GroupBuilder {
-  of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: GroupHandledValue<JTM>): GenericGroupType<JTM>;
+  of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: GroupHandledValue<JTM>): StatedGroupType<JTM>;
 }
 
 export const jGroup: GroupBuilder = {

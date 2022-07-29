@@ -56,7 +56,7 @@ describe('Root', () => {
 
 test('experiment with frames', () => {
   class J1 extends jGroup.of({
-    name: jBit.settable.Of('Sergio'),
+    name: jBit.Of('Sergio'),
     age: jBit.Of(46)
   }) {
     displayName = this.DEF.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);

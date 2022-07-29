@@ -12,9 +12,7 @@ import { OverrideSchemaFrame } from '../context/frames/schema-frame';
 import {
   createSchemaDef, isSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
 } from '../definition/schema';
-import {
-  Juncture, JunctureType, StatedJunctureType, ValueOf
-} from '../juncture';
+import { Juncture, JunctureType, ValueOf } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
@@ -110,44 +108,56 @@ export abstract class SettableSymbolBit extends SettableBit {
 
 // #region Builder types
 // --- Inert
-interface GenericBit<V> extends Bit {
+interface StatedBit<V> extends Bit {
   schema: SchemaDef<BitSchema<V>>;
 }
-interface GenericBitType<V> extends JunctureType<GenericBit<V>> { }
+interface StatedBitType<V> extends JunctureType<StatedBit<V>> { }
 
-interface StringBit extends GenericBit<string> { }
-interface StringBitType extends JunctureType<StringBit> { }
+interface StatedStringBit extends StatedBit<string> { }
+interface StatedStringBitType extends JunctureType<StatedStringBit> { }
 
-interface NumberBit extends GenericBit<number> { }
-interface NumberBitType extends JunctureType<NumberBit> { }
+interface StatedNumberBit extends StatedBit<number> { }
+interface StatedNumberBitType extends JunctureType<StatedNumberBit> { }
 
-interface BooleanBit extends GenericBit<boolean> { }
-interface BooleanBitType extends JunctureType<BooleanBit> { }
+interface StatedBooleanBit extends StatedBit<boolean> { }
+interface StatedBooleanBitType extends JunctureType<StatedBooleanBit> { }
 
-interface SymbolBit extends GenericBit<symbol> { }
-interface SymbolBitType extends JunctureType<SymbolBit> { }
+interface StatedSymbolBit extends StatedBit<symbol> { }
+interface StatedSymbolBitType extends JunctureType<StatedSymbolBit> { }
 
 // --- Settable
-interface GenericSettableBit<V> extends SettableBit {
+interface StatedSettableBit<V> extends SettableBit {
   schema: SchemaDef<BitSchema<V>>;
 }
-interface GenericSettableBitType<V> extends JunctureType<GenericSettableBit<V>> { }
+interface StatedSettableBitType<V> extends JunctureType<StatedSettableBit<V>> { }
 
-interface SettableStringBitType extends StatedJunctureType<SettableStringBit> { }
+interface StatedSettableStringBit extends SettableStringBit {
+  schema: SchemaDef<BitSchema<string>>;
+}
+interface StatedSettableStringBitType extends JunctureType<StatedSettableStringBit> { }
 
-interface SettableNumberBitType extends StatedJunctureType<SettableNumberBit> { }
+interface StatedSettableNumberBit extends SettableNumberBit {
+  schema: SchemaDef<BitSchema<number>>;
+}
+interface StatedSettableNumberBitType extends JunctureType<StatedSettableNumberBit> { }
 
-interface SettableBooleanBitType extends StatedJunctureType<SettableBooleanBit> { }
+interface StatedSettableBooleanBit extends SettableBooleanBit {
+  schema: SchemaDef<BitSchema<boolean>>;
+}
+interface StatedSettableBooleanBitType extends JunctureType<StatedSettableBooleanBit> { }
 
-interface SettableSymbolBitType extends StatedJunctureType<SettableSymbolBit> { }
+interface StatedSettableSymbolBit extends SettableSymbolBit {
+  schema: SchemaDef<BitSchema<symbol>>;
+}
+interface StatedSettableSymbolBitType extends JunctureType<StatedSettableSymbolBit> { }
 // #endregion
 
 // #region Builder
 function createBitType<JT extends abstract new(...args: any) => Bit>(BaseType: JT, defaultValue: any) {
-  abstract class StatedBit extends BaseType {
+  abstract class BuiltBit extends BaseType {
     schema = createSchemaDef(() => createBitSchema(defaultValue));
   }
-  return StatedBit;
+  return BuiltBit;
 }
 
 const defaultStringValue = '';
@@ -166,29 +176,29 @@ class DefaultSettableBooleanBit extends createBitType(SettableBooleanBit, defaul
 class DefaultSettableSymbolBit extends createBitType(SettableSymbolBit, defaultSymbolValue) { }
 
 interface BitBuilder {
-  readonly String: StringBitType;
-  readonly Number: NumberBitType;
-  readonly Boolean: BooleanBitType;
-  readonly Symbol: SymbolBitType;
+  readonly String: StatedStringBitType;
+  readonly Number: StatedNumberBitType;
+  readonly Boolean: StatedBooleanBitType;
+  readonly Symbol: StatedSymbolBitType;
   readonly Of: {
-    (defaultValue: string): StringBitType;
-    (defaultValue: number): NumberBitType;
-    (defaultValue: boolean): BooleanBitType;
-    (defaultValue: symbol): SymbolBitType;
-    <V>(defaultValue: V): GenericBitType<V>;
+    (defaultValue: string): StatedStringBitType;
+    (defaultValue: number): StatedNumberBitType;
+    (defaultValue: boolean): StatedBooleanBitType;
+    (defaultValue: symbol): StatedSymbolBitType;
+    <V>(defaultValue: V): StatedBitType<V>;
   };
 
   readonly settable: {
-    readonly String: SettableStringBitType;
-    readonly Number: SettableNumberBitType;
-    readonly Boolean: SettableBooleanBitType;
-    readonly Symbol: SettableSymbolBitType;
+    readonly String: StatedSettableStringBitType;
+    readonly Number: StatedSettableNumberBitType;
+    readonly Boolean: StatedSettableBooleanBitType;
+    readonly Symbol: StatedSettableSymbolBitType;
     readonly Of: {
-      (defaultValue: string): SettableStringBitType;
-      (defaultValue: number): SettableNumberBitType;
-      (defaultValue: boolean): SettableBooleanBitType;
-      (defaultValue: symbol): SettableSymbolBitType;
-      <V>(defaultValue: V): GenericSettableBitType<V>;
+      (defaultValue: string): StatedSettableStringBitType;
+      (defaultValue: number): StatedSettableNumberBitType;
+      (defaultValue: boolean): StatedSettableBooleanBitType;
+      (defaultValue: symbol): StatedSettableSymbolBitType;
+      <V>(defaultValue: V): StatedSettableBitType<V>;
     }
   }
 }

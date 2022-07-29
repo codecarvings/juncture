@@ -174,11 +174,3 @@ export type CursorMapOfJunctureTypeMap<JTM extends JunctureTypeMap> = {
   readonly [K in keyof JTM]: CursorOfType<JTM[K]>;
 };
 // #endregion
-
-// #region Stated
-// Removes abstract from schema property
-export type StatedJuncture<T extends Juncture> = T & { readonly schema: T['schema'] };
-export interface StatedJunctureType<J extends Juncture = Juncture> {
-  new(): StatedJuncture<J>;
-}
-// #endregion
