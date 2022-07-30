@@ -107,26 +107,10 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     return undefined!;
   }
 
-  static createCtx<JT extends JunctureType>(Type: JT, config: CtxConfig) {
+  static createCtx(Type: JunctureType, config: CtxConfig): Ctx {
     const juncture = Juncture.getInstance(Type);
     return juncture[jSymbols.createCtx](config);
   }
-
-  static createCtxHub<JT extends JunctureType>(Type: JT, ctx: Ctx, config: CtxConfig) {
-    const juncture = Juncture.getInstance(Type);
-    return juncture[jSymbols.createCtxHub](ctx, config);
-  }
-
-  static createCursor<JT extends JunctureType>(Type: JT, hub: CtxHub): CursorOfType<JT> {
-    const juncture = Juncture.getInstance(Type);
-    return juncture[jSymbols.createCursor](hub) as CursorOfType<JT>;
-  }
-
-  static createPrivateCursor<JT extends JunctureType>(Type: JT, hub: CtxHub): PrivateCursorOfType<JT> {
-    const juncture = Juncture.getInstance(Type);
-    return juncture[jSymbols.createPrivateCursor](hub) as PrivateCursorOfType<JT>;
-  }
-
   // #endregion
 }
 

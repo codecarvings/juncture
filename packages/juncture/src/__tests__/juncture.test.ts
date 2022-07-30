@@ -8,6 +8,8 @@
  */
 
 import { Ctx, CtxConfig } from '../context/ctx';
+import { CtxHub } from '../context/ctx-hub';
+import { isCursor } from '../context/cursor';
 import { createSchemaDef, isSchemaDef, Schema } from '../definition/schema';
 import { isDirectSelectorDef } from '../definition/selector';
 import { Juncture } from '../juncture';
@@ -89,6 +91,96 @@ describe('Juncture', () => {
         const ctx1 = juncture[jSymbols.createCtx](config);
         const ctx2 = juncture[jSymbols.createCtx](config);
         expect(ctx2).not.toBe(ctx1);
+      });
+    });
+
+    describe('[jSymbols.createCtxHub] property', () => {
+      const config: CtxConfig = {
+        layout: {
+          parent: null,
+          path: [],
+          isDivergent: false,
+          isUnivocal: true
+        }
+      };
+
+      test('should be a method', () => {
+        expect(typeof juncture[jSymbols.createCtxHub]).toBe('function');
+      });
+
+      test('should create a new CtxHub for the provided Ctx instance and config', () => {
+        const fakeJuncture: any = {
+          [jSymbols.createCtxHub]: () => undefined,
+          schema: createSchemaDef(() => new Schema(''))
+        };
+        const ctx: Ctx = new Ctx(fakeJuncture, config);
+        const hub = juncture[jSymbols.createCtxHub](ctx, config);
+        expect(hub).toBeInstanceOf(CtxHub);
+        expect(hub.ctx).toBe(ctx);
+        expect(hub.schema).toBe(ctx.schema);
+      });
+
+      test('should always return a new CtxHub', () => {
+        const fakeJuncture: any = {
+          [jSymbols.createCtxHub]: () => undefined,
+          schema: createSchemaDef(() => new Schema(''))
+        };
+        const ctx: Ctx = new Ctx(fakeJuncture, config);
+        const hub1 = juncture[jSymbols.createCtxHub](ctx, config);
+        const hub2 = juncture[jSymbols.createCtxHub](ctx, config);
+        expect(hub2).not.toBe(hub1);
+      });
+    });
+
+    describe('[jSymbols.createCursor] property', () => {
+      const config: CtxConfig = {
+        layout: {
+          parent: null,
+          path: [],
+          isDivergent: false,
+          isUnivocal: true
+        }
+      };
+
+      test('should be a method', () => {
+        expect(typeof juncture[jSymbols.createCursor]).toBe('function');
+      });
+
+      test('should create a new Cursor for the provided Ctx / CtxHub', () => {
+        const ctx = juncture[jSymbols.createCtx](config);
+        const hub = juncture[jSymbols.createCtxHub](ctx, config);
+        const cursor = juncture[jSymbols.createCursor](hub);
+        expect(isCursor(cursor, ctx)).toBe(true);
+      });
+
+      test('should always return a new Cursor', () => {
+        const ctx = juncture[jSymbols.createCtx](config);
+        const hub = juncture[jSymbols.createCtxHub](ctx, config);
+        const cursor1 = juncture[jSymbols.createCursor](hub);
+        const cursor2 = juncture[jSymbols.createCursor](hub);
+        expect(cursor2).not.toBe(cursor1);
+      });
+    });
+
+    describe('[jSymbols.createPrivateCursor] property', () => {
+      const config: CtxConfig = {
+        layout: {
+          parent: null,
+          path: [],
+          isDivergent: false,
+          isUnivocal: true
+        }
+      };
+
+      test('should be a method', () => {
+        expect(typeof juncture[jSymbols.createPrivateCursor]).toBe('function');
+      });
+
+      test('should return the cursor of the ctx', () => {
+        const ctx = juncture[jSymbols.createCtx](config);
+        const hub = juncture[jSymbols.createCtxHub](ctx, config);
+        const cursor = juncture[jSymbols.createPrivateCursor](hub);
+        expect(cursor).toBe(ctx.cursor);
       });
     });
 

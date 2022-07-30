@@ -9,15 +9,16 @@
 import { Ctx, CtxConfig } from '../../context/ctx';
 import { CtxHub } from '../../context/ctx-hub';
 import { createCursor, Cursor, isCursor } from '../../context/cursor';
-import { createSchemaDef, Schema } from '../../definition/schema';
-import { Juncture } from '../../juncture';
+import { createSchemaDef, Schema, SchemaDef } from '../../definition/schema';
+import { Juncture, JunctureType } from '../../juncture';
 import { jSymbols } from '../../symbols';
 
 describe('Ctx', () => {
-  class MyJuncture extends Juncture {
-    schema = createSchemaDef(() => new Schema(''));
+  interface MyJuncture extends Juncture {
+    schema: SchemaDef<Schema<string>>;
   }
-  const juncture = Juncture.getInstance(MyJuncture);
+  let MyJunctureType: JunctureType<MyJuncture>;
+  let juncture: MyJuncture;
   const config: CtxConfig = {
     layout: {
       parent: null,
@@ -27,11 +28,28 @@ describe('Ctx', () => {
     }
   };
 
-  test('should be instantiable by passing a juncture and a CtxConfig object', () => {
-    expect(() => {
+  beforeEach(() => {
+    MyJunctureType = class extends Juncture {
+      schema = createSchemaDef(() => new Schema(''));
+    };
+    juncture = Juncture.getInstance(MyJunctureType);
+  });
+
+  describe('constructor', () => {
+    test('should accept a juncture and a CtxConfig object', () => {
+      expect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const ctx = new Ctx(juncture, config);
+      }).not.toThrow();
+    });
+
+    test('should invoke the juncture[jSymbols.createCtxHub] factory to create a new hub for the ctx', () => {
+      (juncture as any)[jSymbols.createCtxHub] = jest.fn(juncture[jSymbols.createCtxHub]);
+      expect(juncture[jSymbols.createCtxHub]).toBeCalledTimes(0);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const ctx = new Ctx(juncture, config);
-    }).not.toThrow();
+      expect(juncture[jSymbols.createCtxHub]).toBeCalledTimes(1);
+    });
   });
 
   describe('instance', () => {
@@ -48,12 +66,36 @@ describe('Ctx', () => {
       expect(ctx.layout).toBe(config.layout);
     });
 
-    // eslint-disable-next-line max-len
-    test('should have a "cursor" property that give access to a cursor associated with the ctx', () => {
-      expect(isCursor(ctx.cursor, ctx)).toBe(true);
+    describe('cursor property', () => {
+      test('should give access to a cursor associated with the ctx', () => {
+        expect(isCursor(ctx.cursor, ctx)).toBe(true);
+      });
+
+      test('should invoke the juncture[jSymbols.createCursor] factory only once the first time is accessed', () => {
+        (juncture as any)[jSymbols.createCursor] = jest.fn(juncture[jSymbols.createCursor]);
+        expect(juncture[jSymbols.createCursor]).toBeCalledTimes(0);
+        expect(isCursor(ctx.cursor, ctx)).toBe(true);
+        expect(juncture[jSymbols.createCursor]).toBeCalledTimes(1);
+        expect(isCursor(ctx.cursor, ctx)).toBe(true);
+        expect(juncture[jSymbols.createCursor]).toBeCalledTimes(1);
+      });
     });
 
     describe('privateCursor property', () => {
+      test('should give access to a cursor associated with the ctx', () => {
+        expect(isCursor(ctx.cursor, ctx)).toBe(true);
+      });
+
+      // eslint-disable-next-line max-len
+      test('should invoke the juncture[jSymbols.createPrivateCursor] factory only once the first time is accessed', () => {
+        (juncture as any)[jSymbols.createPrivateCursor] = jest.fn(juncture[jSymbols.createPrivateCursor]);
+        expect(juncture[jSymbols.createPrivateCursor]).toBeCalledTimes(0);
+        expect(isCursor(ctx.privateCursor, ctx)).toBe(true);
+        expect(juncture[jSymbols.createPrivateCursor]).toBeCalledTimes(1);
+        expect(isCursor(ctx.privateCursor, ctx)).toBe(true);
+        expect(juncture[jSymbols.createPrivateCursor]).toBeCalledTimes(1);
+      });
+
       describe('by default', () => {
         test('should give access to the same value provided by the "cursor" property', () => {
           expect(ctx.privateCursor).toBe(ctx.cursor);
