@@ -9,12 +9,14 @@
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
 import { PrivateCursorHost } from '../cursor';
+import { createReducerFrame, ReducerFrame } from '../frames/reducer-frame';
 import { createSelectorFrame, SelectorFrame } from '../frames/selector-frame';
 import { PrivateAccessorKit } from './accessor-kit';
 
 // #region PrivateFrameKit
 export interface PrivateFrameKit<J extends Juncture = Juncture> {
   readonly selector: SelectorFrame<J>;
+  readonly reducer: ReducerFrame<J>;
 }
 
 export function preparePrivateFrameKit(
@@ -23,5 +25,6 @@ export function preparePrivateFrameKit(
   accessors: PrivateAccessorKit
 ) {
   defineLazyProperty(frames, 'selector', () => createSelectorFrame(privateCursorProviuder, accessors));
+  defineLazyProperty(frames, 'reducer', () => createReducerFrame(privateCursorProviuder, accessors));
 }
 // #endregion

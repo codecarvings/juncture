@@ -21,6 +21,10 @@ const config: CtxConfig = {
     path: [],
     isDivergent: false,
     isUnivocal: true
+  },
+  ctxMediator: {
+    getValue: () => undefined,
+    setValue: () => {}
   }
 };
 const ctx1 = new Ctx(juncture, config);

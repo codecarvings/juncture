@@ -25,6 +25,10 @@ describe('Ctx', () => {
       path: [],
       isDivergent: false,
       isUnivocal: true
+    },
+    ctxMediator: {
+      getValue: () => undefined,
+      setValue: () => {}
     }
   };
 

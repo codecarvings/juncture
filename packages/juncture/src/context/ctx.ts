@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { isReducerDef, ReducerDefSubKind } from '../definition/reducer';
 import { Schema } from '../definition/schema';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
@@ -29,8 +30,14 @@ export interface CtxLayout {
   readonly isDivergent: boolean;
 }
 
+export interface CtxMediator {
+  getValue(): any;
+  setValue(newValue: any): void;
+}
+
 export interface CtxConfig {
   readonly layout: CtxLayout;
+  readonly ctxMediator: CtxMediator;
 }
 
 export class Ctx {
@@ -56,10 +63,12 @@ export class Ctx {
 
   readonly hub: CtxHub;
 
-  constructor(readonly juncture: Juncture, config: CtxConfig) {
+  constructor(readonly juncture: Juncture, protected readonly config: CtxConfig) {
     this.schema = Juncture.getSchema(juncture);
 
     this.layout = config.layout;
+
+    this.#value = config.ctxMediator.getValue();
 
     defineLazyProperty(this, 'cursor', () => this.juncture[jSymbols.createCursor](this.hub));
     defineLazyProperty(this, 'privateCursor', () => this.juncture[jSymbols.createPrivateCursor](this.hub));
@@ -72,14 +81,27 @@ export class Ctx {
     preparePrivateBinKit(this.privateBins, this.juncture, this.privateFrames);
     preparePrivateAccessorKit(this.privateAccessors, this, this.privateBins);
 
-    this.getValue = this.getValue.bind(this);
-
     this.hub = this.juncture[jSymbols.createCtxHub](this, config);
   }
 
-  getValue(): any {
-    // TODO: implement this
-    return this.schema.defaultValue;
+  #value: any;
+
+  get value(): any {
+    return this.#value;
+  }
+
+  executeAction(key: string, args: any) {
+    const def = (this.juncture as any)[key];
+    if (!isReducerDef(def)) {
+      throw Error(`Unable to execute action "${key}": not a ReducerDef`);
+    }
+    const subKind = def.defSubKind;
+    if (subKind === ReducerDefSubKind.plain) {
+      const newValue = def[jSymbols.defPayload](this.privateFrames.selector)(...args);
+      if (newValue !== this.#value) {
+        this.config.ctxMediator.setValue(newValue);
+      }
+    }
   }
 }
 

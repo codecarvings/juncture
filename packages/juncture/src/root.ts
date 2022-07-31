@@ -6,7 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx } from './context/ctx';
+import {
+  Ctx, CtxConfig, CtxLayout, CtxMediator
+} from './context/ctx';
 import { Frame } from './context/frames/frame';
 import { Juncture, JunctureType, ValueOfType } from './juncture';
 
@@ -16,14 +18,24 @@ export class Root<JT extends JunctureType> {
     const initialValue = value === undefined ? schema.defaultValue : value;
     this._value = initialValue;
 
-    this.ctx = Juncture.createCtx(Type, {
-      layout: {
-        path: [],
-        parent: null,
-        isUnivocal: true,
-        isDivergent: false
+    const layout: CtxLayout = {
+      path: [],
+      parent: null,
+      isUnivocal: true,
+      isDivergent: false
+    };
+    const ctxMediator: CtxMediator = {
+      getValue: () => this._value,
+      setValue: newValue => {
+        this._value = newValue;
       }
-    });
+    };
+    const ctxConfig: CtxConfig = {
+      layout,
+      ctxMediator
+    };
+
+    this.ctx = Juncture.createCtx(Type, ctxConfig);
     this.frame = this.ctx.frame as any;
   }
 

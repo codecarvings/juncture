@@ -34,7 +34,7 @@ function createReducerDef<T extends ReducerDefSubKind, B extends (...args: any) 
   return createDef(DefKind.reducer, subKind, reducerFn);
 }
 
-function isReducerDef(obj: any, subKind?: ReducerDefSubKind): obj is ReducerDef<any, any> {
+export function isReducerDef(obj: any, subKind?: ReducerDefSubKind): obj is ReducerDef<any, any> {
   return isDef(obj, DefKind.reducer, subKind);
 }
 

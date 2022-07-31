@@ -8,7 +8,9 @@
 
 import { ComposableJuncture } from '../composable-juncture';
 import { Composer } from '../composer';
-import { Ctx, CtxConfig, CtxMap } from '../context/ctx';
+import {
+  Ctx, CtxConfig, CtxLayout, CtxMap, CtxMediator
+} from '../context/ctx';
 import { CtxHub } from '../context/ctx-hub';
 import { createCursor, Cursor } from '../context/cursor';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
@@ -69,17 +71,29 @@ export class GroupCtxHub extends CtxHub {
 
   constructor(ctx: Ctx, config: CtxConfig) {
     super(ctx, config);
+    const { setValue } = config.ctxMediator;
     this.childCtxs = mappedAssign(
       {},
       this.schema.childKeys,
-      key => Juncture.createCtx(this.schema.Children[key], {
-        layout: {
+      key => {
+        const layout: CtxLayout = {
           parent: this.ctx,
           path: [...config.layout.path, key],
           isUnivocal: config.layout.isUnivocal,
           isDivergent: false
-        }
-      })
+        };
+        const ctxMediator: CtxMediator = {
+          getValue: () => ctx.value[key],
+          setValue: newValue => {
+            setValue({
+              ...ctx.value,
+              [key]: newValue
+            });
+          }
+        };
+        const childCtxConfig: CtxConfig = { layout, ctxMediator };
+        return Juncture.createCtx(this.schema.Children[key], childCtxConfig);
+      }
     );
   }
 

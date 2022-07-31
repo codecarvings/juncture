@@ -10,6 +10,6 @@ export interface ValueAccessor<J extends Juncture> {
 export function createValueAccessor<J extends Juncture>(defaultCtx: Ctx): ValueAccessor<J> {
   return ((_?: Cursor) => {
     const ctx = typeof _ !== 'undefined' ? getCtx(_) : defaultCtx;
-    return ctx.getValue();
+    return ctx.value;
   }) as any;
 }

@@ -71,3 +71,24 @@ test('experiment with frames', () => {
   expect(select(_.name).value).toBe('Sergio');
   expect(select(_.age).value).toBe(46);
 });
+
+test('experiment with frames 2', () => {
+  class J1 extends jGroup.of({
+    name: jBit.Of('Sergio'),
+    age: jBit.settable.Of(46)
+  }) {
+    displayName = this.DEF.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
+  }
+  const root = new Root(J1, {
+    name: 'Mirco',
+    age: 47
+  });
+  const { _, select } = root.frame;
+  expect(select(_).displayName).toBe('Mirco 47');
+  expect(select(_).value).toEqual({
+    name: 'Mirco',
+    age: 47
+  });
+  expect(select(_.name).value).toBe('Mirco');
+  expect(select(_.age).value).toBe(47);
+});

@@ -73,6 +73,10 @@ describe('Juncture', () => {
           path: [],
           isDivergent: false,
           isUnivocal: true
+        },
+        ctxMediator: {
+          getValue: () => undefined,
+          setValue: () => {}
         }
       };
 
@@ -101,6 +105,10 @@ describe('Juncture', () => {
           path: [],
           isDivergent: false,
           isUnivocal: true
+        },
+        ctxMediator: {
+          getValue: () => undefined,
+          setValue: () => {}
         }
       };
 
@@ -139,6 +147,10 @@ describe('Juncture', () => {
           path: [],
           isDivergent: false,
           isUnivocal: true
+        },
+        ctxMediator: {
+          getValue: () => undefined,
+          setValue: () => {}
         }
       };
 
@@ -169,6 +181,10 @@ describe('Juncture', () => {
           path: [],
           isDivergent: false,
           isUnivocal: true
+        },
+        ctxMediator: {
+          getValue: () => undefined,
+          setValue: () => {}
         }
       };
 
@@ -359,6 +375,10 @@ describe('Juncture', () => {
           path: [],
           isDivergent: false,
           isUnivocal: true
+        },
+        ctxMediator: {
+          getValue: () => undefined,
+          setValue: () => {}
         }
       };
 
