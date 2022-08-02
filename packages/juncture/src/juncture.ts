@@ -7,11 +7,12 @@
  */
 
 import { Ctx, CtxConfig } from './context/ctx';
+import { getCtx } from './context/ctx-host';
 import { CtxHub } from './context/ctx-hub';
-import { createCursor, Cursor, getCtx } from './context/cursor';
+import { createCursor, Cursor } from './context/cursor';
 import { Path } from './context/path';
 import { Schema, SchemaDef, SchemaOfSchemaDef } from './definition/schema';
-import { createDirectSelectorDef, DirectSelectorDef } from './definition/selector';
+import { createSelectorDef, SelectorDef } from './definition/selector';
 import { Initializable } from './fabric/initializable';
 import { PropertyAssembler, PropertyAssemblerHost } from './fabric/property-assembler';
 import { Singleton } from './fabric/singleton';
@@ -55,26 +56,31 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
   [jSymbols.createPrivateCursor](hub: CtxHub): Cursor<this> {
     return hub.ctx.cursor as Cursor<this>;
   }
+
+  // eslint-disable-next-line class-methods-use-this
+  [jSymbols.adaptHandledValue](value: ValueOf<this>, handledValue: HandledValueOf<this>): ValueOf<this> {
+    return handledValue;
+  }
   // #endregion
 
   constructor() {
     const assembler = Juncture.getPropertyAssembler(this);
 
     this.defaultValue = assembler
-      .registerStaticProperty(createDirectSelectorDef((
+      .registerStaticProperty(createSelectorDef((
         frame: any
       ) => getCtx(frame._).schema.defaultValue));
 
     this.path = assembler
-      .registerStaticProperty(createDirectSelectorDef((
+      .registerStaticProperty(createSelectorDef((
         frame: any
       ) => getCtx(frame._).layout.path));
 
     this.isMounted = assembler
-      .registerStaticProperty(createDirectSelectorDef(() => true)); // TODO: Implement this
+      .registerStaticProperty(createSelectorDef(() => true)); // TODO: Implement this
 
     this.value = assembler
-      .registerStaticProperty(createDirectSelectorDef((
+      .registerStaticProperty(createSelectorDef((
         frame: any
       ) => getCtx(frame._).value));
   }
@@ -82,13 +88,13 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
   // #region Defs
   abstract readonly schema: SchemaDef<Schema>;
 
-  readonly defaultValue: DirectSelectorDef<ValueOf<this>>;
+  readonly defaultValue: SelectorDef<ValueOf<this>>;
 
-  readonly path: DirectSelectorDef<Path>;
+  readonly path: SelectorDef<Path>;
 
-  readonly isMounted: DirectSelectorDef<boolean>;
+  readonly isMounted: SelectorDef<boolean>;
 
-  readonly value: DirectSelectorDef<ValueOf<this>>;
+  readonly value: SelectorDef<ValueOf<this>>;
   // #endregion
 
   // #region Static

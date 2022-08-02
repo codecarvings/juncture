@@ -6,66 +6,60 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Action } from '../context/action';
 import { PrivateFrameConsumer } from '../context/frames/private-frame';
-import { Path } from '../context/path';
 import {
   createDef, Def, DefKind, isDef
 } from './def';
 
-export interface Action {
-  readonly target: Path; // TODO | CtxRef;
-  readonly key: string;
-  readonly args: any;
-}
+// #region Uni Def
+export const notAUniReducerDef = '\u26A0 ERROR: NOT A REDUCER';
 
-// #region Def
-export const notAReducerDef = '\u26A0 ERROR: NOT A REDUCER';
-
-export enum ReducerDefSubKind {
-  plain = 'plain',
+export enum UniReducerDefSubKind {
+  standard = '',
   mix = 'mix'
 }
 
-export interface ReducerDef<T extends ReducerDefSubKind, B extends (...args: any) => any>
+export interface UniReducerDef<T extends UniReducerDefSubKind, B extends (...args: any) => any>
   extends Def<DefKind.reducer, T, PrivateFrameConsumer<B>> { }
 
-function createReducerDef<T extends ReducerDefSubKind, B extends (...args: any) => any>(
-  subKind: T, reducerFn: PrivateFrameConsumer<B>): ReducerDef<T, B> {
+function createUniReducerDef<T extends UniReducerDefSubKind, B extends (...args: any) => any>(
+  subKind: T, reducerFn: PrivateFrameConsumer<B>): UniReducerDef<T, B> {
   return createDef(DefKind.reducer, subKind, reducerFn);
 }
 
-export function isReducerDef(obj: any, subKind?: ReducerDefSubKind): obj is ReducerDef<any, any> {
+function isUniReducerDef(obj: any, subKind?: UniReducerDefSubKind): obj is UniReducerDef<any, any> {
   return isDef(obj, DefKind.reducer, subKind);
 }
 
 // ---  Derivations
-export type ReducerOfReducerDef<D extends ReducerDef<any, any>>
-  = D extends ReducerDef<any, infer B> ? B : never;
+export type ReducerOfUniReducerDef<D extends UniReducerDef<any, any>>
+  = D extends UniReducerDef<any, infer B> ? B : never;
 
-// --- PlainReducer
-export interface PlainReducerDef<B extends (...args: any) => any>
-  extends ReducerDef<ReducerDefSubKind.plain, B> { }
+// --- Starndard
+export interface ReducerDef<B extends (...args: any) => any>
+  extends UniReducerDef<UniReducerDefSubKind.standard, B> { }
 
-export function createPlainReducerDef<B extends (...args: any) => any>(
-  reducerFn: PrivateFrameConsumer<B>): PlainReducerDef<B> {
-  return createReducerDef(ReducerDefSubKind.plain, reducerFn);
+export function createReducerDef<B extends (...args: any) => any>(
+  reducerFn: PrivateFrameConsumer<B>): ReducerDef<B> {
+  return createUniReducerDef(UniReducerDefSubKind.standard, reducerFn);
 }
 
-export function isPlainReducerDef(obj: any): obj is PlainReducerDef<any> {
-  return isReducerDef(obj, ReducerDefSubKind.plain);
+export function isReducerDef(obj: any): obj is ReducerDef<any> {
+  return isUniReducerDef(obj, UniReducerDefSubKind.standard);
 }
 // #endregion
 
-// --- MixReducer
+// --- Mix
 export interface MixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>
-  extends ReducerDef<ReducerDefSubKind.mix, B> { }
+  extends UniReducerDef<UniReducerDefSubKind.mix, B> { }
 
 export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
   reducerFn: PrivateFrameConsumer<B>): MixReducerDef<B> {
-  return createReducerDef(ReducerDefSubKind.mix, reducerFn);
+  return createUniReducerDef(UniReducerDefSubKind.mix, reducerFn);
 }
 
 export function isMixReducerDef(obj: any): obj is MixReducerDef<any> {
-  return isReducerDef(obj, ReducerDefSubKind.mix);
+  return isUniReducerDef(obj, UniReducerDefSubKind.mix);
 }
 // #endregion

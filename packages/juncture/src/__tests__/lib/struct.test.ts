@@ -12,26 +12,26 @@ import { Schema } from '../../definition/schema';
 import { JunctureTypeMap } from '../../juncture';
 import { jBit } from '../../lib/bit';
 import {
-  GroupCtxHub, GroupHandledValue, GroupSchema, jGroup
-} from '../../lib/group';
+  jStruct, StructCtxHub, StructHandledValue, StructSchema
+} from '../../lib/struct';
 import { Root } from '../../root';
 
 // Exposes constructor as public
-export class TestGroupSchema<JTM extends JunctureTypeMap> extends GroupSchema<JTM> {
-  constructor(readonly Children: JTM, defaultValue?: GroupHandledValue<JTM>) {
+export class TestStructSchema<JTM extends JunctureTypeMap> extends StructSchema<JTM> {
+  constructor(readonly Children: JTM, defaultValue?: StructHandledValue<JTM>) {
     super(Children, defaultValue);
   }
 }
 
-describe('GroupSchema', () => {
+describe('StructSchema', () => {
   test('should be a subclass of Schema', () => {
-    expect(GroupSchema.prototype).toBeInstanceOf(Schema);
+    expect(StructSchema.prototype).toBeInstanceOf(Schema);
   });
 
   describe('constructor', () => {
     test('should be able to accept a Child map only', () => {
-      const schema = new TestGroupSchema({ firstName: jBit.String });
-      expect(schema).toBeInstanceOf(GroupSchema);
+      const schema = new TestStructSchema({ firstName: jBit.String });
+      expect(schema).toBeInstanceOf(StructSchema);
     });
 
     describe('when passing a custom defaultValue as second, optional, parameter', () => {
@@ -41,7 +41,7 @@ describe('GroupSchema', () => {
       };
 
       test('should use the provieded defaultValue', () => {
-        expect((new TestGroupSchema(Children, {
+        expect((new TestStructSchema(Children, {
           firstName: 'customFn',
           lastName: 'customLn'
         })).defaultValue).toEqual({
@@ -51,12 +51,12 @@ describe('GroupSchema', () => {
       });
 
       test('should be able to use the defaultValue of child junctures when one or more properties is missing', () => {
-        expect((new TestGroupSchema(Children, {})).defaultValue).toEqual({
+        expect((new TestStructSchema(Children, {})).defaultValue).toEqual({
           firstName: 'fn',
           lastName: 'ln'
         });
 
-        expect((new TestGroupSchema(Children, {
+        expect((new TestStructSchema(Children, {
           lastName: 'customLn'
         })).defaultValue).toEqual({
           firstName: 'fn',
@@ -71,7 +71,7 @@ describe('GroupSchema', () => {
       const Children = {
         firstName: jBit.String
       };
-      const schema = new TestGroupSchema(Children);
+      const schema = new TestStructSchema(Children);
       expect(schema.Children).toBe(Children);
     });
 
@@ -80,15 +80,15 @@ describe('GroupSchema', () => {
         firstName: jBit.String,
         lastName: jBit.Number
       };
-      const schema = new TestGroupSchema(Children);
+      const schema = new TestStructSchema(Children);
       expect(schema.childKeys).toEqual(Object.keys(Children));
     });
   });
 });
 
-describe('GroupCtxHub', () => {
-  // class MyJuncture extends Group {
-  //   schema = createSchemaDef(() => new TestGroupSchema({
+describe('StructCtxHub', () => {
+  // class MyJuncture extends Struct {
+  //   schema = createSchemaDef(() => new TestStructSchema({
   //     firstName: jBit.String,
   //     lastName: jBit.String
   //   }));
@@ -104,14 +104,14 @@ describe('GroupCtxHub', () => {
   // };
 
   test('should be a subclass of CtxHub', () => {
-    expect(GroupCtxHub.prototype).toBeInstanceOf(CtxHub);
+    expect(StructCtxHub.prototype).toBeInstanceOf(CtxHub);
   });
 
   /*
   describe('instance', () => {
-    let ctx: GroupCtx<MyJuncture>;
+    let ctx: StructCtx<MyJuncture>;
     beforeEach(() => {
-      ctx = new GroupCtx(juncture, config);
+      ctx = new StructCtx(juncture, config);
     });
 
     // eslint-disable-next-line max-len
@@ -120,7 +120,7 @@ describe('GroupCtxHub', () => {
         expect(isCursor(ctx.privateCursor, ctx)).toBe(true);
       });
 
-      test('should give access to a map of cursors with the same keys of the Children of the Group', () => {
+      test('should give access to a map of cursors with the same keys of the Children of the Struct', () => {
         expect(Object.keys(ctx.privateCursor)).toEqual(['firstName', 'lastName']);
         expect(isCursor(ctx.privateCursor.firstName)).toBe(true);
         expect(isCursor(ctx.privateCursor.lastName)).toBe(true);
@@ -135,13 +135,13 @@ describe('GroupCtxHub', () => {
 });
 
 xtest('temp test', () => {
-  class Person extends jGroup.of({
+  class Person extends jStruct.of({
     firstName: jBit.String,
     lastName: jBit.String,
     age: jBit.Of(1)
   }) { }
 
-  class Parents extends jGroup.of({
+  class Parents extends jStruct.of({
     father: Person,
     mother: Person
   }) {

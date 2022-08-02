@@ -12,9 +12,10 @@ import {
 } from './def';
 
 // #region Schema
+// Handled value: Return type of a readucer
+// Required for inheritance of object-type junctures (eg: Struct)
 export class Schema<V extends HV = any, HV = V> {
-  // TYPE PLACEHOLDER: Return type of a readucer(for an object juncture can be Partial...)
-  readonly [jSymbols.handledValue]!: HV;
+  readonly [jSymbols.handledValue]!: HV; // Preserve type param
 
   constructor(readonly defaultValue: V) { }
 }

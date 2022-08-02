@@ -10,13 +10,14 @@
 /* eslint-disable no-multi-assign */
 
 import { Composer, PrivateComposer } from '../composer';
+import { Action } from '../context/action';
 import { isPrivate, Private } from '../definition/private';
 import {
-  Action, isMixReducerDef, isPlainReducerDef, MixReducerDef, PlainReducerDef
+  isMixReducerDef, isReducerDef, MixReducerDef, ReducerDef
 } from '../definition/reducer';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import {
-  DirectSelectorDef, isDirectSelectorDef, isParamSelectorDef, ParamSelectorDef
+  isParamSelectorDef, isSelectorDef, ParamSelectorDef, SelectorDef
 } from '../definition/selector';
 import { PropertyAssembler } from '../fabric/property-assembler';
 import { Juncture } from '../juncture';
@@ -50,10 +51,10 @@ describe('PrivateComposer', () => {
         expect(typeof composer.selector).toBe('function');
       });
 
-      test('should create, after property wiring, a Private DirectSelectorDef, by passing a selector function', () => {
+      test('should create, after property wiring, a Private SelectorDef, by passing a selector function', () => {
         container.mySelector = composer.selector(({ value }) => value());
         assembler.wire();
-        expect(isDirectSelectorDef(container.mySelector)).toBe(true);
+        expect(isSelectorDef(container.mySelector)).toBe(true);
         expect(container.mySelector.access).toBe('private');
       });
     });
@@ -76,10 +77,10 @@ describe('PrivateComposer', () => {
         expect(typeof composer.reducer).toBe('function');
       });
 
-      test('should create, after property wiring, a Private PlainReducerDef, by passing a reducer function', () => {
+      test('should create, after property wiring, a Private ReducerDef, by passing a reducer function', () => {
         container.myReducer = composer.reducer(({ value }) => () => value());
         assembler.wire();
-        expect(isPlainReducerDef(container.myReducer)).toBe(true);
+        expect(isReducerDef(container.myReducer)).toBe(true);
         expect(container.myReducer.access).toBe('private');
       });
     });
@@ -122,10 +123,10 @@ describe('Composer', () => {
         expect(typeof composer.selector).toBe('function');
       });
 
-      test('should create, after property wiring, a DirectSelectorDef, by passing a selector function', () => {
+      test('should create, after property wiring, a SelectorDef, by passing a selector function', () => {
         container.mySelector = composer.selector(({ value }) => value());
         assembler.wire();
-        expect(isDirectSelectorDef(container.mySelector)).toBe(true);
+        expect(isSelectorDef(container.mySelector)).toBe(true);
       });
     });
 
@@ -146,10 +147,10 @@ describe('Composer', () => {
         expect(typeof composer.reducer).toBe('function');
       });
 
-      test('should create, after property wiring, a PlainReducerDef, by passing a reducer function', () => {
+      test('should create, after property wiring, a ReducerDef, by passing a reducer function', () => {
         container.myReducer = composer.reducer(({ value }) => () => value());
         assembler.wire();
-        expect(isPlainReducerDef(container.myReducer)).toBe(true);
+        expect(isReducerDef(container.myReducer)).toBe(true);
       });
     });
 
@@ -193,8 +194,8 @@ describe('Composer', () => {
         });
       });
 
-      describe('when passing a DirectSelectorDef as type argument, proxy should provide access to', () => {
-        let myOriginalSelector: DirectSelectorDef<string>;
+      describe('when passing a SelectorDef as type argument, proxy should provide access to', () => {
+        let myOriginalSelector: SelectorDef<string>;
         beforeEach(() => {
           myOriginalSelector = container.mySelector = composer.selector(() => 'original');
           assembler.wire();
@@ -207,12 +208,12 @@ describe('Composer', () => {
             expect(typeof proxy.selector).toBe('function');
           });
 
-          test('should create, after property wiring, a new DirectSelectorDef assignable to the parent, by passing a selector function', () => {
+          test('should create, after property wiring, a new SelectorDef assignable to the parent, by passing a selector function', () => {
             const proxy = composer.override(myOriginalSelector);
-            let myNewSelector: DirectSelectorDef<string> = container.mySelector = proxy.selector(({ value }) => value());
+            let myNewSelector: SelectorDef<string> = container.mySelector = proxy.selector(({ value }) => value());
             assembler.wire();
             myNewSelector = container.mySelector;
-            expect(isDirectSelectorDef(myNewSelector)).toBe(true);
+            expect(isSelectorDef(myNewSelector)).toBe(true);
             expect(myNewSelector).not.toBe(myOriginalSelector);
           });
 
@@ -224,31 +225,31 @@ describe('Composer', () => {
             expect(result).toBe('original2');
           });
 
-          test('should return a non-private DirectSelectorDef if the parent is not private', () => {
+          test('should return a non-private SelectorDef if the parent is not private', () => {
             const proxy = composer.override(myOriginalSelector);
             let myNewSelector = container.mySelector = proxy.selector(({ value }) => value());
             assembler.wire();
             myNewSelector = container.mySelector;
             expect(isPrivate(myOriginalSelector)).toBe(false);
-            expect(isDirectSelectorDef(myNewSelector)).toBe(true);
+            expect(isSelectorDef(myNewSelector)).toBe(true);
             expect(isPrivate(myNewSelector)).toBe(false);
           });
 
-          test('should return a private DirectSelectorDef if the parent is private', () => {
-            let myOriginalPrivateSelector: Private<DirectSelectorDef<string>> = container.myPrivateSelector = composer.private.selector(() => 'original');
+          test('should return a private SelectorDef if the parent is private', () => {
+            let myOriginalPrivateSelector: Private<SelectorDef<string>> = container.myPrivateSelector = composer.private.selector(() => 'original');
             assembler.wire();
             myOriginalPrivateSelector = container.myPrivateSelector;
 
             const proxy = composer.override(myOriginalPrivateSelector);
-            let myNewPrivateSelector: Private<DirectSelectorDef<string>> = container.myPrivateSelector = proxy.selector(({ value }) => value());
+            let myNewPrivateSelector: Private<SelectorDef<string>> = container.myPrivateSelector = proxy.selector(({ value }) => value());
             assembler.wire();
             myNewPrivateSelector = container.myPrivateSelector;
             expect(isPrivate(myOriginalPrivateSelector)).toBe(true);
-            expect(isDirectSelectorDef(myNewPrivateSelector)).toBe(true);
+            expect(isSelectorDef(myNewPrivateSelector)).toBe(true);
             expect(isPrivate(myNewPrivateSelector)).toBe(true);
           });
 
-          test('should throw error during wire if the parent is not a DirectSelectorDef', () => {
+          test('should throw error during wire if the parent is not a SelectorDef', () => {
             container.mySelector = assembler.registerStaticProperty(createSchemaDef(() => new Schema('')));
             const proxy = composer.override(myOriginalSelector);
             container.mySelector = proxy.selector(() => '');
@@ -326,8 +327,8 @@ describe('Composer', () => {
         });
       });
 
-      describe('when passing a PlainReducerDef as type argument, proxy should provide access to', () => {
-        let myOriginalReducer: PlainReducerDef<(value: string) => string>;
+      describe('when passing a ReducerDef as type argument, proxy should provide access to', () => {
+        let myOriginalReducer: ReducerDef<(value: string) => string>;
         beforeEach(() => {
           myOriginalReducer = container.myReducer = composer.reducer(() => (value: string) => value.toUpperCase());
           assembler.wire();
@@ -340,13 +341,13 @@ describe('Composer', () => {
             expect(typeof proxy.reducer).toBe('function');
           });
 
-          test('should create, after property wiring, a new PlainReducerDef assignable to the parent, by passing a reducer function', () => {
+          test('should create, after property wiring, a new ReducerDef assignable to the parent, by passing a reducer function', () => {
             const proxy = composer.override(myOriginalReducer);
-            let myNewReducer: PlainReducerDef<(value: string) => string> = container.myReducer = proxy
+            let myNewReducer: ReducerDef<(value: string) => string> = container.myReducer = proxy
               .reducer(() => (value: string) => value);
             assembler.wire();
             myNewReducer = container.myReducer;
-            expect(isPlainReducerDef(myNewReducer)).toBe(true);
+            expect(isReducerDef(myNewReducer)).toBe(true);
             expect(myNewReducer).not.toBe(myOriginalReducer);
           });
 
@@ -358,33 +359,33 @@ describe('Composer', () => {
             expect(result).toBe('ABC2');
           });
 
-          test('should return a non-private PlainReducerDef if the parent is not private', () => {
+          test('should return a non-private ReducerDef if the parent is not private', () => {
             const proxy = composer.override(myOriginalReducer);
             let myNewReducer = container.myReducer = proxy.reducer(() => (value: string) => value);
             assembler.wire();
             myNewReducer = container.myReducer;
             expect(isPrivate(myOriginalReducer)).toBe(false);
-            expect(isPlainReducerDef(myNewReducer)).toBe(true);
+            expect(isReducerDef(myNewReducer)).toBe(true);
             expect(isPrivate(myNewReducer)).toBe(false);
           });
 
-          test('should return a private PlainReducerDef if the parent is private', () => {
-            let myOriginalPrivateReducer: Private<PlainReducerDef<(value: string) => string>> = container.myPrivateReducer = composer
+          test('should return a private ReducerDef if the parent is private', () => {
+            let myOriginalPrivateReducer: Private<ReducerDef<(value: string) => string>> = container.myPrivateReducer = composer
               .private.reducer(() => (value: string) => value.toUpperCase());
             assembler.wire();
             myOriginalPrivateReducer = container.myPrivateReducer;
 
             const proxy = composer.override(myOriginalPrivateReducer);
-            let myNewPrivateReducer: Private<PlainReducerDef<(value: string) => string>> = container.myPrivateReducer = proxy
+            let myNewPrivateReducer: Private<ReducerDef<(value: string) => string>> = container.myPrivateReducer = proxy
               .reducer(() => (value: string) => value);
             assembler.wire();
             myNewPrivateReducer = container.myPrivateReducer;
             expect(isPrivate(myOriginalPrivateReducer)).toBe(true);
-            expect(isPlainReducerDef(myNewPrivateReducer)).toBe(true);
+            expect(isReducerDef(myNewPrivateReducer)).toBe(true);
             expect(isPrivate(myNewPrivateReducer)).toBe(true);
           });
 
-          test('should throw error during wire if the parent is not a PlainReducerDef', () => {
+          test('should throw error during wire if the parent is not a ReducerDef', () => {
             container.myReducer = assembler.registerStaticProperty(createSchemaDef(() => new Schema('')));
             const proxy = composer.override(myOriginalReducer);
             container.myReducer = proxy.reducer(() => () => '');

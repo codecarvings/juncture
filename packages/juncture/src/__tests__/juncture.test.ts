@@ -8,10 +8,10 @@
  */
 
 import { Ctx, CtxConfig } from '../context/ctx';
+import { isCtxHost } from '../context/ctx-host';
 import { CtxHub } from '../context/ctx-hub';
-import { isCursor } from '../context/cursor';
 import { createSchemaDef, isSchemaDef, Schema } from '../definition/schema';
-import { isDirectSelectorDef } from '../definition/selector';
+import { isSelectorDef } from '../definition/selector';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
@@ -77,6 +77,9 @@ describe('Juncture', () => {
         ctxMediator: {
           getValue: () => undefined,
           setValue: () => {}
+        },
+        rootMediator: {
+          dispatch: () => {}
         }
       };
 
@@ -109,6 +112,9 @@ describe('Juncture', () => {
         ctxMediator: {
           getValue: () => undefined,
           setValue: () => {}
+        },
+        rootMediator: {
+          dispatch: () => {}
         }
       };
 
@@ -151,6 +157,9 @@ describe('Juncture', () => {
         ctxMediator: {
           getValue: () => undefined,
           setValue: () => {}
+        },
+        rootMediator: {
+          dispatch: () => {}
         }
       };
 
@@ -162,7 +171,7 @@ describe('Juncture', () => {
         const ctx = juncture[jSymbols.createCtx](config);
         const hub = juncture[jSymbols.createCtxHub](ctx, config);
         const cursor = juncture[jSymbols.createCursor](hub);
-        expect(isCursor(cursor, ctx)).toBe(true);
+        expect(isCtxHost(cursor, ctx)).toBe(true);
       });
 
       test('should always return a new Cursor', () => {
@@ -185,6 +194,9 @@ describe('Juncture', () => {
         ctxMediator: {
           getValue: () => undefined,
           setValue: () => {}
+        },
+        rootMediator: {
+          dispatch: () => {}
         }
       };
 
@@ -204,20 +216,20 @@ describe('Juncture', () => {
       expect(isSchemaDef(juncture.schema)).toBe(true);
     });
 
-    test('should contain a "defaultValue" DirectSelectorDef', () => {
-      expect(isDirectSelectorDef(juncture.defaultValue)).toBe(true);
+    test('should contain a "defaultValue" SelectorDef', () => {
+      expect(isSelectorDef(juncture.defaultValue)).toBe(true);
     });
 
-    test('should contain a "path" DirectSelectorDef ', () => {
-      expect(isDirectSelectorDef(juncture.path)).toBe(true);
+    test('should contain a "path" SelectorDef ', () => {
+      expect(isSelectorDef(juncture.path)).toBe(true);
     });
 
-    test('should contain a "isMounted" DirectSelectorDef', () => {
-      expect(isDirectSelectorDef(juncture.isMounted)).toBe(true);
+    test('should contain a "isMounted" SelectorDef', () => {
+      expect(isSelectorDef(juncture.isMounted)).toBe(true);
     });
 
-    test('should contain a "value" direct selectorDef', () => {
-      expect(isDirectSelectorDef(juncture.value)).toBe(true);
+    test('should contain a "value" SelectorDef', () => {
+      expect(isSelectorDef(juncture.value)).toBe(true);
     });
   });
 
@@ -329,7 +341,7 @@ describe('Juncture', () => {
             schema = createSchemaDef(jest.fn(() => new Schema('')));
           }
           const instance = Juncture.getInstance(MyJuncture2);
-          const fn = instance.schema[jSymbols.defPayload] as jest.Mock<Schema<string>, []>;
+          const fn = instance.schema[jSymbols.defPayload] as unknown as jest.Mock<Schema<string>, []>;
           expect(fn).toHaveBeenCalledTimes(0);
           Juncture.getSchema(MyJuncture2);
           expect(fn).toHaveBeenCalledTimes(1);
@@ -358,7 +370,7 @@ describe('Juncture', () => {
             schema = createSchemaDef(jest.fn(() => new Schema('')));
           }
           const instance = Juncture.getInstance(MyJuncture2);
-          const fn = instance.schema[jSymbols.defPayload] as jest.Mock<Schema<string>, []>;
+          const fn = instance.schema[jSymbols.defPayload] as unknown as jest.Mock<Schema<string>, []>;
           expect(fn).toHaveBeenCalledTimes(0);
           Juncture.getSchema(instance);
           expect(fn).toHaveBeenCalledTimes(1);
@@ -379,6 +391,9 @@ describe('Juncture', () => {
         ctxMediator: {
           getValue: () => undefined,
           setValue: () => {}
+        },
+        rootMediator: {
+          dispatch: () => {}
         }
       };
 

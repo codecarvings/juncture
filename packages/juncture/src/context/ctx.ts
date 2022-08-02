@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { isReducerDef, ReducerDefSubKind } from '../definition/reducer';
 import { Schema } from '../definition/schema';
 import { Juncture } from '../juncture';
+import { RootCtxMediator } from '../root';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../util/object';
 import { CtxHub } from './ctx-hub';
+import { createCtxRef, CtxRef } from './ctx-ref';
 import { Cursor } from './cursor';
 import { createFrame, Frame } from './frames/frame';
 import {
@@ -38,12 +39,15 @@ export interface CtxMediator {
 export interface CtxConfig {
   readonly layout: CtxLayout;
   readonly ctxMediator: CtxMediator;
+  readonly rootMediator: RootCtxMediator;
 }
 
 export class Ctx {
   readonly schema: Schema;
 
   readonly layout: CtxLayout;
+
+  readonly ref!: CtxRef;
 
   readonly cursor!: Cursor;
 
@@ -68,39 +72,41 @@ export class Ctx {
 
     this.layout = config.layout;
 
-    this.#value = config.ctxMediator.getValue();
+    this._value = config.ctxMediator.getValue();
+
+    defineLazyProperty(this, 'ref', () => createCtxRef(this));
 
     defineLazyProperty(this, 'cursor', () => this.juncture[jSymbols.createCursor](this.hub));
     defineLazyProperty(this, 'privateCursor', () => this.juncture[jSymbols.createPrivateCursor](this.hub));
+
     defineLazyProperty(this, 'frame', () => createFrame(this, this.accessors));
 
-    prepareBinKit(this.bins, this.juncture, this.privateFrames);
+    prepareBinKit(this.bins, this, this.privateFrames, config.rootMediator.dispatch);
     prepareAccessorKit(this.accessors, this);
 
     preparePrivateFrameKit(this.privateFrames, this, this.privateAccessors);
-    preparePrivateBinKit(this.privateBins, this.juncture, this.privateFrames);
+    preparePrivateBinKit(this.privateBins, this, this.privateFrames, config.rootMediator.dispatch);
     preparePrivateAccessorKit(this.privateAccessors, this, this.privateBins);
 
     this.hub = this.juncture[jSymbols.createCtxHub](this, config);
   }
 
-  #value: any;
+  protected _value: any;
 
   get value(): any {
-    return this.#value;
+    return this._value;
   }
 
   executeAction(key: string, args: any) {
-    const def = (this.juncture as any)[key];
-    if (!isReducerDef(def)) {
+    const reducerFn = (this.privateBins.reduce as any)[key];
+    if (!reducerFn) {
       throw Error(`Unable to execute action "${key}": not a ReducerDef`);
     }
-    const subKind = def.defSubKind;
-    if (subKind === ReducerDefSubKind.plain) {
-      const newValue = def[jSymbols.defPayload](this.privateFrames.selector)(...args);
-      if (newValue !== this.#value) {
-        this.config.ctxMediator.setValue(newValue);
-      }
+
+    const value = reducerFn(...args);
+
+    if (value !== this._value) {
+      this.config.ctxMediator.setValue(value);
     }
   }
 }

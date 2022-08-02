@@ -8,7 +8,7 @@
 
 import { Ctx, CtxConfig } from '../../context/ctx';
 import { isCtxHost } from '../../context/ctx-host';
-import { createCursor } from '../../context/cursor';
+import { createCtxRef } from '../../context/ctx-ref';
 import { createSchemaDef, Schema } from '../../definition/schema';
 import { Juncture } from '../../juncture';
 
@@ -34,16 +34,16 @@ const config: CtxConfig = {
 const ctx1 = new Ctx(juncture, config);
 const ctx2 = new Ctx(juncture, config);
 
-describe('createCursor', () => {
-  test('should create a cursor by passing a ctx', () => {
-    const cursor = createCursor(ctx1);
-    expect(isCtxHost(cursor)).toBe(true);
+describe('createCtxRef', () => {
+  test('should create a CtxRef by passing a ctx', () => {
+    const ref = createCtxRef(ctx1);
+    expect(isCtxHost(ref)).toBe(true);
   });
 
-  test('should create a cursor associated with the original ctx', () => {
-    const cursor = createCursor(ctx1);
+  test('should create a CtxRef associated with the original ctx', () => {
+    const ref = createCtxRef(ctx1);
 
-    expect(isCtxHost(cursor, ctx1)).toBe(true);
-    expect(isCtxHost(cursor, ctx2)).toBe(false);
+    expect(isCtxHost(ref, ctx1)).toBe(true);
+    expect(isCtxHost(ref, ctx2)).toBe(false);
   });
 });

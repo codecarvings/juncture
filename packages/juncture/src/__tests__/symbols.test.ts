@@ -9,10 +9,6 @@
 import { jSymbols } from '../symbols';
 
 describe('jSymbols', () => {
-  test('should contain the typeParam1 symbol', () => {
-    expect(typeof jSymbols.typeParam1).toBe('symbol');
-  });
-
   test('should contain the defPayload symbol', () => {
     expect(typeof jSymbols.defPayload).toBe('symbol');
   });
@@ -47,6 +43,18 @@ describe('jSymbols', () => {
 
   test('should contain the createPrivateCursor symbol', () => {
     expect(typeof jSymbols.createPrivateCursor).toBe('symbol');
+  });
+
+  test('should contain the adaptHandledValue symbol', () => {
+    expect(typeof jSymbols.adaptHandledValue).toBe('symbol');
+  });
+
+  test('should contain the ctx symbol', () => {
+    expect(typeof jSymbols.ctx).toBe('symbol');
+  });
+
+  test('should contain the juncture symbol', () => {
+    expect(typeof jSymbols.juncture).toBe('symbol');
   });
 
   test('should contain the bitDefault symbol', () => {

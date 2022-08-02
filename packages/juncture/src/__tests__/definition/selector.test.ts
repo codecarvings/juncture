@@ -8,42 +8,38 @@
 
 import { createDef, DefKind } from '../../definition/def';
 import {
-  createDirectSelectorDef,
-  createParamSelectorDef,
-  isDirectSelectorDef,
-  isParamSelectorDef,
-  SelectorDefSubKind
+  createParamSelectorDef, createSelectorDef, isParamSelectorDef, isSelectorDef, UniSelectorDefSubKind
 } from '../../definition/selector';
 import { jSymbols } from '../../symbols';
 
-describe('createDirectSelectorDef', () => {
-  test('should create a DiretSelectorDef by passing a selector', () => {
+describe('createSelectorDef', () => {
+  test('should create a SelectorDef by passing a selector', () => {
     const mySelector = () => undefined;
-    const def = createDirectSelectorDef(mySelector);
+    const def = createSelectorDef(mySelector);
     expect(def.defKind).toBe(DefKind.selector);
-    expect(def.defSubKind).toBe(SelectorDefSubKind.direct);
+    expect(def.defSubKind).toBe(UniSelectorDefSubKind.standard);
     expect(def[jSymbols.defPayload]).toBe(mySelector);
   });
 });
 
-describe('isDirectSelectorDef', () => {
-  test('should return true if an object is a DirectSelectorDef', () => {
+describe('isSelectorDef', () => {
+  test('should return true if an object is a SelectorDef', () => {
     const mySelector = () => undefined;
-    const def = createDirectSelectorDef(mySelector);
-    expect(isDirectSelectorDef(def)).toBe(true);
+    const def = createSelectorDef(mySelector);
+    expect(isSelectorDef(def)).toBe(true);
   });
 
   test('should return false if an object is a ParamSelectorDef', () => {
     const mySelector = () => () => undefined;
     const def = createParamSelectorDef(mySelector);
-    expect(isDirectSelectorDef(def)).toBe(false);
+    expect(isSelectorDef(def)).toBe(false);
   });
 
-  test('should return false if an object is not a DirectSelectorDef', () => {
-    expect(isDirectSelectorDef(createDef(DefKind.schema, '', undefined))).toBe(false);
-    expect(isDirectSelectorDef(null)).toBe(false);
-    expect(isDirectSelectorDef(undefined)).toBe(false);
-    expect(isDirectSelectorDef('dummy')).toBe(false);
+  test('should return false if an object is not a SelectorDef', () => {
+    expect(isSelectorDef(createDef(DefKind.schema, '', undefined))).toBe(false);
+    expect(isSelectorDef(null)).toBe(false);
+    expect(isSelectorDef(undefined)).toBe(false);
+    expect(isSelectorDef('dummy')).toBe(false);
   });
 });
 
@@ -52,7 +48,7 @@ describe('createParamSelectorDef', () => {
     const mySelector = () => () => undefined;
     const def = createParamSelectorDef(mySelector);
     expect(def.defKind).toBe(DefKind.selector);
-    expect(def.defSubKind).toBe(SelectorDefSubKind.param);
+    expect(def.defSubKind).toBe(UniSelectorDefSubKind.param);
     expect(def[jSymbols.defPayload]).toBe(mySelector);
   });
 });
@@ -64,9 +60,9 @@ describe('isParamSelectorDef', () => {
     expect(isParamSelectorDef(def)).toBe(true);
   });
 
-  test('should return false if an object is a DirectSelectorDef', () => {
+  test('should return false if an object is a SelectorDef', () => {
     const mySelector = () => undefined;
-    const def = createDirectSelectorDef(mySelector);
+    const def = createSelectorDef(mySelector);
     expect(isParamSelectorDef(def)).toBe(false);
   });
 

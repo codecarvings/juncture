@@ -11,55 +11,57 @@ import {
   createDef, Def, DefKind, isDef
 } from './def';
 
-// #region Def
-export const notASelectorDef = '\u26A0 ERROR: NOT A SELECTOR';
+// #region Uni Def
+export const notAUniSelectorDef = '\u26A0 ERROR: NOT A SELECTOR';
 
-export enum SelectorDefSubKind {
-  direct = 'direct',
+export enum UniSelectorDefSubKind {
+  standard = '',
   param = 'param'
 }
 
-export interface SelectorDef<T extends SelectorDefSubKind, B>
+export interface UniSelectorDef<T extends UniSelectorDefSubKind, B>
   extends Def<DefKind.selector, T, PrivateFrameConsumer<B>> { }
 
-function createSelectorDef<T extends SelectorDefSubKind, B>(
+function createUniSelectorDef<T extends UniSelectorDefSubKind, B>(
   subKind: T,
   selectorFn: PrivateFrameConsumer<B>
-): SelectorDef<T, B> {
+): UniSelectorDef<T, B> {
   return createDef(DefKind.selector, subKind, selectorFn);
 }
 
-function isSelectorDef(obj: any, subKind?: SelectorDefSubKind): obj is SelectorDef<any, any> {
+function isUniSelectorDef(obj: any, subKind?: UniSelectorDefSubKind): obj is UniSelectorDef<any, any> {
   return isDef(obj, DefKind.selector, subKind);
 }
 
 // ---  Derivations
-export type SelectorOfSelectorDef<D extends SelectorDef<any, any>>
-  = D extends SelectorDef<any, infer B> ? B : never;
+export type SelectorOfUniSelectorDef<D extends UniSelectorDef<any, any>>
+= D extends UniSelectorDef<any, infer B> ? B : never;
+// #endregion
 
-// --- Direct
-export interface DirectSelectorDef<B>
-  extends SelectorDef<SelectorDefSubKind.direct, B> { }
+// #region Starndard
+export interface SelectorDef<B>
+  extends UniSelectorDef<UniSelectorDefSubKind.standard, B> { }
 
-export function createDirectSelectorDef
-  <B>(selectorFn: PrivateFrameConsumer<B>): DirectSelectorDef<B> {
-  return createSelectorDef(SelectorDefSubKind.direct, selectorFn);
+export function createSelectorDef
+<B>(selectorFn: PrivateFrameConsumer<B>): SelectorDef<B> {
+  return createUniSelectorDef(UniSelectorDefSubKind.standard, selectorFn);
 }
 
-export function isDirectSelectorDef(obj: any): obj is DirectSelectorDef<any> {
-  return isSelectorDef(obj, SelectorDefSubKind.direct);
+export function isSelectorDef(obj: any): obj is SelectorDef<any> {
+  return isUniSelectorDef(obj, UniSelectorDefSubKind.standard);
 }
+// #endregion
 
-// --- ParamSelector
+// #region Param
 export interface ParamSelectorDef<B extends (...args: any) => any>
-  extends SelectorDef<SelectorDefSubKind.param, B> { }
+  extends UniSelectorDef<UniSelectorDefSubKind.param, B> { }
 
 export function createParamSelectorDef<B extends (...args: any) => any>(
   selectorFn: PrivateFrameConsumer<B>): ParamSelectorDef<B> {
-  return createSelectorDef(SelectorDefSubKind.param, selectorFn);
+  return createUniSelectorDef(UniSelectorDefSubKind.param, selectorFn);
 }
 
 export function isParamSelectorDef(obj: any): obj is ParamSelectorDef<any> {
-  return isSelectorDef(obj, SelectorDefSubKind.param);
+  return isUniSelectorDef(obj, UniSelectorDefSubKind.param);
 }
 // #endregion

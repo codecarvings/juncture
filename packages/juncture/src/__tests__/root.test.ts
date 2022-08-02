@@ -9,7 +9,7 @@
 import { createSchemaDef, Schema } from '../definition/schema';
 import { Juncture } from '../juncture';
 import { jBit } from '../lib/bit';
-import { jGroup } from '../lib/group';
+import { jStruct } from '../lib/struct';
 import { Root } from '../root';
 
 const myDefaultValue = { myValue: '' };
@@ -55,7 +55,7 @@ describe('Root', () => {
 });
 
 test('experiment with frames', () => {
-  class J1 extends jGroup.of({
+  class J1 extends jStruct.of({
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {
@@ -73,7 +73,7 @@ test('experiment with frames', () => {
 });
 
 test('experiment with frames 2', () => {
-  class J1 extends jGroup.of({
+  class J1 extends jStruct.of({
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {
@@ -83,7 +83,7 @@ test('experiment with frames 2', () => {
     name: 'Mirco',
     age: 47
   });
-  const { _, select } = root.frame;
+  const { _, select, dispatch } = root.frame;
   expect(select(_).displayName).toBe('Mirco 47');
   expect(select(_).value).toEqual({
     name: 'Mirco',
@@ -91,4 +91,9 @@ test('experiment with frames 2', () => {
   });
   expect(select(_.name).value).toBe('Mirco');
   expect(select(_.age).value).toBe(47);
+  dispatch(_.age).set(1001);
+  expect(root.value).toEqual({
+    name: 'Mirco',
+    age: 1001
+  });
 });

@@ -14,7 +14,7 @@ import { asPrivate, isPrivate, Private } from '../../definition/private';
 import {
     createSchemaDef, isSchemaDef, Schema, SchemaDef
 } from '../../definition/schema';
-import { createDirectSelectorDef } from '../../definition/selector';
+import { createSelectorDef } from '../../definition/selector';
 import { PropertyAssembler } from '../../fabric/property-assembler';
 import { Juncture } from '../../juncture';
 import {
@@ -149,7 +149,7 @@ describe('BitComposer', () => {
           });
 
           test('should throw error during wire if the parent is not a SchemaDef', () => {
-            container.mySchema = assembler.registerStaticProperty(createDirectSelectorDef(() => undefined));
+            container.mySchema = assembler.registerStaticProperty(createSelectorDef(() => undefined));
             const proxy = composer.override(myOriginalSchema);
             container.mySchema = proxy.setDefaultValue(() => ({
               firstName: 'test'

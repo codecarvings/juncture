@@ -6,14 +6,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Action } from './context/action';
 import {
   Ctx, CtxConfig, CtxLayout, CtxMediator
 } from './context/ctx';
+import { getCtx, isCtxHost } from './context/ctx-host';
 import { Frame } from './context/frames/frame';
 import { Juncture, JunctureType, ValueOfType } from './juncture';
 
+export interface RootCtxMediator {
+  dispatch(action: Action): void;
+}
+
 export class Root<JT extends JunctureType> {
   constructor(public readonly Type: JT, value?: ValueOfType<JT>) {
+    this.dispatch = this.dispatch.bind(this);
+
     const schema = Juncture.getSchema(Type);
     const initialValue = value === undefined ? schema.defaultValue : value;
     this._value = initialValue;
@@ -30,9 +38,13 @@ export class Root<JT extends JunctureType> {
         this._value = newValue;
       }
     };
+    const rootMediator: RootCtxMediator = {
+      dispatch: this.dispatch
+    };
     const ctxConfig: CtxConfig = {
       layout,
-      ctxMediator
+      ctxMediator,
+      rootMediator
     };
 
     this.ctx = Juncture.createCtx(Type, ctxConfig);
@@ -53,4 +65,13 @@ export class Root<JT extends JunctureType> {
 
   // TODO: Implement this
   // unmount(): void {}
+
+  // eslint-disable-next-line class-methods-use-this
+  dispatch(action: Action) {
+    // TODO: Implement this
+    if (isCtxHost(action.target)) {
+      const ctx = getCtx(action.target);
+      ctx.executeAction(action.key, action.args);
+    }
+  }
 }
