@@ -6,25 +6,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export function defineGetter(object: any, key: PropertyKey, fn: () => any, enumerable?: boolean) {
-  Object.defineProperty(object, key, {
-    get: fn,
-    configurable: false,
-    enumerable
-  });
-}
-
-export function defineLazyProperty(object: any, key: PropertyKey, factory: () => any, enumerable?: boolean) {
+export function defineLazyProperty(object: any, key: PropertyKey, factory: () => any, options: {
+  configurable?: boolean, // Default false
+  enumerable?: boolean, // Default false
+  writable?: boolean // Default false
+} = {}) {
   Object.defineProperty(object, key, {
     get: () => {
       const value = factory();
       Object.defineProperty(object, key, {
-        value, configurable: false, writable: false, enumerable
+        value,
+        configurable: options.configurable,
+        writable: options.writable,
+        enumerable: options.enumerable
       });
       return value;
     },
     configurable: true,
-    enumerable
+    enumerable: options.enumerable
   });
 }
 

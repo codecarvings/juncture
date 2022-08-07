@@ -7,83 +7,87 @@
  */
 
 import {
-  createDef, Def, DefKind, isDef
+  createDef, Def, DefAccess, DefType, isDef
 } from '../../definition/def';
 import { jSymbols } from '../../symbols';
 
-describe('DefKind', () => {
-  test('should contain the schema kind', () => {
-    expect(DefKind.schema).toBe('schema');
+describe('DefType', () => {
+  test('should contain the schema type', () => {
+    expect(DefType.schema).toBe('schema');
   });
 
-  test('should contain the selector kind', () => {
-    expect(DefKind.selector).toBe('selector');
+  test('should contain the selector type', () => {
+    expect(DefType.selector).toBe('selector');
   });
 
-  test('should contain the reducer kind', () => {
-    expect(DefKind.reducer).toBe('reducer');
+  test('should contain the reducer type', () => {
+    expect(DefType.reducer).toBe('reducer');
+  });
+
+  test('should contain the reactor type', () => {
+    expect(DefType.reactor).toBe('reactor');
   });
 });
 
 describe('createDef', () => {
-  test('should create a def by passing kind, subKind and a function payload', () => {
-    const kind = DefKind.selector;
-    const subKind = 'test';
+  test('should create a def by passing type, access and a function payload', () => {
+    const type = DefType.selector;
+    const access = DefAccess.public;
     const payload = () => undefined;
-    const def = createDef(kind, subKind, payload);
-    expect(def.defKind).toBe(kind);
-    expect(def.defSubKind).toBe(subKind);
+    const def = createDef(type, access, payload);
+    expect(def.type).toBe(type);
+    expect(def.access).toBe(access);
     expect(def[jSymbols.defPayload]).toBe(payload);
   });
 
-  test('should create a def by passing kind, subkind and a value as payload', () => {
-    const kind = DefKind.schema;
-    const subKind = 'test';
+  test('should create a def by passing type, access and a value as payload', () => {
+    const type = DefType.schema;
+    const access = DefAccess.public;
     const payload = { val: 123 };
-    const def = createDef(kind, subKind, payload);
-    expect(def.defKind).toBe(kind);
-    expect(def.defSubKind).toBe(subKind);
+    const def = createDef(type, access, payload);
+    expect(def.type).toBe(type);
+    expect(def.access).toBe(access);
     expect(def[jSymbols.defPayload]).toBe(payload);
   });
 });
 
 describe('isDef', () => {
-  let kind: DefKind;
-  let wrongKind: DefKind;
-  let subKind: string;
-  let wrongSubKind: string;
+  let type: DefType;
+  let wrongType: DefType;
+  let access: DefAccess;
+  let wrongAccess: DefAccess;
   let fn: (...args: any) => any;
   let def: Def<any, any, any>;
 
   beforeEach(() => {
-    kind = DefKind.schema;
-    wrongKind = DefKind.selector;
-    subKind = 'my-def-sub-kind';
-    wrongSubKind = 'my-wrong-def-sub-kind';
+    type = DefType.schema;
+    wrongType = DefType.selector;
+    access = DefAccess.protected;
+    wrongAccess = DefAccess.private;
     fn = () => undefined;
-    def = createDef(kind, subKind, fn);
+    def = createDef(type, access, fn);
   });
 
   test('should return true if an object is a Def', () => {
     expect(isDef(def)).toBe(true);
   });
 
-  test('should return true if an object is a specific kind of Def', () => {
-    expect(isDef(def, kind)).toBe(true);
+  test('should return true if an object is a specific famiyly of Def', () => {
+    expect(isDef(def, type)).toBe(true);
   });
 
-  test('should return false if an object is not a specific kind of Def', () => {
-    expect(isDef(def, wrongKind)).toBe(false);
+  test('should return false if an object is not a specific type of Def', () => {
+    expect(isDef(def, wrongType)).toBe(false);
   });
 
-  test('should return true if an object is a specific subKind of Def', () => {
-    expect(isDef(def, kind, subKind)).toBe(true);
-    expect(isDef(def, undefined, subKind)).toBe(true);
+  test('should return true if an object is a Def has a specific access', () => {
+    expect(isDef(def, type, access)).toBe(true);
+    expect(isDef(def, undefined, access)).toBe(true);
   });
 
-  test('should return false if an object is not a specific subKind of Def', () => {
-    expect(isDef(def, kind, wrongSubKind)).toBe(false);
-    expect(isDef(def, undefined, wrongSubKind)).toBe(false);
+  test('should return false if an object is a Def has not a specific access', () => {
+    expect(isDef(def, type, wrongAccess)).toBe(false);
+    expect(isDef(def, undefined, wrongAccess)).toBe(false);
   });
 
   test('should return false if object is not a def', () => {

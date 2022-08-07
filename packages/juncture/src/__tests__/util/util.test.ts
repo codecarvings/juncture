@@ -6,47 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { defineGetter, defineLazyProperty, mappedAssign } from '../../util/object';
-
-describe('defineGetter', () => {
-  test('should define a non-configurable, non-enumerable getter property on a object', () => {
-    const obj: any = {};
-    const fn = () => 1;
-    defineGetter(obj, 'myKey', fn);
-
-    const property = Object.getOwnPropertyDescriptor(obj, 'myKey');
-    expect(property?.configurable).toBe(false);
-    expect(property?.enumerable).toBe(false);
-    expect(property?.get).toBe(fn);
-  });
-
-  test('should provide an option to make the property enumerable', () => {
-    const obj: any = {};
-    const fn = () => 1;
-    defineGetter(obj, 'myKey', fn, true);
-
-    const property = Object.getOwnPropertyDescriptor(obj, 'myKey');
-    expect(property?.configurable).toBe(false);
-    expect(property?.enumerable).toBe(true);
-    expect(property?.get).toBe(fn);
-  });
-
-  test('should define a getter property on a object that invokes the provided function', () => {
-    const obj: any = {};
-    const fnResult = { ok: 1 };
-    const fn = jest.fn(() => fnResult);
-    defineGetter(obj, 'myKey', fn);
-
-    expect(obj.myKey).toBe(fnResult);
-    expect(fn).toHaveBeenCalledTimes(1);
-    expect(obj.myKey).toBe(fnResult);
-    expect(fn).toHaveBeenCalledTimes(2);
-  });
-});
+import { defineLazyProperty, mappedAssign } from '../../util/object';
 
 describe('defineLazyProperty', () => {
   // eslint-disable-next-line max-len
-  test('should define a non-enumerable getter property on a object that is transformed into a non-configurable, non-enumerable, non-writable property value after the first access', () => {
+  test('should define a configurable, non-writable, non-enumerable getter property on a object that is transformed into a non-configurable, non-writable, non-enumerable property value after the first access', () => {
     const obj: any = {};
     const fnResult = { ok: 1 };
     const fn = () => fnResult;
@@ -54,6 +18,7 @@ describe('defineLazyProperty', () => {
 
     let property = Object.getOwnPropertyDescriptor(obj, 'myKey');
     expect(property?.configurable).toBe(true);
+    expect(property?.writable).toBe(undefined);
     expect(property?.enumerable).toBe(false);
 
     expect(obj.myKey).toBe(fnResult);
@@ -63,14 +28,51 @@ describe('defineLazyProperty', () => {
     expect(property?.enumerable).toBe(false);
   });
 
-  test('should provide an option to make the property enumerable', () => {
+  test('should provide an option to make the property configurable after the first access', () => {
     const obj: any = {};
     const fnResult = { ok: 1 };
     const fn = () => fnResult;
-    defineLazyProperty(obj, 'myKey', fn, true);
+    defineLazyProperty(obj, 'myKey', fn, { configurable: true });
 
     let property = Object.getOwnPropertyDescriptor(obj, 'myKey');
     expect(property?.configurable).toBe(true);
+    expect(property?.writable).toBe(undefined);
+    expect(property?.enumerable).toBe(false);
+
+    expect(obj.myKey).toBe(fnResult);
+    property = Object.getOwnPropertyDescriptor(obj, 'myKey');
+    expect(property?.configurable).toBe(true);
+    expect(property?.writable).toBe(false);
+    expect(property?.enumerable).toBe(false);
+  });
+
+  test('should provide an option to make the property writable after the first access', () => {
+    const obj: any = {};
+    const fnResult = { ok: 1 };
+    const fn = () => fnResult;
+    defineLazyProperty(obj, 'myKey', fn, { writable: true });
+
+    let property = Object.getOwnPropertyDescriptor(obj, 'myKey');
+    expect(property?.configurable).toBe(true);
+    expect(property?.writable).toBe(undefined);
+    expect(property?.enumerable).toBe(false);
+
+    expect(obj.myKey).toBe(fnResult);
+    property = Object.getOwnPropertyDescriptor(obj, 'myKey');
+    expect(property?.configurable).toBe(false);
+    expect(property?.writable).toBe(true);
+    expect(property?.enumerable).toBe(false);
+  });
+
+  test('should provide an option to make the property enumerable after the first access', () => {
+    const obj: any = {};
+    const fnResult = { ok: 1 };
+    const fn = () => fnResult;
+    defineLazyProperty(obj, 'myKey', fn, { enumerable: true });
+
+    let property = Object.getOwnPropertyDescriptor(obj, 'myKey');
+    expect(property?.configurable).toBe(true);
+    expect(property?.writable).toBe(undefined);
     expect(property?.enumerable).toBe(true);
 
     expect(obj.myKey).toBe(fnResult);

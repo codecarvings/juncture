@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Def, DefKind, getFilteredDefKeys } from '../../definition/def';
-import { PrivateSuffix } from '../../definition/private';
+import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
 import {
   isMixReducerDef, isReducerDef, notAUniReducerDef, UniReducerDef
 } from '../../definition/reducer';
+import { UniDef } from '../../definition/uni-def';
 import { Juncture, ValueOf } from '../../juncture';
 import { jSymbols } from '../../symbols';
 import { defineLazyProperty } from '../../util/object';
@@ -21,15 +21,15 @@ import { ReducerFrameHost } from '../frames/reducer-frame';
 
 // #region Common
 type ReduceBinItem<D, V> =
-  D extends UniReducerDef<any, infer B> ? (...args : OverloadParameters<B>) => V : typeof notAUniReducerDef;
+  D extends UniReducerDef<any, any, infer B> ? (...args : OverloadParameters<B>) => V : typeof notAUniReducerDef;
 
 function createReduceBinBase<J extends Juncture>(
   ctx: Ctx,
   reducerFrameHost: ReducerFrameHost<J> & MixReducerFrameHost<J>,
-  privateUse: boolean
+  internalUse: boolean
 ) {
   const { juncture } = ctx;
-  const keys = getFilteredDefKeys(juncture, privateUse, DefKind.reducer);
+  const keys = getFilteredDefKeys(juncture, DefType.reducer, internalUse);
   const bin: any = {};
   keys.forEach(key => {
     const def = (juncture as any)[key];
@@ -37,12 +37,7 @@ function createReduceBinBase<J extends Juncture>(
       defineLazyProperty(
         bin,
         key,
-        () => (...args: any) => {
-          // Execute the reducer
-          const handledValue = def[jSymbols.defPayload](reducerFrameHost.reducer)(...args);
-          // Transform the handled value into a value
-          return juncture[jSymbols.adaptHandledValue](ctx.value, handledValue);
-        }
+        () => (...args: any) => ctx.getHarmonizedValue(def[jSymbols.defPayload](reducerFrameHost.reducer)(...args))
       );
     } else if (isMixReducerDef(def)) {
       defineLazyProperty(
@@ -56,7 +51,8 @@ function createReduceBinBase<J extends Juncture>(
         }
       );
     } else {
-      throw Error(`Unable to create ReducerBin: Unknwon Reducer subKind: "${(def as Def<any, any, any>).defSubKind}"`);
+      // eslint-disable-next-line max-len
+      throw Error(`Unable to create ReducerBin: Unknwon Reducer variety: "${(def as UniDef<any, any, any, any>).variety}"`);
     }
   });
   return bin;
@@ -66,8 +62,7 @@ function createReduceBinBase<J extends Juncture>(
 // #region ReduceBin
 type GenericReduceBin<J, V> = {
   readonly [K in keyof J as
-  J[K] extends PrivateSuffix ? never :
-    J[K] extends UniReducerDef<any, any> ? K : never
+  J[K] extends UniReducerDef<any, DefAccess.public, any> ? K : never
   ]: ReduceBinItem<J[K], V>;
 };
 export type ReduceBin<J extends Juncture> = GenericReduceBin<J, ValueOf<J>>;
@@ -80,22 +75,22 @@ export function createReduceBin<J extends Juncture>(
 }
 // #endregion
 
-// #region PrivateReduceBin
+// #region InternalReduceBin
 // Conditional type required as a workoaround for problems with key remapping
-type GenericPrivateReduceBin<J, V> = J extends any ? {
+type GenericInternalReduceBin<J, V> = J extends any ? {
   readonly [K in keyof J as K extends string ? K : never]: ReduceBinItem<J[K], V>;
 } : never;
 
-export type PrivateReduceBin<J extends Juncture> = GenericPrivateReduceBin<J, ValueOf<J>>;
+export type InternalReduceBin<J extends Juncture> = GenericInternalReduceBin<J, ValueOf<J>>;
 
-export interface PrivateReduceBinHost<J extends Juncture> {
-  readonly reduce: PrivateReduceBin<J>;
+export interface InternalReduceBinHost<J extends Juncture> {
+  readonly reduce: InternalReduceBin<J>;
 }
 
-export function createPrivateReduceBin<J extends Juncture>(
+export function createInternalReduceBin<J extends Juncture>(
   ctx: Ctx,
   reducerFrameHost: ReducerFrameHost<J> & MixReducerFrameHost<J>
-): PrivateReduceBin<J> {
+): InternalReduceBin<J> {
   return createReduceBinBase(ctx, reducerFrameHost, true);
 }
 // #endregion

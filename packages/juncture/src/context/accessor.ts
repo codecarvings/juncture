@@ -18,11 +18,11 @@ export function createAccessorFactory(binKey: keyof BinKit): any {
   };
 }
 
-export function createPrivateAccessorFactory(binKey: keyof BinKit): any {
-  return (defaultCtx: Ctx, privateBinHost: any) => (_?: Cursor) => {
+export function createInternalAccessorFactory(binKey: keyof BinKit): any {
+  return (defaultCtx: Ctx, internalBinHost: any) => (_?: Cursor) => {
     const ctx = typeof _ !== 'undefined' ? getCtx(_) : defaultCtx;
     if (ctx === defaultCtx) {
-      return privateBinHost[binKey];
+      return internalBinHost[binKey];
     }
     return ctx.bins[binKey];
   };

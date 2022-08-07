@@ -7,7 +7,7 @@
  */
 
 import {
-  CursorOf, Juncture, PrivateCursorOf
+  CursorOf, InternalCursorOf, Juncture
 } from '../juncture';
 import { JSymbols, jSymbols } from '../symbols';
 import { Ctx } from './ctx';
@@ -29,6 +29,6 @@ export interface CursorHost<J extends Juncture = Juncture> {
   readonly cursor: CursorOf<J>;
 }
 
-export interface PrivateCursorHost<J extends Juncture = Juncture> {
-  readonly privateCursor: PrivateCursorOf<J>;
+export interface InternalCursorHost<J extends Juncture = Juncture> {
+  readonly internalCursor: InternalCursorOf<J>;
 }

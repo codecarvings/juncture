@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -8,22 +9,20 @@
 
 import { Schema } from '../definition/schema';
 import { Juncture } from '../juncture';
-import { RootCtxMediator } from '../root';
-import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../util/object';
-import { CtxHub } from './ctx-hub';
+import { Action } from './action';
+import { CtxKernel } from './ctx-kernel';
 import { createCtxRef, CtxRef } from './ctx-ref';
 import { Cursor } from './cursor';
-import { createFrame, Frame } from './frames/frame';
+import { Frame } from './frames/frame';
 import {
-  AccessorKit, prepareAccessorKit, preparePrivateAccessorKit, PrivateAccessorKit
-} from './kits/accessor-kit';
-import {
-  BinKit, prepareBinKit, preparePrivateBinKit, PrivateBinKit
+  BinKit
 } from './kits/bin-kit';
-import { preparePrivateFrameKit, PrivateFrameKit } from './kits/frame-kit';
-import { Path } from './path';
+import {
+  Path, PathFragment, pathFragmentToString, pathToString
+} from './path';
 
+// #region Support types
 export interface CtxLayout {
   readonly parent: Ctx | null;
   readonly path: Path;
@@ -32,73 +31,78 @@ export interface CtxLayout {
 }
 
 export interface CtxMediator {
+  enroll(fn: () => void): void;
   getValue(): any;
   setValue(newValue: any): void;
+  dispatch(action: Action): void;
 }
 
-export interface CtxConfig {
-  readonly layout: CtxLayout;
-  readonly ctxMediator: CtxMediator;
-  readonly rootMediator: RootCtxMediator;
-}
+// #endregion
+
+// #region Ctx
+const revocablePropOptions = { configurable: true };
 
 export class Ctx {
   readonly schema: Schema;
 
-  readonly layout: CtxLayout;
-
   readonly ref!: CtxRef;
 
-  readonly cursor!: Cursor;
-
-  readonly privateCursor!: Cursor;
-
-  readonly frame!: Frame;
-
-  readonly bins: BinKit = {} as any;
-
-  protected readonly accessors: AccessorKit = {} as any;
-
-  protected readonly privateFrames: PrivateFrameKit = {} as any;
-
-  protected readonly privateBins: PrivateBinKit = {} as any;
-
-  protected readonly privateAccessors: PrivateAccessorKit = {} as any;
-
-  readonly hub: CtxHub;
-
-  constructor(readonly juncture: Juncture, protected readonly config: CtxConfig) {
+  constructor(readonly juncture: Juncture, readonly layout: CtxLayout, protected readonly mediator: CtxMediator) {
     this.schema = Juncture.getSchema(juncture);
-
-    this.layout = config.layout;
-
-    this._value = config.ctxMediator.getValue();
 
     defineLazyProperty(this, 'ref', () => createCtxRef(this));
 
-    defineLazyProperty(this, 'cursor', () => this.juncture[jSymbols.createCursor](this.hub));
-    defineLazyProperty(this, 'privateCursor', () => this.juncture[jSymbols.createPrivateCursor](this.hub));
+    this._value = mediator.getValue();
+    Object.defineProperty(this, 'value', {
+      get: () => this._value,
+      ...revocablePropOptions
+    });
 
-    defineLazyProperty(this, 'frame', () => createFrame(this, this.accessors));
+    this.kernel = this.createKernel();
+    defineLazyProperty(this, 'cursor', () => this.kernel.cursor, revocablePropOptions);
+    defineLazyProperty(this, 'frame', () => this.kernel.frame, revocablePropOptions);
+    defineLazyProperty(this, 'bins', () => this.kernel.bins, revocablePropOptions);
 
-    prepareBinKit(this.bins, this, this.privateFrames, config.rootMediator.dispatch);
-    prepareAccessorKit(this.accessors, this);
-
-    preparePrivateFrameKit(this.privateFrames, this, this.privateAccessors);
-    preparePrivateBinKit(this.privateBins, this, this.privateFrames, config.rootMediator.dispatch);
-    preparePrivateAccessorKit(this.privateAccessors, this, this.privateBins);
-
-    this.hub = this.juncture[jSymbols.createCtxHub](this, config);
+    mediator.enroll(() => {
+      if (!this._isMounted) {
+        throw Error(`Cannot unmount Ctx ${pathToString(this.layout.path)}: already unmounted`);
+      }
+      this.ctxWillUnmount();
+      this._isMounted = false;
+    });
   }
 
+  // #region Kernel stuff
+
+  protected readonly kernel: CtxKernel;
+
+  protected createKernel(): CtxKernel {
+    return new CtxKernel(this, this.mediator);
+  }
+
+  readonly cursor!: Cursor;
+
+  readonly frame!: Frame;
+
+  readonly bins!: BinKit;
+
+  // #endregion
+
+  // #region Value stuff
   protected _value: any;
 
-  get value(): any {
-    return this._value;
+  readonly value!: any;
+
+  // eslint-disable-next-line class-methods-use-this
+  protected valueDidUpdate(): void { }
+
+  // eslint-disable-next-line class-methods-use-this
+  getHarmonizedValue(value: any): any {
+    return value;
   }
 
   executeAction(key: string, args: any) {
-    const reducerFn = (this.privateBins.reduce as any)[key];
+    const reducerFn = (this.kernel.internalBins.reduce as any)[key];
     if (!reducerFn) {
       throw Error(`Unable to execute action "${key}": not a ReducerDef`);
     }
@@ -106,11 +110,71 @@ export class Ctx {
     const value = reducerFn(...args);
 
     if (value !== this._value) {
-      this.config.ctxMediator.setValue(value);
+      this.mediator.setValue(value);
     }
   }
+
+  detectValueChange() {
+    const value = this.mediator.getValue();
+    if (value === this._value) {
+      return;
+    }
+
+    this._value = value;
+    this.valueDidUpdate();
+  }
+  // #endregion
+
+  // #region Children stuff
+  resolve(path: Path): Ctx {
+    if (path.length === 0) {
+      return this;
+    }
+
+    const [fragment, ...next] = path;
+    const child = this.resolveFragment(fragment);
+    return child.resolve(next);
+  }
+
+  resolveFragment(fragment: PathFragment): Ctx {
+    throw Error(`Ctx ${pathToString(this.layout.path)} cannot resolve path fragment: ${pathFragmentToString(fragment)}`);
+  }
+  // #endregion
+
+  // #region Mount stuff
+  protected _isMounted: boolean = true;
+
+  get isMounted(): boolean {
+    return this._isMounted;
+  }
+
+  protected ctxWillUnmount(): void {
+    const getRevoked = (desc: string) => () => {
+      throw Error(`Cannot access ${desc}: Ctx ${pathToString(this.layout.path)} not mounted`);
+    };
+
+    const mediatorKeys = Object.keys(this.mediator);
+    mediatorKeys.forEach(key => {
+      defineLazyProperty(this.mediator, key, getRevoked(`mediator.${key}`));
+    });
+
+    defineLazyProperty(this, 'value', getRevoked('value'));
+    defineLazyProperty(this, 'cursor', getRevoked('cursor'));
+    defineLazyProperty(this, 'frame', getRevoked('frame'));
+    defineLazyProperty(this, 'bins', getRevoked('bins'));
+  }
+  // #endregion
 }
 
-export interface CtxMap {
-  readonly [key: string]: Ctx;
+// #endregion
+
+// #region MaagedCtx
+export interface ManagedCtx<C extends Ctx = Ctx> {
+  readonly ctx: C;
+  readonly unmount: () => void;
 }
+
+export interface ManagedCtxMap {
+  readonly [key: string]: ManagedCtx;
+}
+// #endregion

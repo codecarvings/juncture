@@ -7,7 +7,7 @@
  */
 
 import {
-  formatPath, isSameOrDescendantPath, Path, pathFragmentToString
+  isSameOrDescendantPath, Path, pathFragmentToString, pathToString
 } from '../../context/path';
 
 declare function BigInt(x: any): bigint;
@@ -57,18 +57,18 @@ describe('pathFragmentToString', () => {
   });
 });
 
-describe('formatPath', () => {
+describe('pathToString', () => {
   const path: Path = ['a', 'b/c', 'd\\e', 4, BigInt(5), Symbol('s'), Symbol('x/y'), true, false];
   const expectedInnerPath = 'a/b\\/c/d\\\\e/4/5/s/x\\/y/true/false';
 
   test('should format a non absolute path', () => {
-    expect(formatPath(path, false)).toBe(`[${expectedInnerPath}]`);
+    expect(pathToString(path, false)).toBe(`[${expectedInnerPath}]`);
   });
   test('should format an absolute path', () => {
-    expect(formatPath(path, true)).toBe(`[/${expectedInnerPath}]`);
+    expect(pathToString(path, true)).toBe(`[/${expectedInnerPath}]`);
   });
   test('should format as absolute path by default', () => {
-    expect(formatPath(path)).toBe(`[/${expectedInnerPath}]`);
+    expect(pathToString(path)).toBe(`[/${expectedInnerPath}]`);
   });
 });
 

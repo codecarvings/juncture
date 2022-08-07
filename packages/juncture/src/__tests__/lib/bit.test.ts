@@ -10,16 +10,16 @@
 /* eslint-disable max-len */
 
 import { ComposableJuncture } from '../../composable-juncture';
-import { asPrivate, isPrivate, Private } from '../../definition/private';
+import { DefAccess } from '../../definition/def';
 import {
-    createSchemaDef, isSchemaDef, Schema, SchemaDef
+  createSchemaDef, isSchemaDef, Schema, SchemaDef
 } from '../../definition/schema';
 import { createSelectorDef } from '../../definition/selector';
 import { PropertyAssembler } from '../../fabric/property-assembler';
 import { Juncture } from '../../juncture';
 import {
-    BitComposer, BitJuncture, BitSchema, jBit, SettableBitJuncture,
-    SettableBooleanBitJuncture, SettableNumberBitJuncture, SettableStringBitJuncture, SettableSymbolBitJuncture
+  BitComposer, BitJuncture, BitSchema, jBit, SettableBitJuncture,
+  SettableBooleanBitJuncture, SettableNumberBitJuncture, SettableStringBitJuncture, SettableSymbolBitJuncture
 } from '../../lib/bit';
 import { jSymbols } from '../../symbols';
 
@@ -118,38 +118,8 @@ describe('BitComposer', () => {
             });
           });
 
-          test('should return a non-private SchemaDef if the parent is not private', () => {
-            const proxy = composer.override(myOriginalSchema);
-            let myNewSchema = container.mySchema = proxy.setDefaultValue(() => ({ firstName: 'test' }));
-            assembler.wire();
-            myNewSchema = container.mySchema;
-            expect(isPrivate(myOriginalSchema)).toBe(false);
-            expect(isSchemaDef(myNewSchema)).toBe(true);
-            expect(isPrivate(myNewSchema)).toBe(false);
-          });
-
-          test('should return a private SchemaDef if the parent is private', () => {
-            let myOriginalPrivateSchema: Private<SchemaDef<BitSchema<{
-              firstName: string
-            }>>> = container.myPrivateSchema = assembler.registerStaticProperty(asPrivate(createSchemaDef(() => new TestBitSchema({
-              firstName: 'Sergio'
-            }))));
-            assembler.wire();
-            myOriginalPrivateSchema = container.myPrivateSchema;
-
-            const proxy = composer.override(myOriginalPrivateSchema);
-            let myNewPrivateSchema: Private<SchemaDef<BitSchema<{
-              firstName: string
-            }>>> = container.myPrivateSchema = proxy.setDefaultValue(() => ({ firstName: 'test' }));
-            assembler.wire();
-            myNewPrivateSchema = container.myPrivateSchema;
-            expect(isPrivate(myOriginalPrivateSchema)).toBe(true);
-            expect(isSchemaDef(myNewPrivateSchema)).toBe(true);
-            expect(isPrivate(myNewPrivateSchema)).toBe(true);
-          });
-
           test('should throw error during wire if the parent is not a SchemaDef', () => {
-            container.mySchema = assembler.registerStaticProperty(createSelectorDef(() => undefined));
+            container.mySchema = assembler.registerStaticProperty(createSelectorDef(DefAccess.public, () => undefined));
             const proxy = composer.override(myOriginalSchema);
             container.mySchema = proxy.setDefaultValue(() => ({
               firstName: 'test'

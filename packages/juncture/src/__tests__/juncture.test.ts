@@ -7,9 +7,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx, CtxConfig } from '../context/ctx';
+import { Ctx, CtxLayout, CtxMediator } from '../context/ctx';
 import { isCtxHost } from '../context/ctx-host';
-import { CtxHub } from '../context/ctx-hub';
 import { createSchemaDef, isSchemaDef, Schema } from '../definition/schema';
 import { isSelectorDef } from '../definition/selector';
 import { Juncture } from '../juncture';
@@ -67,147 +66,90 @@ describe('Juncture', () => {
     });
 
     describe('[jSymbols.createCtx] property', () => {
-      const config: CtxConfig = {
-        layout: {
-          parent: null,
-          path: [],
-          isDivergent: false,
-          isUnivocal: true
-        },
-        ctxMediator: {
-          getValue: () => undefined,
-          setValue: () => {}
-        },
-        rootMediator: {
-          dispatch: () => {}
-        }
+      const layout: CtxLayout = {
+        parent: null,
+        path: [],
+        isDivergent: false,
+        isUnivocal: true
+      };
+      const mediator: CtxMediator = {
+        enroll: () => { },
+        getValue: () => undefined,
+        setValue: () => { },
+        dispatch: () => {}
       };
 
       test('should be a method', () => {
         expect(typeof juncture[jSymbols.createCtx]).toBe('function');
       });
 
-      test('should create a new Ctx for the provided Juncture instance and config', () => {
-        const ctx = juncture[jSymbols.createCtx](config);
+      test('should create a new Ctx for the provided Juncture instance, layout and mediator', () => {
+        const ctx = juncture[jSymbols.createCtx](layout, mediator);
         expect(ctx).toBeInstanceOf(Ctx);
         expect(ctx.juncture).toBe(juncture);
-        expect(ctx.layout).toBe(config.layout);
+        expect(ctx.layout).toBe(layout);
       });
 
       test('should always return a new Ctx', () => {
-        const ctx1 = juncture[jSymbols.createCtx](config);
-        const ctx2 = juncture[jSymbols.createCtx](config);
+        const ctx1 = juncture[jSymbols.createCtx](layout, mediator);
+        const ctx2 = juncture[jSymbols.createCtx](layout, mediator);
         expect(ctx2).not.toBe(ctx1);
       });
     });
 
-    describe('[jSymbols.createCtxHub] property', () => {
-      const config: CtxConfig = {
-        layout: {
-          parent: null,
-          path: [],
-          isDivergent: false,
-          isUnivocal: true
-        },
-        ctxMediator: {
-          getValue: () => undefined,
-          setValue: () => {}
-        },
-        rootMediator: {
-          dispatch: () => {}
-        }
-      };
-
-      test('should be a method', () => {
-        expect(typeof juncture[jSymbols.createCtxHub]).toBe('function');
-      });
-
-      test('should create a new CtxHub for the provided Ctx instance and config', () => {
-        const fakeJuncture: any = {
-          [jSymbols.createCtxHub]: () => undefined,
-          schema: createSchemaDef(() => new Schema(''))
-        };
-        const ctx: Ctx = new Ctx(fakeJuncture, config);
-        const hub = juncture[jSymbols.createCtxHub](ctx, config);
-        expect(hub).toBeInstanceOf(CtxHub);
-        expect(hub.ctx).toBe(ctx);
-        expect(hub.schema).toBe(ctx.schema);
-      });
-
-      test('should always return a new CtxHub', () => {
-        const fakeJuncture: any = {
-          [jSymbols.createCtxHub]: () => undefined,
-          schema: createSchemaDef(() => new Schema(''))
-        };
-        const ctx: Ctx = new Ctx(fakeJuncture, config);
-        const hub1 = juncture[jSymbols.createCtxHub](ctx, config);
-        const hub2 = juncture[jSymbols.createCtxHub](ctx, config);
-        expect(hub2).not.toBe(hub1);
-      });
-    });
-
     describe('[jSymbols.createCursor] property', () => {
-      const config: CtxConfig = {
-        layout: {
-          parent: null,
-          path: [],
-          isDivergent: false,
-          isUnivocal: true
-        },
-        ctxMediator: {
-          getValue: () => undefined,
-          setValue: () => {}
-        },
-        rootMediator: {
-          dispatch: () => {}
-        }
+      const layout: CtxLayout = {
+        parent: null,
+        path: [],
+        isDivergent: false,
+        isUnivocal: true
+      };
+      const mediator: CtxMediator = {
+        enroll: () => { },
+        getValue: () => undefined,
+        setValue: () => { },
+        dispatch: () => {}
       };
 
       test('should be a method', () => {
         expect(typeof juncture[jSymbols.createCursor]).toBe('function');
       });
 
-      test('should create a new Cursor for the provided Ctx / CtxHub', () => {
-        const ctx = juncture[jSymbols.createCtx](config);
-        const hub = juncture[jSymbols.createCtxHub](ctx, config);
-        const cursor = juncture[jSymbols.createCursor](hub);
+      test('should create a new Cursor for the provided Ctx', () => {
+        const ctx = juncture[jSymbols.createCtx](layout, mediator);
+        const cursor = juncture[jSymbols.createCursor](ctx);
         expect(isCtxHost(cursor, ctx)).toBe(true);
       });
 
       test('should always return a new Cursor', () => {
-        const ctx = juncture[jSymbols.createCtx](config);
-        const hub = juncture[jSymbols.createCtxHub](ctx, config);
-        const cursor1 = juncture[jSymbols.createCursor](hub);
-        const cursor2 = juncture[jSymbols.createCursor](hub);
+        const ctx = juncture[jSymbols.createCtx](layout, mediator);
+        const cursor1 = juncture[jSymbols.createCursor](ctx);
+        const cursor2 = juncture[jSymbols.createCursor](ctx);
         expect(cursor2).not.toBe(cursor1);
       });
     });
 
     describe('[jSymbols.createPrivateCursor] property', () => {
-      const config: CtxConfig = {
-        layout: {
-          parent: null,
-          path: [],
-          isDivergent: false,
-          isUnivocal: true
-        },
-        ctxMediator: {
-          getValue: () => undefined,
-          setValue: () => {}
-        },
-        rootMediator: {
-          dispatch: () => {}
-        }
+      const layout: CtxLayout = {
+        parent: null,
+        path: [],
+        isDivergent: false,
+        isUnivocal: true
+      };
+      const mediator: CtxMediator = {
+        enroll: () => { },
+        getValue: () => undefined,
+        setValue: () => { },
+        dispatch: () => {}
       };
 
       test('should be a method', () => {
-        expect(typeof juncture[jSymbols.createPrivateCursor]).toBe('function');
+        expect(typeof juncture[jSymbols.createInternalCursor]).toBe('function');
       });
 
       test('should return the cursor of the ctx', () => {
-        const ctx = juncture[jSymbols.createCtx](config);
-        const hub = juncture[jSymbols.createCtxHub](ctx, config);
-        const cursor = juncture[jSymbols.createPrivateCursor](hub);
+        const ctx = juncture[jSymbols.createCtx](layout, mediator);
+        const cursor = juncture[jSymbols.createInternalCursor](ctx);
         expect(cursor).toBe(ctx.cursor);
       });
     });
@@ -381,31 +323,28 @@ describe('Juncture', () => {
     });
 
     describe('createCtx', () => {
-      const config: CtxConfig = {
-        layout: {
-          parent: null,
-          path: [],
-          isDivergent: false,
-          isUnivocal: true
-        },
-        ctxMediator: {
-          getValue: () => undefined,
-          setValue: () => {}
-        },
-        rootMediator: {
-          dispatch: () => {}
-        }
+      const layout: CtxLayout = {
+        parent: null,
+        path: [],
+        isDivergent: false,
+        isUnivocal: true
+      };
+      const mediator: CtxMediator = {
+        enroll: () => { },
+        getValue: () => undefined,
+        setValue: () => { },
+        dispatch: () => {}
       };
 
       test('should be a method', () => {
         expect(typeof Juncture.createCtx).toBe('function');
       });
 
-      test('should create a new Ctx for the provided Juncture type and config', () => {
-        const ctx = Juncture.createCtx(MyJuncture, config);
+      test('should create a new Ctx for the provided Juncture type, layout and mediator', () => {
+        const ctx = Juncture.createCtx(MyJuncture, layout, mediator);
         expect(ctx).toBeInstanceOf(Ctx);
         expect(ctx.juncture).toBe(Juncture.getInstance(MyJuncture));
-        expect(ctx.layout).toBe(config.layout);
+        expect(ctx.layout).toBe(layout);
       });
 
       test('should invoke the instance method [jSymbols.createCtx]', () => {
@@ -415,9 +354,9 @@ describe('Juncture', () => {
         (juncture as any)[jSymbols.createCtx] = factory;
 
         expect(factory).toHaveBeenCalledTimes(0);
-        Juncture.createCtx(MyJuncture, config);
+        Juncture.createCtx(MyJuncture, layout, mediator);
         expect(factory).toHaveBeenCalledTimes(1);
-        Juncture.createCtx(MyJuncture, config);
+        Juncture.createCtx(MyJuncture, layout, mediator);
         expect(factory).toHaveBeenCalledTimes(2);
       });
     });

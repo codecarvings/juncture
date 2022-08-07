@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDef, DefKind } from '../../definition/def';
+import { createDef, DefAccess, DefType } from '../../definition/def';
 import { createSchemaDef, isSchemaDef, Schema } from '../../definition/schema';
 import { jSymbols } from '../../symbols';
 
@@ -26,12 +26,12 @@ describe('Schema', () => {
 });
 
 describe('createSchemaDef', () => {
-  test('should create a SchemaDef by passing a schema factory', () => {
+  test('should create a SchemaDef by passing a schema factory with access always public', () => {
     const schemaFactory = () => new Schema('str');
 
     const def = createSchemaDef(schemaFactory);
-    expect(def.defKind).toBe(DefKind.schema);
-    expect(def.defSubKind).toBe('');
+    expect(def.type).toBe(DefType.schema);
+    expect(def.access).toBe(DefAccess.public);
     expect(def[jSymbols.defPayload]).toBe(schemaFactory);
   });
 });
@@ -43,7 +43,7 @@ describe('isSchemaDef', () => {
   });
 
   test('should return false if an object is not a SchemaDef', () => {
-    expect(isSchemaDef(createDef(DefKind.selector, '', undefined))).toBe(false);
+    expect(isSchemaDef(createDef(DefType.selector, DefAccess.public, undefined))).toBe(false);
     expect(isSchemaDef(null)).toBe(false);
     expect(isSchemaDef(undefined)).toBe(false);
     expect(isSchemaDef('dummy')).toBe(false);

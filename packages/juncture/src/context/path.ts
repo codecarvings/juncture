@@ -30,7 +30,7 @@ export function pathFragmentToString(fragment: PathFragment): string {
   }
 }
 
-export function formatPath(path: Path, absolute = true): string {
+export function pathToString(path: Path, absolute = true): string {
   const result = path.map(fragment => pathFragmentToString(fragment)).join('/');
   return `[${absolute ? '/' : ''}${result}]`;
 }

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx, CtxConfig } from '../../context/ctx';
+import { Ctx, CtxLayout, CtxMediator } from '../../context/ctx';
 import { isCtxHost } from '../../context/ctx-host';
 import { createCursor } from '../../context/cursor';
 import { createSchemaDef, Schema } from '../../definition/schema';
@@ -16,23 +16,21 @@ class MyJuncture extends Juncture {
   schema = createSchemaDef(() => new Schema(''));
 }
 const juncture = Juncture.getInstance(MyJuncture);
-const config: CtxConfig = {
-  layout: {
-    parent: null,
-    path: [],
-    isDivergent: false,
-    isUnivocal: true
-  },
-  ctxMediator: {
-    getValue: () => undefined,
-    setValue: () => {}
-  },
-  rootMediator: {
-    dispatch: () => {}
-  }
+const layout: CtxLayout = {
+  parent: null,
+  path: [],
+  isDivergent: false,
+  isUnivocal: true
 };
-const ctx1 = new Ctx(juncture, config);
-const ctx2 = new Ctx(juncture, config);
+const mediator: CtxMediator = {
+  enroll: () => { },
+  getValue: () => undefined,
+  setValue: () => { },
+  dispatch: () => {}
+};
+
+const ctx1 = new Ctx(juncture, layout, mediator);
+const ctx2 = new Ctx(juncture, layout, mediator);
 
 describe('createCursor', () => {
   test('should create a cursor by passing a ctx', () => {

@@ -13,10 +13,6 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.defPayload).toBe('symbol');
   });
 
-  test('should contain the handledValue symbol', () => {
-    expect(typeof jSymbols.handledValue).toBe('symbol');
-  });
-
   test('should contain the init symbol', () => {
     expect(typeof jSymbols.init).toBe('symbol');
   });
@@ -33,20 +29,12 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createCtx).toBe('symbol');
   });
 
-  test('should contain the createCtxHub symbol', () => {
-    expect(typeof jSymbols.createCtxHub).toBe('symbol');
-  });
-
   test('should contain the createCursor symbol', () => {
     expect(typeof jSymbols.createCursor).toBe('symbol');
   });
 
-  test('should contain the createPrivateCursor symbol', () => {
-    expect(typeof jSymbols.createPrivateCursor).toBe('symbol');
-  });
-
-  test('should contain the adaptHandledValue symbol', () => {
-    expect(typeof jSymbols.adaptHandledValue).toBe('symbol');
+  test('should contain the createInternalCursor symbol', () => {
+    expect(typeof jSymbols.createInternalCursor).toBe('symbol');
   });
 
   test('should contain the ctx symbol', () => {

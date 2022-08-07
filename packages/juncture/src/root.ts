@@ -7,64 +7,68 @@
  */
 
 import { Action } from './context/action';
-import {
-  Ctx, CtxConfig, CtxLayout, CtxMediator
-} from './context/ctx';
+import { Ctx, CtxLayout, CtxMediator } from './context/ctx';
 import { getCtx, isCtxHost } from './context/ctx-host';
 import { Frame } from './context/frames/frame';
 import { Juncture, JunctureType, ValueOfType } from './juncture';
-
-export interface RootCtxMediator {
-  dispatch(action: Action): void;
-}
 
 export class Root<JT extends JunctureType> {
   constructor(public readonly Type: JT, value?: ValueOfType<JT>) {
     this.dispatch = this.dispatch.bind(this);
 
-    const schema = Juncture.getSchema(Type);
-    const initialValue = value === undefined ? schema.defaultValue : value;
-    this._value = initialValue;
+    this._value = this.getInitialValue(value);
 
+    this.ctx = this.createCtx();
+    this.frame = this.ctx.frame as any;
+  }
+
+  // #region Value stuff
+  protected _value: ValueOfType<JT>;
+
+  get value(): ValueOfType<JT> {
+    return this._value;
+  }
+
+  protected getInitialValue(value?: ValueOfType<JT>) {
+    const schema = Juncture.getSchema(this.Type);
+    return value === undefined ? schema.defaultValue : value;
+  }
+  // #endregion
+
+  // #region Mount stuff
+  protected readonly ctx: Ctx;
+
+  protected ctxUnmount: () => void = undefined!;
+
+  protected createCtx(): Ctx {
     const layout: CtxLayout = {
       path: [],
       parent: null,
       isUnivocal: true,
       isDivergent: false
     };
-    const ctxMediator: CtxMediator = {
+    const mediator: CtxMediator = {
+      enroll: um => { this.ctxUnmount = um; },
       getValue: () => this._value,
       setValue: newValue => {
+        // New Value check performed in Ctx.executeAction method
         this._value = newValue;
-      }
-    };
-    const rootMediator: RootCtxMediator = {
+        this.ctx.detectValueChange();
+      },
       dispatch: this.dispatch
     };
-    const ctxConfig: CtxConfig = {
-      layout,
-      ctxMediator,
-      rootMediator
-    };
 
-    this.ctx = Juncture.createCtx(Type, ctxConfig);
-    this.frame = this.ctx.frame as any;
+    return Juncture.createCtx(this.Type, layout, mediator);
   }
 
-  protected _value: ValueOfType<JT>;
-
-  get value(): ValueOfType<JT> {
-    // return this.ctx.getValue();
-    return this._value;
+  get isMounted(): boolean {
+    return this.ctx.isMounted;
   }
 
-  protected readonly ctx: Ctx;
-
-  // TODO: Implement getFrame and remove static frame...
-  readonly frame: Frame<InstanceType<JT>>;
-
-  // TODO: Implement this
-  // unmount(): void {}
+  unmount() {
+    this.ctxUnmount();
+  }
+  // #endregion
 
   // eslint-disable-next-line class-methods-use-this
   dispatch(action: Action) {
@@ -74,4 +78,7 @@ export class Root<JT extends JunctureType> {
       ctx.executeAction(action.key, action.args);
     }
   }
+
+  // TODO: Implement getFrame and remove static frame...
+  readonly frame: Frame<InstanceType<JT>>;
 }

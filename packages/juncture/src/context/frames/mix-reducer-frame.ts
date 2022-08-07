@@ -8,14 +8,14 @@
 
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
-import { PrepareBin, PrivatePrepareBin } from '../bins/prepare-bin';
-import { Cursor, JunctureOfCursor, PrivateCursorHost } from '../cursor';
-import { PrivateAccessorKit } from '../kits/accessor-kit';
-import { createPrivateFrame, PrivateFrame } from './private-frame';
+import { InternalPrepareBin, PrepareBin } from '../bins/prepare-bin';
+import { Cursor, InternalCursorHost, JunctureOfCursor } from '../cursor';
+import { InternalAccessorKit } from '../kits/accessor-kit';
+import { createInternalFrame, InternalFrame } from './internal-frame';
 
-export interface MixReducerFrame<J extends Juncture> extends PrivateFrame<J> {
-  prepare(): PrivatePrepareBin<J>;
-  prepare(_: this['_']): PrivatePrepareBin<J>;
+export interface MixReducerFrame<J extends Juncture> extends InternalFrame<J> {
+  prepare(): InternalPrepareBin<J>;
+  prepare(_: this['_']): InternalPrepareBin<J>;
   prepare<C extends Cursor>(_: C): PrepareBin<JunctureOfCursor<C>>;
 }
 
@@ -24,10 +24,10 @@ export interface MixReducerFrameHost<J extends Juncture> {
 }
 
 export function createMixReducerFrame<J extends Juncture>(
-  privateCursorProviuder: PrivateCursorHost<J>,
-  accessors: PrivateAccessorKit<J>
-): PrivateFrame<J> {
-  const frame: any = createPrivateFrame(privateCursorProviuder, accessors);
+  internalCursorProviuder: InternalCursorHost<J>,
+  accessors: InternalAccessorKit<J>
+): InternalFrame<J> {
+  const frame: any = createInternalFrame(internalCursorProviuder, accessors);
   defineLazyProperty(frame, 'prepare', () => accessors.prepare);
   return frame;
 }

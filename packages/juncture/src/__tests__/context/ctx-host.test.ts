@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx, CtxConfig } from '../../context/ctx';
+import { Ctx, CtxLayout, CtxMediator } from '../../context/ctx';
 import { addCtxLink, getCtx, isCtxHost } from '../../context/ctx-host';
 import { createSchemaDef, Schema } from '../../definition/schema';
 import { Juncture } from '../../juncture';
@@ -16,24 +16,21 @@ class MyJuncture extends Juncture {
   schema = createSchemaDef(() => new Schema(''));
 }
 const juncture = Juncture.getInstance(MyJuncture);
-const config: CtxConfig = {
-  layout: {
-    parent: null,
-    path: [],
-    isDivergent: false,
-    isUnivocal: true
-  },
-  ctxMediator: {
-    getValue: () => undefined,
-    setValue: () => {}
-  },
-  rootMediator: {
-    dispatch: () => {}
-  }
+const layout: CtxLayout = {
+  parent: null,
+  path: [],
+  isDivergent: false,
+  isUnivocal: true
+};
+const mediator: CtxMediator = {
+  enroll: () => { },
+  getValue: () => undefined,
+  setValue: () => { },
+  dispatch: () => {}
 };
 
-const ctx1 = new Ctx(juncture, config);
-const ctx2 = new Ctx(juncture, config);
+const ctx1 = new Ctx(juncture, layout, mediator);
+const ctx2 = new Ctx(juncture, layout, mediator);
 
 describe('addCtxLink', () => {
   test('should add a property [jSymbols.ctx] containing a refernce to the provided ctx', () => {

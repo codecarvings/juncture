@@ -8,62 +8,69 @@
 
 import { jSymbols } from '../symbols';
 import { isObject } from '../util/object';
-import { isPrivate } from './private';
 
-export enum DefKind {
+export enum DefType {
   schema = 'schema',
   selector = 'selector',
-  reducer = 'reducer'
+  reducer = 'reducer',
+  reactor = 'reactor'
 }
 
-// Not a class because of Private implementation (and because so can be easily expanded...)
-export interface Def<K extends DefKind, Q extends string, P> {
-  readonly defKind: K;
-  readonly defSubKind: Q;
+export enum DefAccess {
+  public = 'public',
+  protected = 'protected',
+  private = 'private'
+}
+
+// Not a class because of AccessModifier implementation (and because so can be easily expanded...)
+export interface Def<T extends DefType, A extends DefAccess, P> {
+  readonly type: T;
+  readonly access: A;
   readonly [jSymbols.defPayload]: P;
 }
 
-export function createDef<K extends DefKind, Q extends string, P>(kind: K, subKind: Q, payload: P): Def<K, Q, P> {
-  const result: Def<K, Q, P> = {
-    defKind: kind,
-    defSubKind: subKind,
+// eslint-disable-next-line max-len
+export function createDef<T extends DefType, A extends DefAccess, P>(type: T, access: A, payload: P): Def<T, A, P> {
+  const result: Def<T, A, P> = {
+    type,
+    access,
     [jSymbols.defPayload]: payload
   };
 
   return result;
 }
 
-export function isDef(obj: any, kind?: DefKind, subKind?: string): obj is Def<any, any, any> {
+export function isDef<T extends DefType, A extends DefAccess>(obj: any, type?: T, access?: A): obj is Def<T, A, any> {
   if (!isObject(obj)) {
     return false;
   }
 
-  if (kind !== undefined) {
-    if (obj.defKind !== kind) {
+  if (type !== undefined) {
+    if (obj.type !== type) {
       return false;
     }
-  } else if (typeof obj.defKind !== 'string') {
+  } else if (typeof obj.type !== 'string') {
     return false;
   }
 
-  if (subKind !== undefined) {
-    if (obj.defSubKind !== subKind) {
+  if (access !== undefined) {
+    if (obj.access !== access) {
       return false;
     }
-  } else if (typeof obj.defSubKind !== 'string') {
+  } else if (typeof obj.access !== 'string') {
     return false;
   }
 
   return true;
 }
 
-export function getFilteredDefKeys(obj: object, privateUse: boolean, kind: DefKind, subKind?: string): string[] {
+export function getFilteredDefKeys(obj: object, type: DefType, internalUse: boolean): string[] {
   return Object.keys(obj).filter(key => {
     const prop = (obj as any)[key];
-    if (!isDef(prop, kind, subKind)) {
+    if (!isDef(prop, type)) {
       return false;
     }
-    if (!privateUse && isPrivate(prop)) {
+    if (!internalUse && prop.access !== DefAccess.public) {
       return false;
     }
     return true;

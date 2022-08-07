@@ -9,20 +9,20 @@
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
 import {
-  createDispatchAccessor, createPrivateDispatchAccessor, DispatchAccessor, PrivateDispatchAccessor
+  createDispatchAccessor, createInternalDispatchAccessor, DispatchAccessor, InternalDispatchAccessor
 } from '../accessors/dispatch-accessor';
 import {
-  createPrepareAccessor, createPrivatePrepareAccessor, PrepareAccessor, PrivatePrepareAccessor
+  createInternalPrepareAccessor, createPrepareAccessor, InternalPrepareAccessor, PrepareAccessor
 } from '../accessors/prepare-accessor';
 import {
-  createPrivateReduceAccessor, createReduceAccessor, PrivateReduceAccessor, ReduceAccessor
+  createInternalReduceAccessor, createReduceAccessor, InternalReduceAccessor, ReduceAccessor
 } from '../accessors/reduce-accessor';
 import {
-  createPrivateSelectAccessor, createSelectAccessor, PrivateSelectAccessor, SelectAccessor
+  createInternalSelectAccessor, createSelectAccessor, InternalSelectAccessor, SelectAccessor
 } from '../accessors/select-accessor';
 import { createValueAccessor, ValueAccessor } from '../accessors/value-accessor';
 import { Ctx } from '../ctx';
-import { PrivateBinKit } from './bin-kit';
+import { InternalBinKit } from './bin-kit';
 
 // #region AccessorKit
 export interface AccessorKit<J extends Juncture = Juncture> {
@@ -33,7 +33,7 @@ export interface AccessorKit<J extends Juncture = Juncture> {
   readonly dispatch: DispatchAccessor<J>;
 }
 
-export function prepareAccessorKit(accessors: any, ctx: Ctx) {
+export function equipAccessorKit(accessors: any, ctx: Ctx) {
   defineLazyProperty(accessors, 'value', () => createValueAccessor(ctx));
   defineLazyProperty(accessors, 'select', () => createSelectAccessor(ctx));
   defineLazyProperty(accessors, 'reduce', () => createReduceAccessor(ctx));
@@ -42,20 +42,20 @@ export function prepareAccessorKit(accessors: any, ctx: Ctx) {
 }
 // #endregion
 
-// #region PrivateAccessorKit
-export interface PrivateAccessorKit<J extends Juncture = Juncture> {
+// #region InternalAccessorKit
+export interface InternalAccessorKit<J extends Juncture = Juncture> {
   readonly value: ValueAccessor<J>;
-  readonly select: PrivateSelectAccessor<J>;
-  readonly reduce: PrivateReduceAccessor<J>;
-  readonly prepare: PrivatePrepareAccessor<J>;
-  readonly dispatch: PrivateDispatchAccessor<J>;
+  readonly select: InternalSelectAccessor<J>;
+  readonly reduce: InternalReduceAccessor<J>;
+  readonly prepare: InternalPrepareAccessor<J>;
+  readonly dispatch: InternalDispatchAccessor<J>;
 }
 
-export function preparePrivateAccessorKit(accessors: any, ctx: Ctx, privateBins: PrivateBinKit) {
+export function equipInternalAccessorKit(accessors: any, ctx: Ctx, internalBins: InternalBinKit) {
   defineLazyProperty(accessors, 'value', () => createValueAccessor(ctx));
-  defineLazyProperty(accessors, 'select', () => createPrivateSelectAccessor(ctx, privateBins));
-  defineLazyProperty(accessors, 'reduce', () => createPrivateReduceAccessor(ctx, privateBins));
-  defineLazyProperty(accessors, 'prepare', () => createPrivatePrepareAccessor(ctx, privateBins));
-  defineLazyProperty(accessors, 'dispatch', () => createPrivateDispatchAccessor(ctx, privateBins));
+  defineLazyProperty(accessors, 'select', () => createInternalSelectAccessor(ctx, internalBins));
+  defineLazyProperty(accessors, 'reduce', () => createInternalReduceAccessor(ctx, internalBins));
+  defineLazyProperty(accessors, 'prepare', () => createInternalPrepareAccessor(ctx, internalBins));
+  defineLazyProperty(accessors, 'dispatch', () => createInternalDispatchAccessor(ctx, internalBins));
 }
 // #endregion

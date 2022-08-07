@@ -19,5 +19,5 @@ export function createAction(target: Path, key: string, args: any): Action {
 }
 
 export interface Dispatcher {
-  (action: Action): void;
+  dispatch(action: Action): void;
 }

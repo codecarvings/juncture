@@ -6,30 +6,34 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Def, DefKind, getFilteredDefKeys } from '../../definition/def';
-import { PrivateSuffix } from '../../definition/private';
-import { isParamSelectorDef, isSelectorDef, notAUniSelectorDef, UniSelectorDef } from '../../definition/selector';
+import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
+import {
+  isParamSelectorDef, isSelectorDef, notAUniSelectorDef, UniSelectorDef
+} from '../../definition/selector';
+import { UniDef } from '../../definition/uni-def';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
-import { defineGetter, defineLazyProperty } from '../../util/object';
+import { defineLazyProperty } from '../../util/object';
 import { Ctx } from '../ctx';
 import { SelectorFrameHost } from '../frames/selector-frame';
 
 // #region Common
-type SelectBinItem<D> = D extends UniSelectorDef<any, infer B> ? B : typeof notAUniSelectorDef;
+type SelectBinItem<D> = D extends UniSelectorDef<any, any, infer B> ? B : typeof notAUniSelectorDef;
 
 function createSelectBinBase<J extends Juncture>(
   ctx: Ctx,
   selectorFrameHost: SelectorFrameHost<J>,
-  privateUse: boolean
+  internalUse: boolean
 ) {
   const { juncture } = ctx;
-  const keys = getFilteredDefKeys(juncture, privateUse, DefKind.selector);
+  const keys = getFilteredDefKeys(juncture, DefType.selector, internalUse);
   const bin: any = {};
   keys.forEach(key => {
     const def = (juncture as any)[key];
     if (isSelectorDef(def)) {
-      defineGetter(bin, key, () => def[jSymbols.defPayload](selectorFrameHost.selector));
+      Object.defineProperty(bin, key, {
+        get: () => def[jSymbols.defPayload](selectorFrameHost.selector)
+      });
     } else if (isParamSelectorDef(def)) {
       defineLazyProperty(
         bin,
@@ -37,7 +41,8 @@ function createSelectBinBase<J extends Juncture>(
         () => (...args: any) => def[jSymbols.defPayload](selectorFrameHost.selector)(...args)
       );
     } else {
-      throw Error(`Unable to create SelectorBin: Unknwon subKind: "${(def as Def<any, any, any>).defSubKind}"`);
+      // eslint-disable-next-line max-len
+      throw Error(`Unable to create SelectorBin: Unknwon variety: "${(def as UniDef<any, any, any, any>).variety}"`);
     }
   });
   return bin;
@@ -47,8 +52,7 @@ function createSelectBinBase<J extends Juncture>(
 // #region SelectBin
 export type SelectBin<J> = {
   readonly [K in keyof J as
-  J[K] extends PrivateSuffix ? never :
-    J[K] extends UniSelectorDef<any, any> ? K : never
+  J[K] extends UniSelectorDef<any, DefAccess.public, any> ? K : never
   ]: SelectBinItem<J[K]>;
 };
 
@@ -60,21 +64,21 @@ export function createSelectBin<J extends Juncture>(
 }
 // #endregion
 
-// #region PrivateSelectBin
+// #region InternalSelectBin
 // Conditional type required as a workoaround for problems with key remapping
-export type PrivateSelectBin<J> = J extends any ? {
+export type InternalSelectBin<J> = J extends any ? {
   // readonly [K in keyof J as J[K] extends SelectorDef<any, any> ? K : never]: SelectBinItem<J[K]>;
   readonly [K in keyof J as K extends string ? K : never]: SelectBinItem<J[K]>;
 } : never;
 
-export interface PrivateSelectBinHost<J> {
-  readonly select: PrivateSelectBin<J>;
+export interface InternalSelectBinHost<J> {
+  readonly select: InternalSelectBin<J>;
 }
 
-export function createPrivateSelectBin<J extends Juncture>(
+export function createInternalSelectBin<J extends Juncture>(
   ctx: Ctx,
   selectorFrameHost: SelectorFrameHost<J>
-): PrivateSelectBin<J> {
+): InternalSelectBin<J> {
   return createSelectBinBase(ctx, selectorFrameHost, true);
 }
 // #endregion

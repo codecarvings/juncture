@@ -11,13 +11,13 @@
 
 import { Composer, PrivateComposer } from '../composer';
 import { Action } from '../context/action';
-import { isPrivate, Private } from '../definition/private';
+import { DefAccess } from '../definition/def';
 import {
-  isMixReducerDef, isReducerDef, MixReducerDef, ReducerDef
+  isMixReducerDef, isReducerDef, MixReducerDef, PrivateMixReducerDef, PrivateReducerDef, ProtectedMixReducerDef, ProtectedReducerDef, ReducerDef
 } from '../definition/reducer';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import {
-  isParamSelectorDef, isSelectorDef, ParamSelectorDef, SelectorDef
+  isParamSelectorDef, isSelectorDef, ParamSelectorDef, PrivateParamSelectorDef, PrivateSelectorDef, SelectorDef
 } from '../definition/selector';
 import { PropertyAssembler } from '../fabric/property-assembler';
 import { Juncture } from '../juncture';
@@ -225,28 +225,26 @@ describe('Composer', () => {
             expect(result).toBe('original2');
           });
 
-          test('should return a non-private SelectorDef if the parent is not private', () => {
+          test('should return a public SelectorDef if the parent is public', () => {
             const proxy = composer.override(myOriginalSelector);
             let myNewSelector = container.mySelector = proxy.selector(({ value }) => value());
             assembler.wire();
             myNewSelector = container.mySelector;
-            expect(isPrivate(myOriginalSelector)).toBe(false);
-            expect(isSelectorDef(myNewSelector)).toBe(true);
-            expect(isPrivate(myNewSelector)).toBe(false);
+            expect(myOriginalSelector.access).toBe(DefAccess.public);
+            expect(isSelectorDef(myNewSelector, DefAccess.public)).toBe(true);
           });
 
           test('should return a private SelectorDef if the parent is private', () => {
-            let myOriginalPrivateSelector: Private<SelectorDef<string>> = container.myPrivateSelector = composer.private.selector(() => 'original');
+            let myOriginalPrivateSelector: PrivateSelectorDef<string> = container.myPrivateSelector = composer.private.selector(() => 'original');
             assembler.wire();
             myOriginalPrivateSelector = container.myPrivateSelector;
 
             const proxy = composer.override(myOriginalPrivateSelector);
-            let myNewPrivateSelector: Private<SelectorDef<string>> = container.myPrivateSelector = proxy.selector(({ value }) => value());
+            let myNewPrivateSelector: PrivateSelectorDef<string> = container.myPrivateSelector = proxy.selector(({ value }) => value());
             assembler.wire();
             myNewPrivateSelector = container.myPrivateSelector;
-            expect(isPrivate(myOriginalPrivateSelector)).toBe(true);
-            expect(isSelectorDef(myNewPrivateSelector)).toBe(true);
-            expect(isPrivate(myNewPrivateSelector)).toBe(true);
+            expect(myOriginalPrivateSelector.access).toBe(DefAccess.private);
+            expect(isSelectorDef(myNewPrivateSelector, DefAccess.private)).toBe(true);
           });
 
           test('should throw error during wire if the parent is not a SelectorDef', () => {
@@ -291,29 +289,27 @@ describe('Composer', () => {
             expect(result).toBe(3);
           });
 
-          test('should return a non-private ParamSelectorDef if the parent is not private', () => {
+          test('should return a public ParamSelectorDef if the parent is public', () => {
             const proxy = composer.override(myOriginalSelector);
             let myNewSelector: ParamSelectorDef<(value: string) => number> = container.mySelector = proxy.paramSelector(() => () => 0);
             assembler.wire();
             myNewSelector = container.mySelector;
-            expect(isPrivate(myOriginalSelector)).toBe(false);
-            expect(isParamSelectorDef(myNewSelector)).toBe(true);
-            expect(isPrivate(myNewSelector)).toBe(false);
+            expect(myOriginalSelector.access).toBe(DefAccess.public);
+            expect(isParamSelectorDef(myNewSelector, DefAccess.public)).toBe(true);
           });
 
           test('should return a private ParamSelectorDef if the parent is private', () => {
-            let myOriginalPrivateSelector: Private<ParamSelectorDef<(value: string) => number>> = container
+            let myOriginalPrivateSelector: PrivateParamSelectorDef<(value: string) => number> = container
               .myPrivateSelector = composer.private.paramSelector(() => (value: string) => value.length);
             assembler.wire();
             myOriginalPrivateSelector = container.myPrivateSelector;
 
             const proxy = composer.override(myOriginalPrivateSelector);
-            let myNewPrivateSelector: Private<ParamSelectorDef<(value: string) => number>> = container.myPrivateSelector = proxy.paramSelector(() => () => 0);
+            let myNewPrivateSelector: PrivateParamSelectorDef<(value: string) => number> = container.myPrivateSelector = proxy.paramSelector(() => () => 0);
             assembler.wire();
             myNewPrivateSelector = container.myPrivateSelector;
-            expect(isPrivate(myOriginalPrivateSelector)).toBe(true);
-            expect(isParamSelectorDef(myNewPrivateSelector)).toBe(true);
-            expect(isPrivate(myNewPrivateSelector)).toBe(true);
+            expect(myOriginalPrivateSelector.access).toBe(DefAccess.private);
+            expect(isParamSelectorDef(myNewPrivateSelector, DefAccess.private)).toBe(true);
           });
 
           test('should throw error during wire if the parent is not a ParamSelectorDef', () => {
@@ -359,30 +355,43 @@ describe('Composer', () => {
             expect(result).toBe('ABC2');
           });
 
-          test('should return a non-private ReducerDef if the parent is not private', () => {
+          test('should return a public ReducerDef if the parent is public', () => {
             const proxy = composer.override(myOriginalReducer);
             let myNewReducer = container.myReducer = proxy.reducer(() => (value: string) => value);
             assembler.wire();
             myNewReducer = container.myReducer;
-            expect(isPrivate(myOriginalReducer)).toBe(false);
-            expect(isReducerDef(myNewReducer)).toBe(true);
-            expect(isPrivate(myNewReducer)).toBe(false);
+            expect(myOriginalReducer.access).toBe(DefAccess.public);
+            expect(isReducerDef(myNewReducer, DefAccess.public)).toBe(true);
+          });
+
+          test('should return a protected ReducerDef if the parent is protected', () => {
+            let myOriginalProtectedReducer: ProtectedReducerDef<(value: string) => string> = container.myProtectedReducer = composer
+              .protected.reducer(() => (value: string) => value.toUpperCase());
+            assembler.wire();
+            myOriginalProtectedReducer = container.myProtectedReducer;
+
+            const proxy = composer.override(myOriginalProtectedReducer);
+            let myNewProtectedReducer: ProtectedReducerDef<(value: string) => string> = container.myProtectedReducer = proxy
+              .reducer(() => (value: string) => value);
+            assembler.wire();
+            myNewProtectedReducer = container.myProtectedReducer;
+            expect(myOriginalProtectedReducer.access).toBe(DefAccess.protected);
+            expect(isReducerDef(myNewProtectedReducer, DefAccess.protected)).toBe(true);
           });
 
           test('should return a private ReducerDef if the parent is private', () => {
-            let myOriginalPrivateReducer: Private<ReducerDef<(value: string) => string>> = container.myPrivateReducer = composer
+            let myOriginalPrivateReducer: PrivateReducerDef<(value: string) => string> = container.myPrivateReducer = composer
               .private.reducer(() => (value: string) => value.toUpperCase());
             assembler.wire();
             myOriginalPrivateReducer = container.myPrivateReducer;
 
             const proxy = composer.override(myOriginalPrivateReducer);
-            let myNewPrivateReducer: Private<ReducerDef<(value: string) => string>> = container.myPrivateReducer = proxy
+            let myNewPrivateReducer: PrivateReducerDef<(value: string) => string> = container.myPrivateReducer = proxy
               .reducer(() => (value: string) => value);
             assembler.wire();
             myNewPrivateReducer = container.myPrivateReducer;
-            expect(isPrivate(myOriginalPrivateReducer)).toBe(true);
-            expect(isReducerDef(myNewPrivateReducer)).toBe(true);
-            expect(isPrivate(myNewPrivateReducer)).toBe(true);
+            expect(myOriginalPrivateReducer.access).toBe(DefAccess.private);
+            expect(isReducerDef(myNewPrivateReducer, DefAccess.private)).toBe(true);
           });
 
           test('should throw error during wire if the parent is not a ReducerDef', () => {
@@ -436,18 +445,36 @@ describe('Composer', () => {
             }]);
           });
 
-          test('should return a non-private MixReducerDef if the parent is not private', () => {
+          test('should return a public MixReducerDef if the parent is public', () => {
             const proxy = composer.override(myOriginalReducer);
             let myNewReducer = container.myReducer = proxy.mixReducer(() => () => []);
             assembler.wire();
             myNewReducer = container.myReducer;
-            expect(isPrivate(myOriginalReducer)).toBe(false);
-            expect(isMixReducerDef(myNewReducer)).toBe(true);
-            expect(isPrivate(myNewReducer)).toBe(false);
+            expect(myOriginalReducer.access).toBe(DefAccess.public);
+            expect(isMixReducerDef(myNewReducer, DefAccess.public)).toBe(true);
+          });
+
+          test('should return a protected MixReducerDef if the parent is protected', () => {
+            let myOriginalProtectedReducer: ProtectedMixReducerDef<(value: string) => Action[]> = container.myProtectedReducer = composer
+              .protected.mixReducer(() => (value: string) => [{
+                target: [],
+                key: 'dummy',
+                args: [value]
+              }]);
+            assembler.wire();
+            myOriginalProtectedReducer = container.myProtectedReducer;
+
+            const proxy = composer.override(myOriginalProtectedReducer);
+            let myNewProtectedReducer: ProtectedMixReducerDef<(value: string) => Action[]> = container.myProtectedReducer = proxy
+              .mixReducer(() => () => []);
+            assembler.wire();
+            myNewProtectedReducer = container.myProtectedReducer;
+            expect(myOriginalProtectedReducer.access).toBe(DefAccess.protected);
+            expect(isMixReducerDef(myNewProtectedReducer, DefAccess.protected)).toBe(true);
           });
 
           test('should return a private MixReducerDef if the parent is private', () => {
-            let myOriginalPrivateReducer: Private<MixReducerDef<(value: string) => Action[]>> = container.myPrivateReducer = composer
+            let myOriginalPrivateReducer: PrivateMixReducerDef<(value: string) => Action[]> = container.myPrivateReducer = composer
               .private.mixReducer(() => (value: string) => [{
                 target: [],
                 key: 'dummy',
@@ -457,13 +484,12 @@ describe('Composer', () => {
             myOriginalPrivateReducer = container.myPrivateReducer;
 
             const proxy = composer.override(myOriginalPrivateReducer);
-            let myNewPrivateReducer: Private<MixReducerDef<(value: string) => Action[]>> = container.myPrivateReducer = proxy
+            let myNewPrivateReducer: PrivateMixReducerDef<(value: string) => Action[]> = container.myPrivateReducer = proxy
               .mixReducer(() => () => []);
             assembler.wire();
             myNewPrivateReducer = container.myPrivateReducer;
-            expect(isPrivate(myOriginalPrivateReducer)).toBe(true);
-            expect(isMixReducerDef(myNewPrivateReducer)).toBe(true);
-            expect(isPrivate(myNewPrivateReducer)).toBe(true);
+            expect(myOriginalPrivateReducer.access).toBe(DefAccess.private);
+            expect(isMixReducerDef(myNewPrivateReducer, DefAccess.private)).toBe(true);
           });
 
           test('should throw error during wire if the parent is not a MixReducerDef', () => {

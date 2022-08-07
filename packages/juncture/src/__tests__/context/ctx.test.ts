@@ -6,10 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx, CtxConfig } from '../../context/ctx';
+import { Ctx, CtxLayout, CtxMediator } from '../../context/ctx';
 import { isCtxHost } from '../../context/ctx-host';
-import { CtxHub } from '../../context/ctx-hub';
-import { createCursor, Cursor } from '../../context/cursor';
 import { createSchemaDef, Schema, SchemaDef } from '../../definition/schema';
 import { Juncture, JunctureType } from '../../juncture';
 import { jSymbols } from '../../symbols';
@@ -20,21 +18,6 @@ describe('Ctx', () => {
   }
   let MyJunctureType: JunctureType<MyJuncture>;
   let juncture: MyJuncture;
-  const config: CtxConfig = {
-    layout: {
-      parent: null,
-      path: [],
-      isDivergent: false,
-      isUnivocal: true
-    },
-    ctxMediator: {
-      getValue: () => undefined,
-      setValue: () => {}
-    },
-    rootMediator: {
-      dispatch: () => {}
-    }
-  };
 
   beforeEach(() => {
     MyJunctureType = class extends Juncture {
@@ -44,34 +27,56 @@ describe('Ctx', () => {
   });
 
   describe('constructor', () => {
-    test('should accept a juncture and a CtxConfig object', () => {
+    test('should accept a juncture, a CtxLayout and CtxMediator object', () => {
+      const layout: CtxLayout = {
+        parent: null,
+        path: [],
+        isDivergent: false,
+        isUnivocal: true
+      };
+      const mediator: CtxMediator = {
+        enroll: () => { },
+        getValue: () => undefined,
+        setValue: () => { },
+        dispatch: () => {}
+      };
+
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const ctx = new Ctx(juncture, config);
+        const ctx = new Ctx(juncture, layout, mediator);
       }).not.toThrow();
-    });
-
-    test('should invoke the juncture[jSymbols.createCtxHub] factory to create a new hub for the ctx', () => {
-      (juncture as any)[jSymbols.createCtxHub] = jest.fn(juncture[jSymbols.createCtxHub]);
-      expect(juncture[jSymbols.createCtxHub]).toBeCalledTimes(0);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const ctx = new Ctx(juncture, config);
-      expect(juncture[jSymbols.createCtxHub]).toBeCalledTimes(1);
     });
   });
 
   describe('instance', () => {
+    let unmount: () => void = undefined!;
+    let layout: CtxLayout;
+    let mediator: CtxMediator;
     let ctx: Ctx;
+
     beforeEach(() => {
-      ctx = new Ctx(juncture, config);
+      layout = {
+        parent: null,
+        path: [],
+        isDivergent: false,
+        isUnivocal: true
+      };
+      mediator = {
+        enroll: um => { unmount = um; },
+        getValue: () => 1,
+        setValue: () => { },
+        dispatch: () => {}
+      };
+
+      ctx = new Ctx(juncture, layout, mediator);
     });
 
     test('should have a "juncture" property containing a reference to the original Juncture', () => {
       expect(ctx.juncture).toBe(juncture);
     });
 
-    test('should have a "layout" property containing the same value of the provided config', () => {
-      expect(ctx.layout).toBe(config.layout);
+    test('should have a "layout" property containing the same value of the provided layout', () => {
+      expect(ctx.layout).toBe(layout);
     });
 
     describe('cursor property', () => {
@@ -89,44 +94,29 @@ describe('Ctx', () => {
       });
     });
 
-    describe('privateCursor property', () => {
-      test('should give access to a cursor associated with the ctx', () => {
+    describe('after unmount has been ivoked', () => {
+      test('should have property "isMounted" set to false', () => {
+        expect(ctx.isMounted).toBe(true);
+        unmount();
+        expect(ctx.isMounted).toBe(false);
+      });
+
+      test('should throw error if tryng to access the value property', () => {
+        expect(ctx.value).toBe(1);
+        unmount();
+        expect(() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const val = ctx.value;
+        }).toThrow();
+      });
+
+      test('should throw error if tryng to access the cursor property', () => {
         expect(isCtxHost(ctx.cursor, ctx)).toBe(true);
-      });
-
-      // eslint-disable-next-line max-len
-      test('should invoke the juncture[jSymbols.createPrivateCursor] factory only once the first time is accessed', () => {
-        (juncture as any)[jSymbols.createPrivateCursor] = jest.fn(juncture[jSymbols.createPrivateCursor]);
-        expect(juncture[jSymbols.createPrivateCursor]).toBeCalledTimes(0);
-        expect(isCtxHost(ctx.privateCursor, ctx)).toBe(true);
-        expect(juncture[jSymbols.createPrivateCursor]).toBeCalledTimes(1);
-        expect(isCtxHost(ctx.privateCursor, ctx)).toBe(true);
-        expect(juncture[jSymbols.createPrivateCursor]).toBeCalledTimes(1);
-      });
-
-      describe('by default', () => {
-        test('should give access to the same value provided by the "cursor" property', () => {
-          expect(ctx.privateCursor).toBe(ctx.cursor);
-        });
-      });
-
-      // eslint-disable-next-line max-len
-      describe('when [jSymbols.createPrivateCursor] factory is overridden in the Juncture and return a different cursor', () => {
-        class MyJuncture2 extends Juncture {
-          // eslint-disable-next-line class-methods-use-this
-          [jSymbols.createPrivateCursor](hub: CtxHub): Cursor<this> {
-            return createCursor(hub.ctx);
-          }
-
-          schema = createSchemaDef(() => new Schema(''));
-        }
-        const juncture2 = Juncture.getInstance(MyJuncture2);
-
-        test('should give access to the new private cursor', () => {
-          const ctx2 = new Ctx(juncture2, config);
-          expect(isCtxHost(ctx2.privateCursor, ctx2)).toBe(true);
-          expect(ctx2.privateCursor).not.toBe(ctx.cursor);
-        });
+        unmount();
+        expect(() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _ = ctx.cursor;
+        }).toThrow();
       });
     });
   });

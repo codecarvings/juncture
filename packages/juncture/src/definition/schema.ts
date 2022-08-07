@@ -6,17 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { jSymbols } from '../symbols';
 import {
-  createDef, Def, DefKind, isDef
+  createDef, Def, DefAccess, DefType, isDef
 } from './def';
 
 // #region Schema
-// Handled value: Return type of a readucer
-// Required for inheritance of object-type junctures (eg: Struct)
-export class Schema<V extends HV = any, HV = V> {
-  readonly [jSymbols.handledValue]!: HV; // Preserve type param
-
+export class Schema<V = any> {
   constructor(readonly defaultValue: V) { }
 }
 
@@ -25,14 +20,14 @@ export type ValueOfSchema<X extends Schema> = X['defaultValue'];
 // #endregion
 
 // #region Def
-export type SchemaDef<B extends Schema> = Def<DefKind.schema, '', () => B>;
+export type SchemaDef<B extends Schema> = Def<DefType.schema, DefAccess.public, () => B>;
 
 export function createSchemaDef<B extends Schema>(schemaFactory: () => B): SchemaDef<B> {
-  return createDef(DefKind.schema, '', schemaFactory);
+  return createDef(DefType.schema, DefAccess.public, schemaFactory);
 }
 
 export function isSchemaDef(obj: any): obj is SchemaDef<Schema> {
-  return isDef(obj, DefKind.schema, '');
+  return isDef(obj, DefType.schema, DefAccess.public);
 }
 
 // ---  Derivations

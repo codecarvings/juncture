@@ -7,59 +7,95 @@
  */
 
 import { Action } from '../context/action';
-import { PrivateFrameConsumer } from '../context/frames/private-frame';
-import {
-  createDef, Def, DefKind, isDef
-} from './def';
+import { InternalFrameConsumer } from '../context/frames/internal-frame';
+import { DefAccess, DefType } from './def';
+import { createUniDef, isUniDef, UniDef } from './uni-def';
 
 // #region Uni Def
 export const notAUniReducerDef = '\u26A0 ERROR: NOT A REDUCER';
 
-export enum UniReducerDefSubKind {
+export enum UniReducerDefVariety {
   standard = '',
   mix = 'mix'
 }
 
-export interface UniReducerDef<T extends UniReducerDefSubKind, B extends (...args: any) => any>
-  extends Def<DefKind.reducer, T, PrivateFrameConsumer<B>> { }
+export interface UniReducerDef<V extends UniReducerDefVariety, A extends DefAccess, B extends (...args: any) => any>
+  extends UniDef<DefType.reducer, V, A, InternalFrameConsumer<B>> { }
 
-function createUniReducerDef<T extends UniReducerDefSubKind, B extends (...args: any) => any>(
-  subKind: T, reducerFn: PrivateFrameConsumer<B>): UniReducerDef<T, B> {
-  return createDef(DefKind.reducer, subKind, reducerFn);
+function createUniReducerDef<V extends UniReducerDefVariety, A extends DefAccess, B extends (...args: any) => any>(
+  variety: V, access: A, reducerFn: InternalFrameConsumer<B>): UniReducerDef<V, A, B> {
+  return createUniDef(DefType.reducer, variety, access, reducerFn);
 }
 
-function isUniReducerDef(obj: any, subKind?: UniReducerDefSubKind): obj is UniReducerDef<any, any> {
-  return isDef(obj, DefKind.reducer, subKind);
+function isUniReducerDef<V extends UniReducerDefVariety, A extends DefAccess>(
+  obj: any,
+  variety?: UniReducerDefVariety,
+  access?: DefAccess
+): obj is UniReducerDef<V, A, any> {
+  return isUniDef(obj, DefType.reducer, variety, access);
 }
 
 // ---  Derivations
-export type ReducerOfUniReducerDef<D extends UniReducerDef<any, any>>
-  = D extends UniReducerDef<any, infer B> ? B : never;
+export type ReducerOfUniReducerDef<D extends UniReducerDef<any, any, any>>
+  = D extends UniReducerDef<any, any, infer B> ? B : never;
 
 // --- Starndard
 export interface ReducerDef<B extends (...args: any) => any>
-  extends UniReducerDef<UniReducerDefSubKind.standard, B> { }
+  extends UniReducerDef<UniReducerDefVariety.standard, DefAccess.public, B> { }
+
+export interface ProtectedReducerDef<B extends (...args: any) => any>
+  extends UniReducerDef<UniReducerDefVariety.standard, DefAccess.protected, B> { }
+
+export interface PrivateReducerDef<B extends (...args: any) => any>
+  extends UniReducerDef<UniReducerDefVariety.standard, DefAccess.private, B> { }
 
 export function createReducerDef<B extends (...args: any) => any>(
-  reducerFn: PrivateFrameConsumer<B>): ReducerDef<B> {
-  return createUniReducerDef(UniReducerDefSubKind.standard, reducerFn);
+  access: DefAccess.public, reducerFn: InternalFrameConsumer<B>): ReducerDef<B>;
+export function createReducerDef<B extends (...args: any) => any>(
+  access: DefAccess.protected, reducerFn: InternalFrameConsumer<B>): ProtectedReducerDef<B>;
+export function createReducerDef<B extends (...args: any) => any>(
+  access: DefAccess.private, reducerFn: InternalFrameConsumer<B>): PrivateReducerDef<B>;
+export function createReducerDef<B extends (...args: any) => any>(
+  access: DefAccess, reducerFn: InternalFrameConsumer<B>) {
+  return createUniReducerDef(UniReducerDefVariety.standard, access, reducerFn);
 }
 
-export function isReducerDef(obj: any): obj is ReducerDef<any> {
-  return isUniReducerDef(obj, UniReducerDefSubKind.standard);
+export function isReducerDef(obj: any): obj is (ReducerDef<any> | ProtectedReducerDef<any> | PrivateReducerDef<any>);
+export function isReducerDef(obj: any, access: DefAccess.public): obj is ReducerDef<any>;
+export function isReducerDef(obj: any, access: DefAccess.protected): obj is ProtectedReducerDef<any>;
+export function isReducerDef(obj: any, access: DefAccess.private): obj is PrivateReducerDef<any>;
+export function isReducerDef(obj: any, access?: DefAccess) {
+  return isUniReducerDef(obj, UniReducerDefVariety.standard, access);
 }
 // #endregion
 
 // --- Mix
 export interface MixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>
-  extends UniReducerDef<UniReducerDefSubKind.mix, B> { }
+  extends UniReducerDef<UniReducerDefVariety.mix, DefAccess.public, B> { }
+
+export interface ProtectedMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>
+  extends UniReducerDef<UniReducerDefVariety.mix, DefAccess.protected, B> { }
+
+export interface PrivateMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>
+  extends UniReducerDef<UniReducerDefVariety.mix, DefAccess.private, B> { }
 
 export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
-  reducerFn: PrivateFrameConsumer<B>): MixReducerDef<B> {
-  return createUniReducerDef(UniReducerDefSubKind.mix, reducerFn);
+  access: DefAccess.public, reducerFn: InternalFrameConsumer<B>): MixReducerDef<B>;
+export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
+  access: DefAccess.protected, reducerFn: InternalFrameConsumer<B>): ProtectedMixReducerDef<B>;
+export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
+  access: DefAccess.private, reducerFn: InternalFrameConsumer<B>): PrivateMixReducerDef<B>;
+export function createMixReducerDef<B extends (...args: any) => ReadonlyArray<Action>>(
+  access: DefAccess, reducerFn: InternalFrameConsumer<B>) {
+  return createUniReducerDef(UniReducerDefVariety.mix, access, reducerFn);
 }
 
-export function isMixReducerDef(obj: any): obj is MixReducerDef<any> {
-  return isUniReducerDef(obj, UniReducerDefSubKind.mix);
+// eslint-disable-next-line max-len
+export function isMixReducerDef(obj: any): obj is (MixReducerDef<any> | ProtectedMixReducerDef<any> | PrivateMixReducerDef<any>);
+export function isMixReducerDef(obj: any, access: DefAccess.public): obj is MixReducerDef<any>;
+export function isMixReducerDef(obj: any, access: DefAccess.protected): obj is ProtectedMixReducerDef<any>;
+export function isMixReducerDef(obj: any, access: DefAccess.private): obj is PrivateMixReducerDef<any>;
+export function isMixReducerDef(obj: any, access?: DefAccess) {
+  return isUniReducerDef(obj, UniReducerDefVariety.mix, access);
 }
 // #endregion

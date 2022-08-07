@@ -7,18 +7,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CtxHub } from '../../context/ctx-hub';
+import { Ctx } from '../../context/ctx';
 import { Schema } from '../../definition/schema';
 import { JunctureTypeMap } from '../../juncture';
 import { jBit } from '../../lib/bit';
 import {
-  jStruct, StructCtxHub, StructHandledValue, StructSchema
+  jStruct, PartialStructValue, StructCtx, StructSchema
 } from '../../lib/struct';
 import { Root } from '../../root';
 
 // Exposes constructor as public
 export class TestStructSchema<JTM extends JunctureTypeMap> extends StructSchema<JTM> {
-  constructor(readonly Children: JTM, defaultValue?: StructHandledValue<JTM>) {
+  constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
     super(Children, defaultValue);
   }
 }
@@ -86,52 +86,10 @@ describe('StructSchema', () => {
   });
 });
 
-describe('StructCtxHub', () => {
-  // class MyJuncture extends Struct {
-  //   schema = createSchemaDef(() => new TestStructSchema({
-  //     firstName: jBit.String,
-  //     lastName: jBit.String
-  //   }));
-  // }
-  // const juncture = Juncture.getInstance(MyJuncture);
-  // const config: CtxConfig = {
-  //   layout: {
-  //     parent: null,
-  //     path: [],
-  //     isDivergent: false,
-  //     isUnivocal: true
-  //   }
-  // };
-
-  test('should be a subclass of CtxHub', () => {
-    expect(StructCtxHub.prototype).toBeInstanceOf(CtxHub);
+describe('StructCtx', () => {
+  test('should be a subclass of Ctx', () => {
+    expect(StructCtx.prototype).toBeInstanceOf(Ctx);
   });
-
-  /*
-  describe('instance', () => {
-    let ctx: StructCtx<MyJuncture>;
-    beforeEach(() => {
-      ctx = new StructCtx(juncture, config);
-    });
-
-    // eslint-disable-next-line max-len
-    describe('"cursor" property', () => {
-      test('should return a cursor associated with the ctx', () => {
-        expect(isCursor(ctx.privateCursor, ctx)).toBe(true);
-      });
-
-      test('should give access to a map of cursors with the same keys of the Children of the Struct', () => {
-        expect(Object.keys(ctx.privateCursor)).toEqual(['firstName', 'lastName']);
-        expect(isCursor(ctx.privateCursor.firstName)).toBe(true);
-        expect(isCursor(ctx.privateCursor.lastName)).toBe(true);
-      });
-    });
-
-    test('should have a "privateCursor" that return the same value of "cursor"', () => {
-      expect(ctx.cursor).toBe(ctx.privateCursor);
-    });
-  });
-  */
 });
 
 xtest('temp test', () => {

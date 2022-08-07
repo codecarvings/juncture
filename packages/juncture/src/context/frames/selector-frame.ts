@@ -7,15 +7,15 @@
  */
 
 import { Juncture } from '../../juncture';
-import { PrivateFrame } from './private-frame';
+import { InternalFrame } from './internal-frame';
 
-export interface SelectorFrame<J extends Juncture> extends PrivateFrame<J> { }
+export interface SelectorFrame<J extends Juncture> extends InternalFrame<J> { }
 
 export interface SelectorFrameHost<J extends Juncture> {
   readonly selector: SelectorFrame<J>;
 }
 
-export { createPrivateFrame as createSelectorFrame } from './private-frame';
+export { createInternalFrame as createSelectorFrame } from './internal-frame';
 
 export interface OverrideSelectorFrame<J extends Juncture, S> extends SelectorFrame<J> {
   readonly parent: S;

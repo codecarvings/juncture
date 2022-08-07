@@ -1,6 +1,6 @@
-import { Juncture, PrivateCursorOf } from '../../juncture';
-import { createAccessorFactory, createPrivateAccessorFactory } from '../accessor';
-import { PrivateSelectBin, PrivateSelectBinHost, SelectBin } from '../bins/select-bin';
+import { InternalCursorOf, Juncture } from '../../juncture';
+import { createAccessorFactory, createInternalAccessorFactory } from '../accessor';
+import { InternalSelectBin, InternalSelectBinHost, SelectBin } from '../bins/select-bin';
 import { Ctx } from '../ctx';
 import { Cursor, JunctureOfCursor } from '../cursor';
 
@@ -14,15 +14,15 @@ export const createSelectAccessor
 : <J extends Juncture>(defaultCtx: Ctx) => SelectAccessor<J> = createAccessorFactory('select');
 // #endregion
 
-// #region PrivateSelectAccessor
-export interface PrivateSelectAccessor<J extends Juncture> {
-  (): PrivateSelectBin<J>;
-  (_: PrivateCursorOf<J>): PrivateSelectBin<J>;
+// #region InternalSelectAccessor
+export interface InternalSelectAccessor<J extends Juncture> {
+  (): InternalSelectBin<J>;
+  (_: InternalCursorOf<J>): InternalSelectBin<J>;
   <C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
 }
 
-export const createPrivateSelectAccessor : <J extends Juncture>(
+export const createInternalSelectAccessor : <J extends Juncture>(
   defaultCtx: Ctx,
-  privateSelectBinHost: PrivateSelectBinHost<J>
-) => PrivateSelectAccessor<J> = createPrivateAccessorFactory('select');
+  internalSelectBinHost: InternalSelectBinHost<J>
+) => InternalSelectAccessor<J> = createInternalAccessorFactory('select');
 // #endregion

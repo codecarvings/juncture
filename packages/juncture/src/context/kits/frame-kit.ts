@@ -8,26 +8,29 @@
 
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
-import { PrivateCursorHost } from '../cursor';
+import { InternalCursorHost } from '../cursor';
 import { createMixReducerFrame, MixReducerFrame } from '../frames/mix-reducer-frame';
+import { createReactorFrame, ReactorFrame } from '../frames/reactor-frame';
 import { createReducerFrame, ReducerFrame } from '../frames/reducer-frame';
 import { createSelectorFrame, SelectorFrame } from '../frames/selector-frame';
-import { PrivateAccessorKit } from './accessor-kit';
+import { InternalAccessorKit } from './accessor-kit';
 
-// #region PrivateFrameKit
-export interface PrivateFrameKit<J extends Juncture = Juncture> {
+// #region InternalFrameKit
+export interface InternalFrameKit<J extends Juncture = Juncture> {
   readonly selector: SelectorFrame<J>;
   readonly reducer: ReducerFrame<J>;
   readonly mixReducer: MixReducerFrame<J>;
+  readonly reactor: ReactorFrame<J>;
 }
 
-export function preparePrivateFrameKit(
+export function equipInternalFrameKit(
   frames: any,
-  privateCursorProviuder: PrivateCursorHost,
-  accessors: PrivateAccessorKit
+  internalCursorProviuder: InternalCursorHost,
+  accessors: InternalAccessorKit
 ) {
-  defineLazyProperty(frames, 'selector', () => createSelectorFrame(privateCursorProviuder, accessors));
-  defineLazyProperty(frames, 'reducer', () => createReducerFrame(privateCursorProviuder, accessors));
-  defineLazyProperty(frames, 'mixReducer', () => createMixReducerFrame(privateCursorProviuder, accessors));
+  defineLazyProperty(frames, 'selector', () => createSelectorFrame(internalCursorProviuder, accessors));
+  defineLazyProperty(frames, 'reducer', () => createReducerFrame(internalCursorProviuder, accessors));
+  defineLazyProperty(frames, 'mixReducer', () => createMixReducerFrame(internalCursorProviuder, accessors));
+  defineLazyProperty(frames, 'reactor', () => createReactorFrame(internalCursorProviuder, accessors));
 }
 // #endregion

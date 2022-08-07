@@ -9,15 +9,15 @@
 import { ComposableJuncture } from '../composable-juncture';
 import { Composer } from '../composer';
 import {
-  Ctx, CtxConfig, CtxLayout, CtxMap, CtxMediator
+  Ctx, CtxLayout, CtxMediator, ManagedCtxMap
 } from '../context/ctx';
-import { CtxHub } from '../context/ctx-hub';
 import { createCursor, Cursor } from '../context/cursor';
+import { PathFragment } from '../context/path';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import {
-  CursorMapOfJunctureTypeMap, HandledValueOf, Juncture, JunctureType,
+  CursorMapOfJunctureTypeMap, Juncture, JunctureType,
   JunctureTypeMap,
-  SchemaOf, ValueOf, ValueOfType
+  SchemaOf, ValueOfType
 } from '../juncture';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty, mappedAssign } from '../util/object';
@@ -26,16 +26,16 @@ import { defineLazyProperty, mappedAssign } from '../util/object';
 export type StructValue<JTM extends JunctureTypeMap> = {
   readonly [K in keyof JTM]: ValueOfType<JTM[K]>;
 };
-export type StructHandledValue<JTM extends JunctureTypeMap> = {
+export type PartialStructValue<JTM extends JunctureTypeMap> = {
   readonly [K in keyof JTM]?: ValueOfType<JTM[K]>;
 };
 
 let createStructSchema: <JTM extends JunctureTypeMap>(
-  Children: JTM, defaultValue?: StructHandledValue<JTM>)
+  Children: JTM, defaultValue?: PartialStructValue<JTM>)
 => StructSchema<JTM>;
 
-export class StructSchema<JTM extends JunctureTypeMap = any> extends Schema<StructValue<JTM>, StructHandledValue<JTM>> {
-  protected constructor(readonly Children: JTM, defaultValue?: StructHandledValue<JTM>) {
+export class StructSchema<JTM extends JunctureTypeMap = any> extends Schema<StructValue<JTM>> {
+  protected constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
     const childKeys = Object.keys(Children);
     const childDefaultValue = mappedAssign(
       { },
@@ -54,7 +54,7 @@ export class StructSchema<JTM extends JunctureTypeMap = any> extends Schema<Stru
 
   static #staticInit = (() => {
     createStructSchema = <JTM2 extends JunctureTypeMap>(
-      Children: JTM2, defaultValue?: StructHandledValue<JTM2>
+      Children: JTM2, defaultValue?: PartialStructValue<JTM2>
     ) => new StructSchema<JTM2>(Children, defaultValue);
   })();
 }
@@ -66,43 +66,75 @@ export class StructComposer<J extends StructJuncture> extends Composer<J> {
 // #endregion
 
 // #region Ctx & Cursors
-export class StructCtxHub extends CtxHub {
+export class StructCtx extends Ctx {
   readonly schema!: StructSchema;
 
-  constructor(ctx: Ctx, config: CtxConfig) {
-    super(ctx, config);
-    const { setValue } = config.ctxMediator;
-    const { rootMediator } = config;
-    this.childCtxs = mappedAssign(
+  // #region Value stuff
+  protected valueDidUpdate(): void {
+    this.schema.childKeys.forEach(key => {
+      this.children[key].ctx.detectValueChange();
+    });
+  }
+
+  getHarmonizedValue(value: any): any {
+    if (value === this._value) {
+      return value;
+    }
+    return {
+      ...this._value,
+      ...value
+    };
+  }
+  // #endregion
+
+  // #region Children stuff
+  protected createChildren(): ManagedCtxMap {
+    const { setValue } = this.mediator;
+    return mappedAssign(
       {},
       this.schema.childKeys,
       key => {
+        let unmount: () => void = undefined!;
         const layout: CtxLayout = {
-          parent: this.ctx,
-          path: [...config.layout.path, key],
-          isUnivocal: config.layout.isUnivocal,
+          parent: this,
+          path: [...this.layout.path, key],
+          isUnivocal: this.layout.isUnivocal,
           isDivergent: false
         };
-        const ctxMediator: CtxMediator = {
-          getValue: () => ctx.value[key],
+        const mediator: CtxMediator = {
+          ...this.mediator,
+          enroll: um => { unmount = um; },
+          getValue: () => this._value[key],
           setValue: newValue => {
             setValue({
-              ...ctx.value,
+              ...this._value,
               [key]: newValue
             });
           }
         };
-        const childCtxConfig: CtxConfig = { layout, ctxMediator, rootMediator };
-        return Juncture.createCtx(this.schema.Children[key], childCtxConfig);
+        const ctx = Juncture.createCtx(this.schema.Children[key], layout, mediator);
+        return { ctx, unmount };
       }
     );
   }
 
-  protected readonly childCtxs: CtxMap;
+  protected readonly children: ManagedCtxMap = this.createChildren();
 
-  resolve(key: string): Ctx {
-    return this.childCtxs[key];
+  resolveFragment(fragment: PathFragment): Ctx {
+    const result = this.children[fragment as any];
+    if (result) {
+      return result.ctx;
+    }
+    return super.resolveFragment(fragment);
   }
+  // #endregion
+
+  // #region Mount stuff
+  protected ctxWillUnmount(): void {
+    super.ctxWillUnmount();
+    this.schema.childKeys.forEach(key => this.children[key].unmount());
+  }
+  // #endregion
 }
 
 export type StructCursor<J extends StructJuncture> = Cursor<J> & CursorMapOfJunctureTypeMap<ChildrenOf<J>>;
@@ -115,34 +147,22 @@ export abstract class StructJuncture extends ComposableJuncture {
     return new StructComposer<this>(Juncture.getPropertyAssembler(this));
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCtxHub](ctx: Ctx, config: CtxConfig): StructCtxHub {
-    return new StructCtxHub(ctx, config);
+  [jSymbols.createCtx](layout: CtxLayout, mediator: CtxMediator): StructCtx {
+    return new StructCtx(this, layout, mediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](hub: StructCtxHub): StructCursor<this> {
-    const _: any = createCursor(hub.ctx);
-    hub.schema.childKeys.forEach(key => {
-      defineLazyProperty(_, key, () => hub.resolve(key).cursor, true);
+  [jSymbols.createCursor](ctx: StructCtx): StructCursor<this> {
+    const _: any = createCursor(ctx);
+    ctx.schema.childKeys.forEach(key => {
+      defineLazyProperty(_, key, () => ctx.resolveFragment(key).cursor, { enumerable: true });
     });
     return _;
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createPrivateCursor](hub: CtxHub): StructCursor<this> {
-    return hub.ctx.cursor as StructCursor<this>;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  [jSymbols.adaptHandledValue](value: ValueOf<this>, handledValue: HandledValueOf<this>): ValueOf<this> {
-    if (handledValue === value) {
-      return handledValue;
-    }
-    return {
-      ...value,
-      ...handledValue
-    };
+  [jSymbols.createInternalCursor](ctx: StructCtx): StructCursor<this> {
+    return ctx.cursor as StructCursor<this>;
   }
 
   protected readonly DEF!: StructComposer<this>;
@@ -164,7 +184,7 @@ interface StructType<JTM extends JunctureTypeMap> extends JunctureType<Struct<JT
 
 // #region Builder
 function createStructType<JT extends abstract new(...args: any) => StructJuncture,
-  JTM extends JunctureTypeMap>(BaseType: JT, Children: JTM, defaultValue?: StructHandledValue<JTM>) {
+  JTM extends JunctureTypeMap>(BaseType: JT, Children: JTM, defaultValue?: PartialStructValue<JTM>) {
   abstract class Struct extends BaseType {
     schema = createSchemaDef(() => createStructSchema(Children, defaultValue));
   }
@@ -172,13 +192,13 @@ function createStructType<JT extends abstract new(...args: any) => StructJunctur
 }
 
 interface StructBuilder {
-  of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: StructHandledValue<JTM>): StructType<JTM>;
+  of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: PartialStructValue<JTM>): StructType<JTM>;
 }
 
 export const jStruct: StructBuilder = {
   of: <JTM extends JunctureTypeMap>(
     Children: JTM,
-    defaultValue?: StructHandledValue<JTM>
+    defaultValue?: PartialStructValue<JTM>
   ) => createStructType(StructJuncture, Children, defaultValue) as any
 };
 // #endregion

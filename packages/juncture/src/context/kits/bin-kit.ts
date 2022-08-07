@@ -10,19 +10,19 @@ import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
 import { Dispatcher } from '../action';
 import {
-  createDispatchBin, createPrivateDispatchBin, DispatchBin, PrivateDispatchBin
+  createDispatchBin, createInternalDispatchBin, DispatchBin, InternalDispatchBin
 } from '../bins/dispatch-bin';
 import {
-  createPrepareBin, createPrivatePrepareBin, PrepareBin, PrivatePrepareBin
+  createInternalPrepareBin, createPrepareBin, InternalPrepareBin, PrepareBin
 } from '../bins/prepare-bin';
 import {
-  createPrivateReduceBin, createReduceBin, PrivateReduceBin, ReduceBin
+  createInternalReduceBin, createReduceBin, InternalReduceBin, ReduceBin
 } from '../bins/reduce-bin';
 import {
-  createPrivateSelectBin, createSelectBin, PrivateSelectBin, SelectBin
+  createInternalSelectBin, createSelectBin, InternalSelectBin, SelectBin
 } from '../bins/select-bin';
 import { Ctx } from '../ctx';
-import { PrivateFrameKit } from './frame-kit';
+import { InternalFrameKit } from './frame-kit';
 
 // #region BinKit
 export interface BinKit<J extends Juncture = Juncture> {
@@ -32,26 +32,26 @@ export interface BinKit<J extends Juncture = Juncture> {
   readonly dispatch: DispatchBin<J>;
 }
 
-export function prepareBinKit(bins: any, ctx: Ctx, frames: PrivateFrameKit, dispatch: Dispatcher) {
+export function equipBinKit(bins: any, ctx: Ctx, frames: InternalFrameKit, dispatcher: Dispatcher) {
   defineLazyProperty(bins, 'select', () => createSelectBin(ctx, frames));
   defineLazyProperty(bins, 'reduce', () => createReduceBin(ctx, frames));
   defineLazyProperty(bins, 'prepare', () => createPrepareBin(ctx));
-  defineLazyProperty(bins, 'dispatch', () => createDispatchBin(ctx, dispatch));
+  defineLazyProperty(bins, 'dispatch', () => createDispatchBin(ctx, dispatcher));
 }
 // #endregion
 
-// #region PrivateBinKit
-export interface PrivateBinKit<J extends Juncture = Juncture> {
-  readonly select: PrivateSelectBin<J>;
-  readonly reduce: PrivateReduceBin<J>;
-  readonly prepare: PrivatePrepareBin<J>;
-  readonly dispatch: PrivateDispatchBin<J>;
+// #region InternalBinKit
+export interface InternalBinKit<J extends Juncture = Juncture> {
+  readonly select: InternalSelectBin<J>;
+  readonly reduce: InternalReduceBin<J>;
+  readonly prepare: InternalPrepareBin<J>;
+  readonly dispatch: InternalDispatchBin<J>;
 }
 
-export function preparePrivateBinKit(privateBins: any, ctx: Ctx, frames: PrivateFrameKit, dispatch: Dispatcher) {
-  defineLazyProperty(privateBins, 'select', () => createPrivateSelectBin(ctx, frames));
-  defineLazyProperty(privateBins, 'reduce', () => createPrivateReduceBin(ctx, frames));
-  defineLazyProperty(privateBins, 'prepare', () => createPrivatePrepareBin(ctx));
-  defineLazyProperty(privateBins, 'dispatch', () => createPrivateDispatchBin(ctx, dispatch));
+export function equipInternalBinKit(internalBins: any, ctx: Ctx, frames: InternalFrameKit, dispatcher: Dispatcher) {
+  defineLazyProperty(internalBins, 'select', () => createInternalSelectBin(ctx, frames));
+  defineLazyProperty(internalBins, 'reduce', () => createInternalReduceBin(ctx, frames));
+  defineLazyProperty(internalBins, 'prepare', () => createInternalPrepareBin(ctx));
+  defineLazyProperty(internalBins, 'dispatch', () => createInternalDispatchBin(ctx, dispatcher));
 }
 // #endregion

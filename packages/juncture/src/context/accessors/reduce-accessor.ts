@@ -1,6 +1,6 @@
-import { Juncture, PrivateCursorOf } from '../../juncture';
-import { createAccessorFactory, createPrivateAccessorFactory } from '../accessor';
-import { PrivateReduceBin, PrivateReduceBinHost, ReduceBin } from '../bins/reduce-bin';
+import { InternalCursorOf, Juncture } from '../../juncture';
+import { createAccessorFactory, createInternalAccessorFactory } from '../accessor';
+import { InternalReduceBin, InternalReduceBinHost, ReduceBin } from '../bins/reduce-bin';
 import { Ctx } from '../ctx';
 import { Cursor, JunctureOfCursor } from '../cursor';
 
@@ -14,15 +14,15 @@ export const createReduceAccessor
 : <J extends Juncture>(defaultCtx: Ctx) => ReduceAccessor<J> = createAccessorFactory('reduce');
 // #endregion
 
-// #region PrivateReduceAccessor
-export interface PrivateReduceAccessor<J extends Juncture> {
-  (): PrivateReduceBin<J>;
-  (_: PrivateCursorOf<J>): PrivateReduceBin<J>;
+// #region InternalReduceAccessor
+export interface InternalReduceAccessor<J extends Juncture> {
+  (): InternalReduceBin<J>;
+  (_: InternalCursorOf<J>): InternalReduceBin<J>;
   <C extends Cursor>(_: C): ReduceBin<JunctureOfCursor<C>>;
 }
 
-export const createPrivateReduceAccessor : <J extends Juncture>(
+export const createInternalReduceAccessor : <J extends Juncture>(
   defaultCtx: Ctx,
-  privateReduceBinHost: PrivateReduceBinHost<J>
-) => PrivateReduceAccessor<J> = createPrivateAccessorFactory('reduce');
+  internalReduceBinHost: InternalReduceBinHost<J>
+) => InternalReduceAccessor<J> = createInternalAccessorFactory('reduce');
 // #endregion

@@ -7,30 +7,24 @@
  */
 
 const defPayload = Symbol('defPayload');
-const handledValue = Symbol('handledValue');
 const createPropertyAssembler = Symbol('createPropertyAssembler');
 const createComposer = Symbol('createComposer');
 const init = Symbol('init');
 const createCtx = Symbol('createCtx');
-const createCtxHub = Symbol('createCtxHub');
 const createCursor = Symbol('createCursor');
-const createPrivateCursor = Symbol('createPrivateCursor');
-const adaptHandledValue = Symbol('adaptHandledValue');
+const createInternalCursor = Symbol('createInternalCursor');
 const ctx = Symbol('ctx');
 const juncture = Symbol('juncture');
 const bitDefault = Symbol('bitDefault');
 
 export interface JSymbols {
   readonly defPayload: typeof defPayload;
-  readonly handledValue: typeof handledValue;
   readonly createPropertyAssembler: typeof createPropertyAssembler;
   readonly createComposer: typeof createComposer;
   readonly init: typeof init;
   readonly createCtx: typeof createCtx;
-  readonly createCtxHub: typeof createCtxHub;
   readonly createCursor: typeof createCursor;
-  readonly createPrivateCursor: typeof createPrivateCursor;
-  readonly adaptHandledValue: typeof adaptHandledValue;
+  readonly createInternalCursor: typeof createInternalCursor;
   readonly ctx: typeof ctx;
   readonly juncture: typeof juncture;
   readonly bitDefault: typeof bitDefault;
@@ -38,15 +32,12 @@ export interface JSymbols {
 
 export const jSymbols: JSymbols = {
   defPayload,
-  handledValue,
   createPropertyAssembler,
   createComposer,
   init,
   createCtx,
-  createCtxHub,
   createCursor,
-  createPrivateCursor,
-  adaptHandledValue,
+  createInternalCursor,
   ctx,
   juncture,
   bitDefault

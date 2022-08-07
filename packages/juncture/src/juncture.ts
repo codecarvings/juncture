@@ -6,17 +6,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx, CtxConfig } from './context/ctx';
+import { Ctx, CtxLayout, CtxMediator } from './context/ctx';
 import { getCtx } from './context/ctx-host';
-import { CtxHub } from './context/ctx-hub';
 import { createCursor, Cursor } from './context/cursor';
 import { Path } from './context/path';
+import { DefAccess } from './definition/def';
 import { Schema, SchemaDef, SchemaOfSchemaDef } from './definition/schema';
 import { createSelectorDef, SelectorDef } from './definition/selector';
 import { Initializable } from './fabric/initializable';
 import { PropertyAssembler, PropertyAssemblerHost } from './fabric/property-assembler';
 import { Singleton } from './fabric/singleton';
-import { JSymbols, jSymbols } from './symbols';
+import { jSymbols } from './symbols';
 
 // #region Symbols
 const schemaCacheSymbol = Symbol('schemaCache');
@@ -38,28 +38,18 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     PropertyAssembler.get(this).wire();
   }
 
-  [jSymbols.createCtx](config: CtxConfig): Ctx {
-    return new Ctx(this, config);
+  [jSymbols.createCtx](layout: CtxLayout, mediator: CtxMediator): Ctx {
+    return new Ctx(this, layout, mediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCtxHub](ctx: Ctx, config: CtxConfig): CtxHub {
-    return new CtxHub(ctx, config);
-  }
-
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createCursor](hub: CtxHub): Cursor<this> {
-    return createCursor(hub.ctx) as Cursor<this>;
-  }
-
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createPrivateCursor](hub: CtxHub): Cursor<this> {
-    return hub.ctx.cursor as Cursor<this>;
+  [jSymbols.createCursor](ctx: Ctx): Cursor<this> {
+    return createCursor(ctx) as Cursor<this>;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.adaptHandledValue](value: ValueOf<this>, handledValue: HandledValueOf<this>): ValueOf<this> {
-    return handledValue;
+  [jSymbols.createInternalCursor](ctx: Ctx): Cursor<this> {
+    return ctx.cursor as Cursor<this>;
   }
   // #endregion
 
@@ -67,20 +57,22 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     const assembler = Juncture.getPropertyAssembler(this);
 
     this.defaultValue = assembler
-      .registerStaticProperty(createSelectorDef((
+      .registerStaticProperty(createSelectorDef(DefAccess.public, (
         frame: any
       ) => getCtx(frame._).schema.defaultValue));
 
     this.path = assembler
-      .registerStaticProperty(createSelectorDef((
+      .registerStaticProperty(createSelectorDef(DefAccess.public, (
         frame: any
       ) => getCtx(frame._).layout.path));
 
     this.isMounted = assembler
-      .registerStaticProperty(createSelectorDef(() => true)); // TODO: Implement this
+      .registerStaticProperty(createSelectorDef(DefAccess.public, (
+        frame: any
+      ) => getCtx(frame._).isMounted));
 
     this.value = assembler
-      .registerStaticProperty(createSelectorDef((
+      .registerStaticProperty(createSelectorDef(DefAccess.public, (
         frame: any
       ) => getCtx(frame._).value));
   }
@@ -113,9 +105,9 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     return undefined!;
   }
 
-  static createCtx(Type: JunctureType, config: CtxConfig): Ctx {
+  static createCtx(Type: JunctureType, layoyt: CtxLayout, mediator: CtxMediator): Ctx {
     const juncture = Juncture.getInstance(Type);
-    return juncture[jSymbols.createCtx](config);
+    return juncture[jSymbols.createCtx](layoyt, mediator);
   }
   // #endregion
 }
@@ -128,15 +120,13 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
 // ---  Derivations
 export type SchemaOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>;
 export type ValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>['defaultValue'];
-export type HandledValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>[JSymbols['handledValue']];
 
-// export type CtxHubOf<J extends Juncture> = ReturnType<J[typeof jSymbols.createCtxHub]>;
 // Use inference to keep type name
 export type CursorOf<J extends Juncture> = J extends {
   [jSymbols.createCursor](...args : any) : infer C
 } ? C : never;
-export type PrivateCursorOf<J extends Juncture> = J extends {
-  [jSymbols.createPrivateCursor](...args : any) : infer C
+export type InternalCursorOf<J extends Juncture> = J extends {
+  [jSymbols.createInternalCursor](...args : any) : infer C
 } ? C : never;
 // #endregion
 
@@ -148,9 +138,8 @@ export interface JunctureType<J extends Juncture = Juncture> {
 // ---  Derivations
 export type SchemaOfType<JT extends JunctureType> = SchemaOf<InstanceType<JT>>;
 export type ValueOfType<JT extends JunctureType> = ValueOf<InstanceType<JT>>;
-export type HandledValueOfType<JT extends JunctureType> = HandledValueOf<InstanceType<JT>>;
 
-export type PrivateCursorOfType<JT extends JunctureType> = PrivateCursorOf<InstanceType<JT>>;
+export type InternalCursorOfType<JT extends JunctureType> = InternalCursorOf<InstanceType<JT>>;
 export type CursorOfType<JT extends JunctureType> = CursorOf<InstanceType<JT>>;
 // #endregion
 

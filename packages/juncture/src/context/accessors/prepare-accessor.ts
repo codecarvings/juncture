@@ -1,6 +1,6 @@
-import { Juncture, PrivateCursorOf } from '../../juncture';
-import { createAccessorFactory, createPrivateAccessorFactory } from '../accessor';
-import { PrepareBin, PrivatePrepareBin, PrivatePrepareBinHost } from '../bins/prepare-bin';
+import { InternalCursorOf, Juncture } from '../../juncture';
+import { createAccessorFactory, createInternalAccessorFactory } from '../accessor';
+import { InternalPrepareBin, InternalPrepareBinHost, PrepareBin } from '../bins/prepare-bin';
 import { Ctx } from '../ctx';
 import { Cursor, JunctureOfCursor } from '../cursor';
 
@@ -14,15 +14,15 @@ export const createPrepareAccessor
 : <J extends Juncture>(defaultCtx: Ctx) => PrepareAccessor<J> = createAccessorFactory('prepare');
 // #endregion
 
-// #region PrivatePrepareAccessor
-export interface PrivatePrepareAccessor<J extends Juncture> {
-  (): PrivatePrepareBin<J>;
-  (_: PrivateCursorOf<J>): PrivatePrepareBin<J>;
+// #region InternalPrepareAccessor
+export interface InternalPrepareAccessor<J extends Juncture> {
+  (): InternalPrepareBin<J>;
+  (_: InternalCursorOf<J>): InternalPrepareBin<J>;
   <C extends Cursor>(_: C): PrepareBin<JunctureOfCursor<C>>;
 }
 
-export const createPrivatePrepareAccessor : <J extends Juncture>(
+export const createInternalPrepareAccessor : <J extends Juncture>(
   defaultCtx: Ctx,
-  privatePrepareBinHost: PrivatePrepareBinHost<J>
-) => PrivatePrepareAccessor<J> = createPrivateAccessorFactory('prepare');
+  internalPrepareBinHost: InternalPrepareBinHost<J>
+) => InternalPrepareAccessor<J> = createInternalAccessorFactory('prepare');
 // #endregion

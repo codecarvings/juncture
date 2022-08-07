@@ -6,8 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DefKind, getFilteredDefKeys } from '../../definition/def';
-import { PrivateSuffix } from '../../definition/private';
+import {
+  DefAccess, DefType, getFilteredDefKeys
+} from '../../definition/def';
 import { notAUniReducerDef, UniReducerDef } from '../../definition/reducer';
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
@@ -17,22 +18,22 @@ import { Ctx } from '../ctx';
 
 // #region Common
 type DispatchBinItem<D> =
-  D extends UniReducerDef<any, infer B> ? (...args : OverloadParameters<B>) => void : typeof notAUniReducerDef;
+  D extends UniReducerDef<any, any, infer B> ? (...args : OverloadParameters<B>) => void : typeof notAUniReducerDef;
 
 function createDispatchBinBase(
   ctx: Ctx,
-  dispatch: Dispatcher,
-  privateUse: boolean
+  dispatcher: Dispatcher,
+  internalUse: boolean
 ) {
   const { juncture } = ctx;
-  const keys = getFilteredDefKeys(juncture, privateUse, DefKind.reducer);
+  const keys = getFilteredDefKeys(juncture, DefType.reducer, internalUse);
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(
       bin,
       key,
       () => (...args: any) => {
-        dispatch(createAction(ctx.ref, key, args));
+        dispatcher.dispatch(createAction(ctx.ref, key, args));
       }
     );
   });
@@ -42,34 +43,31 @@ function createDispatchBinBase(
 
 // #region DispatchBin
 export type DispatchBin<J> = {
-  readonly [K in keyof J as
-  J[K] extends PrivateSuffix ? never :
-    J[K] extends UniReducerDef<any, any> ? K : never
-  ]: DispatchBinItem<J[K]>;
+  readonly [K in keyof J as J[K] extends UniReducerDef<any, DefAccess.public, any> ? K : never]: DispatchBinItem<J[K]>;
 };
 
 export function createDispatchBin<J extends Juncture>(
   ctx: Ctx,
-  dispatch: Dispatcher
+  dispatcher: Dispatcher
 ): DispatchBin<J> {
-  return createDispatchBinBase(ctx, dispatch, false);
+  return createDispatchBinBase(ctx, dispatcher, false);
 }
 // #endregion
 
-// #region PrivateDispatchBin
+// #region InternalDispatchBin
 // Conditional type required as a workoaround for problems with key remapping
-export type PrivateDispatchBin<J> = J extends any ? {
+export type InternalDispatchBin<J> = J extends any ? {
   readonly [K in keyof J as K extends string ? K : never]: DispatchBinItem<J[K]>;
 } : never;
 
-export interface PrivateDispatchBinHost<J> {
-  readonly dispatch: PrivateDispatchBin<J>;
+export interface InternalDispatchBinHost<J> {
+  readonly dispatch: InternalDispatchBin<J>;
 }
 
-export function createPrivateDispatchBin<J extends Juncture>(
+export function createInternalDispatchBin<J extends Juncture>(
   ctx: Ctx,
-  dispatch: Dispatcher
-): PrivateDispatchBin<J> {
-  return createDispatchBinBase(ctx, dispatch, true);
+  dispatcher: Dispatcher
+): InternalDispatchBin<J> {
+  return createDispatchBinBase(ctx, dispatcher, true);
 }
 // #endregion

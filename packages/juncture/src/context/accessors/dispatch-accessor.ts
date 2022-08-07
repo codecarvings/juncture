@@ -1,6 +1,6 @@
-import { Juncture, PrivateCursorOf } from '../../juncture';
-import { createAccessorFactory, createPrivateAccessorFactory } from '../accessor';
-import { DispatchBin, PrivateDispatchBin, PrivateDispatchBinHost } from '../bins/dispatch-bin';
+import { InternalCursorOf, Juncture } from '../../juncture';
+import { createAccessorFactory, createInternalAccessorFactory } from '../accessor';
+import { DispatchBin, InternalDispatchBin, InternalDispatchBinHost } from '../bins/dispatch-bin';
 import { Ctx } from '../ctx';
 import { Cursor, JunctureOfCursor } from '../cursor';
 
@@ -14,15 +14,15 @@ export const createDispatchAccessor
 : <J extends Juncture>(defaultCtx: Ctx) => DispatchAccessor<J> = createAccessorFactory('dispatch');
 // #endregion
 
-// #region PrivateDispatchAccessor
-export interface PrivateDispatchAccessor<J extends Juncture> {
-  (): PrivateDispatchBin<J>;
-  (_: PrivateCursorOf<J>): PrivateDispatchBin<J>;
+// #region InternalDispatchAccessor
+export interface InternalDispatchAccessor<J extends Juncture> {
+  (): InternalDispatchBin<J>;
+  (_: InternalCursorOf<J>): InternalDispatchBin<J>;
   <C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
 }
 
-export const createPrivateDispatchAccessor : <J extends Juncture>(
+export const createInternalDispatchAccessor : <J extends Juncture>(
   defaultCtx: Ctx,
-  privateDispatchBinHost: PrivateDispatchBinHost<J>
-) => PrivateDispatchAccessor<J> = createPrivateAccessorFactory('dispatch');
+  internalDispatchBinHost: InternalDispatchBinHost<J>
+) => InternalDispatchAccessor<J> = createInternalAccessorFactory('dispatch');
 // #endregion
