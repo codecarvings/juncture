@@ -8,18 +8,17 @@
  */
 
 import { Action } from './context/action';
-import { MixReducerFrame, OverrideMixReducerFrame } from './context/frames/mix-reducer-frame';
 import { OverrideReactorFrame, ReactorFrame } from './context/frames/reactor-frame';
 import { OverrideReducerFrame, ReducerFrame } from './context/frames/reducer-frame';
 import { OverrideSelectorFrame, SelectorFrame } from './context/frames/selector-frame';
+import { OverrideTriggerFrame, TriggerFrame } from './context/frames/trigger-frame';
+import {
+  ActivatorDef, ActivatorDefVariety, ActivatorOfActivatorDef, createReducerDef, createTriggerDef, isReducerDef, isTriggerDef, PrivateReducerDef, PrivateTriggerDef, ProtectedReducerDef, ProtectedTriggerDef, ReducerDef, TriggerDef
+} from './definition/activator';
 import { Def, DefAccess, isDef } from './definition/def';
 import {
   createReactorDef, DisposableReactorDef, ReactorDef, ReactorOfReactorDef, SafeReactorDef
 } from './definition/reactor';
-import {
-  createMixReducerDef, createReducerDef, isMixReducerDef,
-  isReducerDef, MixReducerDef, PrivateMixReducerDef, PrivateReducerDef, ProtectedMixReducerDef, ProtectedReducerDef, ReducerDef, ReducerOfUniReducerDef, UniReducerDef, UniReducerDefVariety
-} from './definition/reducer';
 import {
   createParamSelectorDef, createSelectorDef, isParamSelectorDef,
   isSelectorDef, ParamSelectorDef, PrivateParamSelectorDef, PrivateSelectorDef, SelectorDef, SelectorOfUniSelectorDef, UniSelectorDef, UniSelectorDefVariety
@@ -44,9 +43,13 @@ export class ProtectedComposer<J extends Juncture> {
     return this.assembler.registerStaticProperty(createReducerDef(DefAccess.protected, reducerFn as any));
   }
 
-  mixReducer<F extends (frame: MixReducerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: F): ProtectedMixReducerDef<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createMixReducerDef(DefAccess.protected, reducerFn as any));
+  trigger(): ProtectedTriggerDef<() => []>;
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn: F): ProtectedTriggerDef<ReturnType<F>>;
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn?: F) {
+    const fn: any = reducerFn || (() => () => []);
+    return this.assembler.registerStaticProperty(createTriggerDef(DefAccess.protected, fn));
   }
 }
 // #endregion
@@ -69,9 +72,13 @@ export class PrivateComposer<J extends Juncture> {
     return this.assembler.registerStaticProperty(createReducerDef(DefAccess.private, reducerFn as any));
   }
 
-  mixReducer<F extends (frame: MixReducerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: F): PrivateMixReducerDef<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createMixReducerDef(DefAccess.private, reducerFn as any));
+  trigger(): PrivateTriggerDef<() => []>;
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn: F): PrivateTriggerDef<ReturnType<F>>;
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn?: F) {
+    const fn: any = reducerFn || (() => () => []);
+    return this.assembler.registerStaticProperty(createTriggerDef(DefAccess.private, fn));
   }
 }
 // #endregion
@@ -148,9 +155,9 @@ export class Composer<J extends Juncture> {
       }
     }
 
-    if (isMixReducerDef(args.parentDef)) {
-      if (args.fnName === 'mixReducer') {
-        return createMixReducerDef(args.parentDef.access as any, frame => {
+    if (isTriggerDef(args.parentDef)) {
+      if (args.fnName === 'trigger') {
+        return createTriggerDef(args.parentDef.access as any, frame => {
           const parent = args.parentDef[jSymbols.defPayload](frame);
           const frame2 = { ...frame, parent };
           return args.fnArgs[0](frame2);
@@ -175,20 +182,20 @@ export class Composer<J extends Juncture> {
         selectorFn: F): D extends UniSelectorDef<any, DefAccess.public, any> ? ParamSelectorDef<ReturnType<F>> : PrivateParamSelectorDef<ReturnType<F>>;
     };
 
-    <D extends UniReducerDef<UniReducerDefVariety.standard, any, any>>(parent: D): {
-      reducer<F extends (frame: OverrideReducerFrame<J, ReducerOfUniReducerDef<D>>)
+    <D extends ActivatorDef<ActivatorDefVariety.reducer, any, any>>(parent: D): {
+      reducer<F extends (frame: OverrideReducerFrame<J, ActivatorOfActivatorDef<D>>)
       => (...args: any) => ValueOf<J>>(
-        reducerFn: F): D extends UniReducerDef<any, DefAccess.public, any> ? ReducerDef<ReturnType<F>> :
-        D extends UniReducerDef<any, DefAccess.protected, any> ? ProtectedReducerDef<ReturnType<F>> :
+        reducerFn: F): D extends ActivatorDef<any, DefAccess.public, any> ? ReducerDef<ReturnType<F>> :
+        D extends ActivatorDef<any, DefAccess.protected, any> ? ProtectedReducerDef<ReturnType<F>> :
           PrivateReducerDef<ReturnType<F>>
     };
 
-    <D extends UniReducerDef<UniReducerDefVariety.mix, any, any>>(parent: D): {
-      mixReducer<F extends (frame: OverrideMixReducerFrame<J, ReducerOfUniReducerDef<D>>)
+    <D extends ActivatorDef<ActivatorDefVariety.trigger, any, any>>(parent: D): {
+      trigger<F extends (frame: OverrideTriggerFrame<J, ActivatorOfActivatorDef<D>>)
       => (...args: any) => ReadonlyArray<Action>>(
-        reducerFn: F): D extends UniReducerDef<any, DefAccess.public, any> ? MixReducerDef<ReturnType<F>> :
-        D extends UniReducerDef<any, DefAccess.protected, any> ? ProtectedMixReducerDef<ReturnType<F>> :
-          PrivateMixReducerDef<ReturnType<F>>
+        reducerFn: F): D extends ActivatorDef<any, DefAccess.public, any> ? TriggerDef<ReturnType<F>> :
+        D extends ActivatorDef<any, DefAccess.protected, any> ? ProtectedTriggerDef<ReturnType<F>> :
+          PrivateTriggerDef<ReturnType<F>>
     };
 
     <D extends ReactorDef<any>>(parent : D): {
@@ -215,9 +222,13 @@ export class Composer<J extends Juncture> {
     return this.assembler.registerStaticProperty(createReducerDef(DefAccess.public, reducerFn as any));
   }
 
-  mixReducer<F extends (frame: MixReducerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: F): MixReducerDef<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createMixReducerDef(DefAccess.public, reducerFn as any));
+  trigger(): TriggerDef<() => []>;
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn: F): TriggerDef<ReturnType<F>>;
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
+    reducerFn?: F) {
+    const fn: any = reducerFn || (() => () => []);
+    return this.assembler.registerStaticProperty(createTriggerDef(DefAccess.public, fn));
   }
 
   reactor<F extends (frame: ReactorFrame<J>) => (() => void) | void>(reactorFn: F):

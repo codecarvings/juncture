@@ -7,10 +7,10 @@
  */
 
 import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
+import { MixedDef } from '../../definition/mixed-def';
 import {
   isParamSelectorDef, isSelectorDef, notAUniSelectorDef, UniSelectorDef
 } from '../../definition/selector';
-import { UniDef } from '../../definition/uni-def';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
 import { defineLazyProperty } from '../../util/object';
@@ -42,7 +42,7 @@ function createSelectBinBase<J extends Juncture>(
       );
     } else {
       // eslint-disable-next-line max-len
-      throw Error(`Unable to create SelectorBin: Unknwon variety: "${(def as UniDef<any, any, any, any>).variety}"`);
+      throw Error(`Unable to create SelectorBin: Unknwon variety: "${(def as MixedDef<any, any, any, any>).variety}"`);
     }
   });
   return bin;

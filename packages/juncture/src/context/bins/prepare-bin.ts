@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { ActivatorDef, notAnActivatorDef } from '../../definition/activator';
 import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
-import { notAUniReducerDef, UniReducerDef } from '../../definition/reducer';
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
 import { OverloadParameters } from '../../util/overloaed-function-types';
@@ -16,8 +16,8 @@ import { Ctx } from '../ctx';
 
 // #region Common
 type PrepareBinItem<D> =
-D extends UniReducerDef<any, any, infer B>
-  ? (...args : OverloadParameters<B>) => Action : typeof notAUniReducerDef;
+D extends ActivatorDef<any, any, infer B>
+  ? (...args : OverloadParameters<B>) => Action : typeof notAnActivatorDef;
 
 function createPrepareBinBase(
   ctx: Ctx,
@@ -40,7 +40,7 @@ function createPrepareBinBase(
 // #region PrepareBin
 export type PrepareBin<J> = {
   readonly [K in keyof J as
-  J[K] extends UniReducerDef<any, DefAccess.public, any> ? K : never
+  J[K] extends ActivatorDef<any, DefAccess.public, any> ? K : never
   ]: PrepareBinItem<J[K]>;
 };
 

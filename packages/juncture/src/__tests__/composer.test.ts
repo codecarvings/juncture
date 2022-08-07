@@ -11,10 +11,10 @@
 
 import { Composer, PrivateComposer } from '../composer';
 import { Action } from '../context/action';
-import { DefAccess } from '../definition/def';
 import {
-  isMixReducerDef, isReducerDef, MixReducerDef, PrivateMixReducerDef, PrivateReducerDef, ProtectedMixReducerDef, ProtectedReducerDef, ReducerDef
-} from '../definition/reducer';
+  isReducerDef, isTriggerDef, PrivateReducerDef, PrivateTriggerDef, ProtectedReducerDef, ProtectedTriggerDef, ReducerDef, TriggerDef
+} from '../definition/activator';
+import { DefAccess } from '../definition/def';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
 import {
   isParamSelectorDef, isSelectorDef, ParamSelectorDef, PrivateParamSelectorDef, PrivateSelectorDef, SelectorDef
@@ -85,15 +85,15 @@ describe('PrivateComposer', () => {
       });
     });
 
-    describe('mixReducer', () => {
+    describe('trigger', () => {
       test('should be a method', () => {
-        expect(typeof composer.mixReducer).toBe('function');
+        expect(typeof composer.trigger).toBe('function');
       });
 
-      test('should create, after property wiring, a Private MixReducerDef, by passing a reducer function', () => {
-        container.myReducer = composer.mixReducer(() => () => []);
+      test('should create, after property wiring, a Private TriggerDef, by passing a reducer function', () => {
+        container.myReducer = composer.trigger(() => () => []);
         assembler.wire();
-        expect(isMixReducerDef(container.myReducer)).toBe(true);
+        expect(isTriggerDef(container.myReducer)).toBe(true);
         expect(container.myReducer.access).toBe('private');
       });
     });
@@ -154,15 +154,15 @@ describe('Composer', () => {
       });
     });
 
-    describe('mixReducer', () => {
+    describe('trigger', () => {
       test('should be a method', () => {
-        expect(typeof composer.mixReducer).toBe('function');
+        expect(typeof composer.trigger).toBe('function');
       });
 
-      test('should create, after property wiring, a MixReducerDef, by passing a reducer function', () => {
-        container.myReducer = composer.mixReducer(() => () => []);
+      test('should create, after property wiring, a TriggerDef, by passing a reducer function', () => {
+        container.myReducer = composer.trigger(() => () => []);
         assembler.wire();
-        expect(isMixReducerDef(container.myReducer)).toBe(true);
+        expect(isTriggerDef(container.myReducer)).toBe(true);
       });
     });
 
@@ -405,10 +405,10 @@ describe('Composer', () => {
         });
       });
 
-      describe('when passing a MixReducerDef as type argument, proxy should provide access to', () => {
-        let myOriginalReducer: MixReducerDef<(value: string) => Action[]>;
+      describe('when passing a TriggerDef as type argument, proxy should provide access to', () => {
+        let myOriginalReducer: TriggerDef<(value: string) => Action[]>;
         beforeEach(() => {
-          myOriginalReducer = container.myReducer = composer.mixReducer(() => (value: string) => [{
+          myOriginalReducer = container.myReducer = composer.trigger(() => (value: string) => [{
             target: [],
             key: 'dummy',
             args: [value]
@@ -417,25 +417,25 @@ describe('Composer', () => {
           myOriginalReducer = container.myReducer;
         });
 
-        describe('a "mixReducer" property that', () => {
+        describe('a "trigger" property that', () => {
           test('should be a method', () => {
             const proxy = composer.override(myOriginalReducer);
-            expect(typeof proxy.mixReducer).toBe('function');
+            expect(typeof proxy.trigger).toBe('function');
           });
 
-          test('should create, after property wiring, a new MixReducerDef assignable to the parent, by passing a reducer function', () => {
+          test('should create, after property wiring, a new TriggerDef assignable to the parent, by passing a reducer function', () => {
             const proxy = composer.override(myOriginalReducer);
-            let myNewReducer: MixReducerDef<(value: string) => Action[]> = container.myReducer = proxy
-              .mixReducer(() => () => []);
+            let myNewReducer: TriggerDef<(value: string) => Action[]> = container.myReducer = proxy
+              .trigger(() => () => []);
             assembler.wire();
             myNewReducer = container.myReducer;
-            expect(isMixReducerDef(myNewReducer)).toBe(true);
+            expect(isTriggerDef(myNewReducer)).toBe(true);
             expect(myNewReducer).not.toBe(myOriginalReducer);
           });
 
           test('should provide access to the parent reducer', () => {
             const proxy = composer.override(myOriginalReducer);
-            container.myReducer = proxy.mixReducer(({ parent }) => (value: string) => parent(`${value}2`));
+            container.myReducer = proxy.trigger(({ parent }) => (value: string) => parent(`${value}2`));
             assembler.wire();
             const result = container.myReducer[jSymbols.defPayload]()('abc');
             expect(result).toEqual([{
@@ -445,18 +445,18 @@ describe('Composer', () => {
             }]);
           });
 
-          test('should return a public MixReducerDef if the parent is public', () => {
+          test('should return a public TriggerDef if the parent is public', () => {
             const proxy = composer.override(myOriginalReducer);
-            let myNewReducer = container.myReducer = proxy.mixReducer(() => () => []);
+            let myNewReducer = container.myReducer = proxy.trigger(() => () => []);
             assembler.wire();
             myNewReducer = container.myReducer;
             expect(myOriginalReducer.access).toBe(DefAccess.public);
-            expect(isMixReducerDef(myNewReducer, DefAccess.public)).toBe(true);
+            expect(isTriggerDef(myNewReducer, DefAccess.public)).toBe(true);
           });
 
-          test('should return a protected MixReducerDef if the parent is protected', () => {
-            let myOriginalProtectedReducer: ProtectedMixReducerDef<(value: string) => Action[]> = container.myProtectedReducer = composer
-              .protected.mixReducer(() => (value: string) => [{
+          test('should return a protected TriggerDef if the parent is protected', () => {
+            let myOriginalProtectedReducer: ProtectedTriggerDef<(value: string) => Action[]> = container.myProtectedReducer = composer
+              .protected.trigger(() => (value: string) => [{
                 target: [],
                 key: 'dummy',
                 args: [value]
@@ -465,17 +465,17 @@ describe('Composer', () => {
             myOriginalProtectedReducer = container.myProtectedReducer;
 
             const proxy = composer.override(myOriginalProtectedReducer);
-            let myNewProtectedReducer: ProtectedMixReducerDef<(value: string) => Action[]> = container.myProtectedReducer = proxy
-              .mixReducer(() => () => []);
+            let myNewProtectedReducer: ProtectedTriggerDef<(value: string) => Action[]> = container.myProtectedReducer = proxy
+              .trigger(() => () => []);
             assembler.wire();
             myNewProtectedReducer = container.myProtectedReducer;
             expect(myOriginalProtectedReducer.access).toBe(DefAccess.protected);
-            expect(isMixReducerDef(myNewProtectedReducer, DefAccess.protected)).toBe(true);
+            expect(isTriggerDef(myNewProtectedReducer, DefAccess.protected)).toBe(true);
           });
 
-          test('should return a private MixReducerDef if the parent is private', () => {
-            let myOriginalPrivateReducer: PrivateMixReducerDef<(value: string) => Action[]> = container.myPrivateReducer = composer
-              .private.mixReducer(() => (value: string) => [{
+          test('should return a private TriggerDef if the parent is private', () => {
+            let myOriginalPrivateReducer: PrivateTriggerDef<(value: string) => Action[]> = container.myPrivateReducer = composer
+              .private.trigger(() => (value: string) => [{
                 target: [],
                 key: 'dummy',
                 args: [value]
@@ -484,18 +484,18 @@ describe('Composer', () => {
             myOriginalPrivateReducer = container.myPrivateReducer;
 
             const proxy = composer.override(myOriginalPrivateReducer);
-            let myNewPrivateReducer: PrivateMixReducerDef<(value: string) => Action[]> = container.myPrivateReducer = proxy
-              .mixReducer(() => () => []);
+            let myNewPrivateReducer: PrivateTriggerDef<(value: string) => Action[]> = container.myPrivateReducer = proxy
+              .trigger(() => () => []);
             assembler.wire();
             myNewPrivateReducer = container.myPrivateReducer;
             expect(myOriginalPrivateReducer.access).toBe(DefAccess.private);
-            expect(isMixReducerDef(myNewPrivateReducer, DefAccess.private)).toBe(true);
+            expect(isTriggerDef(myNewPrivateReducer, DefAccess.private)).toBe(true);
           });
 
-          test('should throw error during wire if the parent is not a MixReducerDef', () => {
+          test('should throw error during wire if the parent is not a TriggerDef', () => {
             container.myReducer = assembler.registerStaticProperty(createSchemaDef(() => new Schema('')));
             const proxy = composer.override(myOriginalReducer);
-            container.myReducer = proxy.mixReducer(() => () => []);
+            container.myReducer = proxy.trigger(() => () => []);
             expect(() => {
               assembler.wire();
             }).toThrow();

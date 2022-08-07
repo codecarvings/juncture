@@ -8,7 +8,7 @@
 
 import { InternalFrameConsumer } from '../context/frames/internal-frame';
 import { DefAccess, DefType } from './def';
-import { createUniDef, isUniDef, UniDef } from './uni-def';
+import { createMixedDef, isMixedDef, MixedDef } from './mixed-def';
 
 // #region Uni Def
 export const notAUniSelectorDef = '\u26A0 ERROR: NOT A SELECTOR';
@@ -21,14 +21,14 @@ export enum UniSelectorDefVariety {
 export type UniSelectorDefAccess = DefAccess.public | DefAccess.private;
 
 export interface UniSelectorDef<V extends UniSelectorDefVariety, A extends UniSelectorDefAccess, B>
-  extends UniDef<DefType.selector, V, A, InternalFrameConsumer<B>> { }
+  extends MixedDef<DefType.selector, V, A, InternalFrameConsumer<B>> { }
 
 function createUniSelectorDef<V extends UniSelectorDefVariety, A extends UniSelectorDefAccess, B>(
   variety: V,
   access: A,
   selectorFn: InternalFrameConsumer<B>
 ): UniSelectorDef<V, A, B> {
-  return createUniDef(DefType.selector, variety, access, selectorFn);
+  return createMixedDef(DefType.selector, variety, access, selectorFn);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -37,7 +37,7 @@ function isUniSelectorDef<V extends UniSelectorDefVariety, A extends UniSelector
   variety?: V,
   access?: A
 ): obj is UniSelectorDef<V, A, any> {
-  return isUniDef(obj, DefType.selector, variety, access);
+  return isMixedDef(obj, DefType.selector, variety, access);
 }
 
 // ---  Derivations

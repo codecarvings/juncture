@@ -11,17 +11,17 @@ import {
   Def, DefAccess, DefType, isDef
 } from './def';
 
-export interface UniDef<T extends DefType, V extends string, A extends DefAccess, P> extends Def<T, A, P> {
+export interface MixedDef<T extends DefType, V extends string, A extends DefAccess, P> extends Def<T, A, P> {
   readonly variety: V;
 }
 
-export function createUniDef<T extends DefType, V extends string, A extends DefAccess, P>(
+export function createMixedDef<T extends DefType, V extends string, A extends DefAccess, P>(
   type: T,
   variety: V,
   access: A,
   payload: P
-): UniDef<T, V, A, P> {
-  const result: UniDef<T, V, A, P> = {
+): MixedDef<T, V, A, P> {
+  const result: MixedDef<T, V, A, P> = {
     type,
     variety,
     access,
@@ -32,12 +32,12 @@ export function createUniDef<T extends DefType, V extends string, A extends DefA
 }
 
 // eslint-disable-next-line max-len
-export function isUniDef<T extends DefType, V extends string, A extends DefAccess>(
+export function isMixedDef<T extends DefType, V extends string, A extends DefAccess>(
   obj: any,
   type?: T,
   variety?: V,
   access?: A
-): obj is UniDef<T, V, A, any> {
+): obj is MixedDef<T, V, A, any> {
   if (!isDef(obj, type, access)) {
     return false;
   }

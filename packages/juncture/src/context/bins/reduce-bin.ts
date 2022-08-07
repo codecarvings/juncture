@@ -6,26 +6,26 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
 import {
-  isMixReducerDef, isReducerDef, notAUniReducerDef, UniReducerDef
-} from '../../definition/reducer';
-import { UniDef } from '../../definition/uni-def';
+  ActivatorDef, isReducerDef, isTriggerDef, notAnActivatorDef
+} from '../../definition/activator';
+import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
+import { MixedDef } from '../../definition/mixed-def';
 import { Juncture, ValueOf } from '../../juncture';
 import { jSymbols } from '../../symbols';
 import { defineLazyProperty } from '../../util/object';
 import { OverloadParameters } from '../../util/overloaed-function-types';
 import { Ctx } from '../ctx';
-import { MixReducerFrameHost } from '../frames/mix-reducer-frame';
 import { ReducerFrameHost } from '../frames/reducer-frame';
+import { TriggerFrameHost } from '../frames/trigger-frame';
 
 // #region Common
 type ReduceBinItem<D, V> =
-  D extends UniReducerDef<any, any, infer B> ? (...args : OverloadParameters<B>) => V : typeof notAUniReducerDef;
+  D extends ActivatorDef<any, any, infer B> ? (...args : OverloadParameters<B>) => V : typeof notAnActivatorDef;
 
 function createReduceBinBase<J extends Juncture>(
   ctx: Ctx,
-  reducerFrameHost: ReducerFrameHost<J> & MixReducerFrameHost<J>,
+  reducerFrameHost: ReducerFrameHost<J> & TriggerFrameHost<J>,
   internalUse: boolean
 ) {
   const { juncture } = ctx;
@@ -39,20 +39,20 @@ function createReduceBinBase<J extends Juncture>(
         key,
         () => (...args: any) => ctx.getHarmonizedValue(def[jSymbols.defPayload](reducerFrameHost.reducer)(...args))
       );
-    } else if (isMixReducerDef(def)) {
+    } else if (isTriggerDef(def)) {
       defineLazyProperty(
         bin,
         key,
         () => (...args: any) => {
           // TODO
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const actions = def[jSymbols.defPayload](reducerFrameHost.mixReducer)(...args);
+          const actions = def[jSymbols.defPayload](reducerFrameHost.trigger)(...args);
           return ctx.value;
         }
       );
     } else {
       // eslint-disable-next-line max-len
-      throw Error(`Unable to create ReducerBin: Unknwon Reducer variety: "${(def as UniDef<any, any, any, any>).variety}"`);
+      throw Error(`Unable to create ReducerBin: Unknwon variety: "${(def as MixedDef<any, any, any, any>).variety}"`);
     }
   });
   return bin;
@@ -62,14 +62,14 @@ function createReduceBinBase<J extends Juncture>(
 // #region ReduceBin
 type GenericReduceBin<J, V> = {
   readonly [K in keyof J as
-  J[K] extends UniReducerDef<any, DefAccess.public, any> ? K : never
+  J[K] extends ActivatorDef<any, DefAccess.public, any> ? K : never
   ]: ReduceBinItem<J[K], V>;
 };
 export type ReduceBin<J extends Juncture> = GenericReduceBin<J, ValueOf<J>>;
 
 export function createReduceBin<J extends Juncture>(
   ctx: Ctx,
-  reducerFrameHost: ReducerFrameHost<J> & MixReducerFrameHost<J>
+  reducerFrameHost: ReducerFrameHost<J> & TriggerFrameHost<J>
 ): ReduceBin<J> {
   return createReduceBinBase(ctx, reducerFrameHost, false);
 }
@@ -89,7 +89,7 @@ export interface InternalReduceBinHost<J extends Juncture> {
 
 export function createInternalReduceBin<J extends Juncture>(
   ctx: Ctx,
-  reducerFrameHost: ReducerFrameHost<J> & MixReducerFrameHost<J>
+  reducerFrameHost: ReducerFrameHost<J> & TriggerFrameHost<J>
 ): InternalReduceBin<J> {
   return createReduceBinBase(ctx, reducerFrameHost, true);
 }

@@ -13,17 +13,17 @@ import { Cursor, InternalCursorHost, JunctureOfCursor } from '../cursor';
 import { InternalAccessorKit } from '../kits/accessor-kit';
 import { createInternalFrame, InternalFrame } from './internal-frame';
 
-export interface MixReducerFrame<J extends Juncture> extends InternalFrame<J> {
+export interface TriggerFrame<J extends Juncture> extends InternalFrame<J> {
   prepare(): InternalPrepareBin<J>;
   prepare(_: this['_']): InternalPrepareBin<J>;
   prepare<C extends Cursor>(_: C): PrepareBin<JunctureOfCursor<C>>;
 }
 
-export interface MixReducerFrameHost<J extends Juncture> {
-  readonly mixReducer: MixReducerFrame<J>;
+export interface TriggerFrameHost<J extends Juncture> {
+  readonly trigger: TriggerFrame<J>;
 }
 
-export function createMixReducerFrame<J extends Juncture>(
+export function createTriggerFrame<J extends Juncture>(
   internalCursorProviuder: InternalCursorHost<J>,
   accessors: InternalAccessorKit<J>
 ): InternalFrame<J> {
@@ -32,6 +32,6 @@ export function createMixReducerFrame<J extends Juncture>(
   return frame;
 }
 
-export interface OverrideMixReducerFrame<J extends Juncture, S> extends MixReducerFrame<J> {
+export interface OverrideTriggerFrame<J extends Juncture, S> extends TriggerFrame<J> {
   readonly parent: S;
 }
