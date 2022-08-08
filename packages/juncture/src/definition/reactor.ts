@@ -8,22 +8,18 @@
 
 import { InternalFrameConsumer } from '../context/frames/internal-frame';
 import {
-  createDef, Def, DefAccess, DefType, isDef
+  createDef, Def, DefAccess, DefType
 } from './def';
 
 export type ReactorDef<B extends (() => void) | void = (() => void) | void>
-  = Def<DefType.reactor, DefAccess.private, InternalFrameConsumer<B>>;
+  = Def<DefType.reactor, InternalFrameConsumer<B>, DefAccess.public>;
 
 export type SafeReactorDef = ReactorDef<void>;
 export type DisposableReactorDef = ReactorDef<() => void>;
 
 export function createReactorDef<B extends (() => void) | void>(
   reactorFn: InternalFrameConsumer<B>): B extends void ? SafeReactorDef : DisposableReactorDef {
-  return createDef(DefType.reactor, DefAccess.private, reactorFn) as any;
-}
-
-export function isReactorDef(obj: any): obj is ReactorDef {
-  return isDef(obj, DefType.reactor, DefAccess.private);
+  return createDef(DefType.reactor, reactorFn, DefAccess.public) as any;
 }
 
 // ---  Derivations

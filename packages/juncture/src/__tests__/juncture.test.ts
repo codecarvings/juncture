@@ -9,8 +9,8 @@
 
 import { Ctx, CtxLayout, CtxMediator } from '../context/ctx';
 import { isCtxHost } from '../context/ctx-host';
-import { createSchemaDef, isSchemaDef, Schema } from '../definition/schema';
-import { isSelectorDef } from '../definition/selector';
+import { DefAccess, DefType, isDef } from '../definition/def';
+import { createSchemaDef, Schema } from '../definition/schema';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
@@ -155,23 +155,33 @@ describe('Juncture', () => {
     });
 
     test('should contain the "schema" SchemaDef', () => {
-      expect(isSchemaDef(juncture.schema)).toBe(true);
+      expect(isDef(juncture.schema)).toBe(true);
+      expect(juncture.schema.type).toBe(DefType.schema);
+      expect(juncture.schema.access).toBe(DefAccess.public);
     });
 
-    test('should contain a "defaultValue" SelectorDef', () => {
-      expect(isSelectorDef(juncture.defaultValue)).toBe(true);
+    test('should contain a "defaultValue" PubSelectorDef', () => {
+      expect(isDef(juncture.defaultValue)).toBe(true);
+      expect(juncture.defaultValue.type).toBe(DefType.selector);
+      expect(juncture.defaultValue.access).toBe(DefAccess.public);
     });
 
-    test('should contain a "path" SelectorDef ', () => {
-      expect(isSelectorDef(juncture.path)).toBe(true);
+    test('should contain a "path" PubSelectorDef ', () => {
+      expect(isDef(juncture.path)).toBe(true);
+      expect(juncture.path.type).toBe(DefType.selector);
+      expect(juncture.path.access).toBe(DefAccess.public);
     });
 
     test('should contain a "isMounted" SelectorDef', () => {
-      expect(isSelectorDef(juncture.isMounted)).toBe(true);
+      expect(isDef(juncture.isMounted)).toBe(true);
+      expect(juncture.isMounted.type).toBe(DefType.selector);
+      expect(juncture.isMounted.access).toBe(DefAccess.public);
     });
 
     test('should contain a "value" SelectorDef', () => {
-      expect(isSelectorDef(juncture.value)).toBe(true);
+      expect(isDef(juncture.value)).toBe(true);
+      expect(juncture.value.type).toBe(DefType.selector);
+      expect(juncture.value.access).toBe(DefAccess.public);
     });
   });
 

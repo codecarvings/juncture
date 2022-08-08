@@ -7,10 +7,10 @@
  */
 
 import {
-  ActivatorDef, isReducerDef, isTriggerDef, notAnActivatorDef
-} from '../../definition/activator';
-import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
-import { MixedDef } from '../../definition/mixed-def';
+  Def, DefAccess, DefType, getFilteredDefKeys, NotSuitableDefType
+} from '../../definition/def';
+import { ReducerDef } from '../../definition/reducer';
+import { TriggerDef } from '../../definition/trigger';
 import { Juncture, ValueOf } from '../../juncture';
 import { jSymbols } from '../../symbols';
 import { defineLazyProperty } from '../../util/object';
@@ -21,25 +21,28 @@ import { TriggerFrameHost } from '../frames/trigger-frame';
 
 // #region Common
 type ReduceBinItem<D, V> =
-  D extends ActivatorDef<any, any, infer B> ? (...args : OverloadParameters<B>) => V : typeof notAnActivatorDef;
+  D extends ReducerDef<infer B, any> ? (...args : OverloadParameters<B>) => V
+    :D extends TriggerDef<infer B, any> ? (...args : OverloadParameters<B>) => V
+      : NotSuitableDefType;
 
+const binTypes = [DefType.reducer, DefType.trigger];
 function createReduceBinBase<J extends Juncture>(
   ctx: Ctx,
   reducerFrameHost: ReducerFrameHost<J> & TriggerFrameHost<J>,
   internalUse: boolean
 ) {
   const { juncture } = ctx;
-  const keys = getFilteredDefKeys(juncture, DefType.reducer, internalUse);
+  const keys = getFilteredDefKeys(juncture, binTypes, internalUse);
   const bin: any = {};
   keys.forEach(key => {
-    const def = (juncture as any)[key];
-    if (isReducerDef(def)) {
+    const def: Def<any, any, any> = (juncture as any)[key];
+    if (def.type === DefType.reducer) {
       defineLazyProperty(
         bin,
         key,
         () => (...args: any) => ctx.getHarmonizedValue(def[jSymbols.defPayload](reducerFrameHost.reducer)(...args))
       );
-    } else if (isTriggerDef(def)) {
+    } else {
       defineLazyProperty(
         bin,
         key,
@@ -50,9 +53,6 @@ function createReduceBinBase<J extends Juncture>(
           return ctx.value;
         }
       );
-    } else {
-      // eslint-disable-next-line max-len
-      throw Error(`Unable to create ReducerBin: Unknwon variety: "${(def as MixedDef<any, any, any, any>).variety}"`);
     }
   });
   return bin;
@@ -62,7 +62,9 @@ function createReduceBinBase<J extends Juncture>(
 // #region ReduceBin
 type GenericReduceBin<J, V> = {
   readonly [K in keyof J as
-  J[K] extends ActivatorDef<any, DefAccess.public, any> ? K : never
+  J[K] extends ReducerDef<any, DefAccess.public> ? K
+    : J[K] extends TriggerDef<any, DefAccess.public> ? K
+      : never
   ]: ReduceBinItem<J[K], V>;
 };
 export type ReduceBin<J extends Juncture> = GenericReduceBin<J, ValueOf<J>>;

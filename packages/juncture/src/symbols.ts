@@ -8,7 +8,7 @@
 
 const defPayload = Symbol('defPayload');
 const createPropertyAssembler = Symbol('createPropertyAssembler');
-const createComposer = Symbol('createComposer');
+const createForger = Symbol('createForger');
 const init = Symbol('init');
 const createCtx = Symbol('createCtx');
 const createCursor = Symbol('createCursor');
@@ -20,7 +20,7 @@ const bitDefault = Symbol('bitDefault');
 export interface JSymbols {
   readonly defPayload: typeof defPayload;
   readonly createPropertyAssembler: typeof createPropertyAssembler;
-  readonly createComposer: typeof createComposer;
+  readonly createForger: typeof createForger;
   readonly init: typeof init;
   readonly createCtx: typeof createCtx;
   readonly createCursor: typeof createCursor;
@@ -33,7 +33,7 @@ export interface JSymbols {
 export const jSymbols: JSymbols = {
   defPayload,
   createPropertyAssembler,
-  createComposer,
+  createForger,
   init,
   createCtx,
   createCursor,

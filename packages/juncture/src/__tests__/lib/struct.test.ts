@@ -12,7 +12,7 @@ import { Schema } from '../../definition/schema';
 import { JunctureTypeMap } from '../../juncture';
 import { jBit } from '../../lib/bit';
 import {
-  jStruct, PartialStructValue, StructCtx, StructSchema
+    jStruct, PartialStructValue, StructCtx, StructSchema
 } from '../../lib/struct';
 import { Root } from '../../root';
 
@@ -103,7 +103,7 @@ xtest('temp test', () => {
     father: Person,
     mother: Person
   }) {
-    totAge = this.DEF.selector(({ value, _ }) => value(_.father.age) + value(_.mother.age));
+    totAge = this.FORGE.selector(({ value, _ }) => value(_.father.age) + value(_.mother.age));
   }
 
   const root = new Root(Parents);

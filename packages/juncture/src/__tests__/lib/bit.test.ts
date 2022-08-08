@@ -9,16 +9,16 @@
 /* eslint-disable no-multi-assign */
 /* eslint-disable max-len */
 
-import { ComposableJuncture } from '../../composable-juncture';
-import { DefAccess } from '../../definition/def';
+import { DefType, isDef } from '../../definition/def';
 import {
-  createSchemaDef, isSchemaDef, Schema, SchemaDef
+  createSchemaDef, Schema, SchemaDef
 } from '../../definition/schema';
 import { createSelectorDef } from '../../definition/selector';
 import { PropertyAssembler } from '../../fabric/property-assembler';
+import { ForgeableJuncture } from '../../forgeable-juncture';
 import { Juncture } from '../../juncture';
 import {
-  BitComposer, BitJuncture, BitSchema, jBit, SettableBitJuncture,
+  BitForger, BitJuncture, BitSchema, jBit, SettableBitJuncture,
   SettableBooleanBitJuncture, SettableNumberBitJuncture, SettableStringBitJuncture, SettableSymbolBitJuncture
 } from '../../lib/bit';
 import { jSymbols } from '../../symbols';
@@ -46,7 +46,7 @@ describe('BitSchema', () => {
   });
 });
 
-describe('BitComposer', () => {
+describe('BitForger', () => {
   class MyBit extends BitJuncture {
     schema = createSchemaDef(() => new Schema({
       firstName: ''
@@ -56,11 +56,11 @@ describe('BitComposer', () => {
   describe('instance', () => {
     let container: any;
     let assembler: PropertyAssembler;
-    let composer: BitComposer<MyBit>;
+    let forger: BitForger<MyBit>;
     beforeEach(() => {
       container = { };
       assembler = new PropertyAssembler(container);
-      composer = new BitComposer<MyBit>(assembler);
+      forger = new BitForger<MyBit>(assembler);
     });
 
     describe('override', () => {
@@ -78,12 +78,12 @@ describe('BitComposer', () => {
 
         describe('a "setDefaultValue" property that', () => {
           test('should be a method', () => {
-            const proxy = composer.override(myOriginalSchema);
+            const proxy = forger.override(myOriginalSchema);
             expect(typeof proxy.setDefaultValue).toBe('function');
           });
 
           test('should create, after property wiring, a new SchemaDef of BitSchema assignable to the parent, by passing a schema factory', () => {
-            const proxy = composer.override(myOriginalSchema);
+            const proxy = forger.override(myOriginalSchema);
             let myNewSchema: SchemaDef<BitSchema<{
               firstName: string
             }>> = container.mySchema = proxy.setDefaultValue(() => ({
@@ -91,12 +91,13 @@ describe('BitComposer', () => {
             }));
             assembler.wire();
             myNewSchema = container.mySchema;
-            expect(isSchemaDef(myNewSchema)).toBe(true);
+            expect(isDef(myNewSchema)).toBe(true);
+            expect(myNewSchema.type).toBe(DefType.schema);
             expect(myNewSchema).not.toBe(myOriginalSchema);
           });
 
           test('should not change the type of the schema value', () => {
-            const proxy = composer.override(myOriginalSchema);
+            const proxy = forger.override(myOriginalSchema);
             let myNewSchema = proxy.setDefaultValue(() => ({
               firstName: 'Fuffo',
               lastName: 'Fufazzi'
@@ -107,7 +108,7 @@ describe('BitComposer', () => {
           });
 
           test('should provide access to the parent schema', () => {
-            const proxy = composer.override(myOriginalSchema);
+            const proxy = forger.override(myOriginalSchema);
             container.mySchema = proxy.setDefaultValue(({ parent }) => ({
               firstName: `${parent.defaultValue.firstName}2`
             }));
@@ -119,8 +120,8 @@ describe('BitComposer', () => {
           });
 
           test('should throw error during wire if the parent is not a SchemaDef', () => {
-            container.mySchema = assembler.registerStaticProperty(createSelectorDef(DefAccess.public, () => undefined));
-            const proxy = composer.override(myOriginalSchema);
+            container.mySchema = assembler.registerStaticProperty(createSelectorDef(() => undefined));
+            const proxy = forger.override(myOriginalSchema);
             container.mySchema = proxy.setDefaultValue(() => ({
               firstName: 'test'
             }));
@@ -135,8 +136,8 @@ describe('BitComposer', () => {
 });
 
 describe('Bit', () => {
-  test('should be a subclass of ComposableJuncture', () => {
-    expect(BitJuncture.prototype).toBeInstanceOf(ComposableJuncture);
+  test('should be a subclass of ForgeableJuncture', () => {
+    expect(BitJuncture.prototype).toBeInstanceOf(ForgeableJuncture);
   });
 
   test('should be a class instantiable without arguments', () => {
@@ -147,12 +148,12 @@ describe('Bit', () => {
     expect(juncture).toBeInstanceOf(Juncture);
   });
 
-  test('should have BitComposer as composer', () => {
+  test('should have BitForger as forger', () => {
     class MyBit extends BitJuncture {
       schema = createSchemaDef(() => new TestBitSchema(undefined));
     }
     const juncture = Juncture.getInstance(MyBit);
-    expect((juncture as any).DEF).toBeInstanceOf(BitComposer);
+    expect((juncture as any).FORGE).toBeInstanceOf(BitForger);
   });
 });
 

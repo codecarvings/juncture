@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createDef, DefAccess, DefType } from '../../definition/def';
-import { createSchemaDef, isSchemaDef, Schema } from '../../definition/schema';
+import { DefAccess, DefType, isDef } from '../../definition/def';
+import { createSchemaDef, Schema } from '../../definition/schema';
 import { jSymbols } from '../../symbols';
 
 describe('Schema', () => {
@@ -26,26 +26,13 @@ describe('Schema', () => {
 });
 
 describe('createSchemaDef', () => {
-  test('should create a SchemaDef by passing a schema factory with access always public', () => {
+  test('should create a SchemaDef by passing a schema factory with access public', () => {
     const schemaFactory = () => new Schema('str');
 
     const def = createSchemaDef(schemaFactory);
+    expect(isDef(def)).toBe(true);
     expect(def.type).toBe(DefType.schema);
     expect(def.access).toBe(DefAccess.public);
     expect(def[jSymbols.defPayload]).toBe(schemaFactory);
-  });
-});
-
-describe('isSchemaDef', () => {
-  test('should return true if an object is a SchemaDef', () => {
-    const def = createSchemaDef(() => new Schema(''));
-    expect(isSchemaDef(def)).toBe(true);
-  });
-
-  test('should return false if an object is not a SchemaDef', () => {
-    expect(isSchemaDef(createDef(DefType.selector, DefAccess.public, undefined))).toBe(false);
-    expect(isSchemaDef(null)).toBe(false);
-    expect(isSchemaDef(undefined)).toBe(false);
-    expect(isSchemaDef('dummy')).toBe(false);
   });
 });

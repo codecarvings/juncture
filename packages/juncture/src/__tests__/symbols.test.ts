@@ -21,8 +21,8 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createPropertyAssembler).toBe('symbol');
   });
 
-  test('should contain the createComposer symbol', () => {
-    expect(typeof jSymbols.createComposer).toBe('symbol');
+  test('should contain the createForger symbol', () => {
+    expect(typeof jSymbols.createForger).toBe('symbol');
   });
 
   test('should contain the createCtx symbol', () => {

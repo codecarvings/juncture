@@ -10,66 +10,66 @@ import { jSymbols } from '../symbols';
 import { isObject } from '../util/object';
 
 export enum DefType {
-  schema = 'schema',
-  selector = 'selector',
-  reducer = 'reducer',
-  reactor = 'reactor'
+  schema = 'scm',
+  selector = 'sel',
+  paramSelector = 'psl',
+  reducer = 'red',
+  trigger = 'trg',
+  reactor = 'rea'
 }
 
 export enum DefAccess {
-  public = 'public',
-  protected = 'protected',
-  private = 'private'
+  public = 'pub',
+  protected = 'prt',
+  private = 'prv'
 }
 
+export type NotSuitableDefType = '\u26A0 ERROR: NOT SUITABLE TYPE';
+
 // Not a class because of AccessModifier implementation (and because so can be easily expanded...)
-export interface Def<T extends DefType, A extends DefAccess, P> {
+export interface Def<T extends DefType, P, A extends DefAccess> {
   readonly type: T;
-  readonly access: A;
   readonly [jSymbols.defPayload]: P;
+  readonly access: A;
 }
 
 // eslint-disable-next-line max-len
-export function createDef<T extends DefType, A extends DefAccess, P>(type: T, access: A, payload: P): Def<T, A, P> {
-  const result: Def<T, A, P> = {
+export function createDef<T extends DefType, P, A extends DefAccess>(type: T, payload: P, access: A): Def<T, P, A> {
+  const result: Def<T, P, A> = {
     type,
-    access,
-    [jSymbols.defPayload]: payload
+    [jSymbols.defPayload]: payload,
+    access
   };
 
   return result;
 }
 
-export function isDef<T extends DefType, A extends DefAccess>(obj: any, type?: T, access?: A): obj is Def<T, A, any> {
+export function isDef(obj: any): obj is Def<any, any, any> {
   if (!isObject(obj)) {
     return false;
   }
 
-  if (type !== undefined) {
-    if (obj.type !== type) {
-      return false;
-    }
-  } else if (typeof obj.type !== 'string') {
+  if (typeof obj.type !== 'string') {
     return false;
   }
 
-  if (access !== undefined) {
-    if (obj.access !== access) {
-      return false;
-    }
-  } else if (typeof obj.access !== 'string') {
+  if (typeof obj.access !== 'string') {
     return false;
   }
 
   return true;
 }
 
-export function getFilteredDefKeys(obj: object, type: DefType, internalUse: boolean): string[] {
+export function getFilteredDefKeys(obj: object, types: DefType[], internalUse: boolean): string[] {
   return Object.keys(obj).filter(key => {
     const prop = (obj as any)[key];
-    if (!isDef(prop, type)) {
+    if (!isDef(prop)) {
       return false;
     }
+    if (types.indexOf(prop.type) === -1) {
+      return false;
+    }
+
     if (!internalUse && prop.access !== DefAccess.public) {
       return false;
     }

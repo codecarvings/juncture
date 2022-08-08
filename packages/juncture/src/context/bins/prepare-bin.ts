@@ -6,8 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ActivatorDef, notAnActivatorDef } from '../../definition/activator';
-import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
+import {
+  DefAccess, DefType, getFilteredDefKeys, NotSuitableDefType
+} from '../../definition/def';
+import { ReducerDef } from '../../definition/reducer';
+import { TriggerDef } from '../../definition/trigger';
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
 import { OverloadParameters } from '../../util/overloaed-function-types';
@@ -16,15 +19,17 @@ import { Ctx } from '../ctx';
 
 // #region Common
 type PrepareBinItem<D> =
-D extends ActivatorDef<any, any, infer B>
-  ? (...args : OverloadParameters<B>) => Action : typeof notAnActivatorDef;
+  D extends ReducerDef<infer B, any> ? (...args : OverloadParameters<B>) => Action
+    : D extends TriggerDef<infer B, any> ? (...args : OverloadParameters<B>) => Action
+      : NotSuitableDefType;
 
+const binTypes = [DefType.reducer, DefType.trigger];
 function createPrepareBinBase(
   ctx: Ctx,
   internalUse: boolean
 ) {
   const { juncture } = ctx;
-  const keys = getFilteredDefKeys(juncture, DefType.reducer, internalUse);
+  const keys = getFilteredDefKeys(juncture, binTypes, internalUse);
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(
@@ -40,7 +45,9 @@ function createPrepareBinBase(
 // #region PrepareBin
 export type PrepareBin<J> = {
   readonly [K in keyof J as
-  J[K] extends ActivatorDef<any, DefAccess.public, any> ? K : never
+  J[K] extends ReducerDef<any, DefAccess.public> ? K
+    : J[K] extends TriggerDef<any, DefAccess.public> ? K
+      : never
   ]: PrepareBinItem<J[K]>;
 };
 

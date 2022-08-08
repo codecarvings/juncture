@@ -6,15 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Composer } from './composer';
+import { Forger } from './forger';
 import { Juncture } from './juncture';
 import { jSymbols } from './symbols';
 
 // Important: Required to prevent circular references (eg with ValueOf<this>)
-export abstract class ComposableJuncture extends Juncture {
-  protected [jSymbols.createComposer](): Composer<this> {
-    return new Composer<this>(Juncture.getPropertyAssembler(this));
+export abstract class ForgeableJuncture extends Juncture {
+  protected [jSymbols.createForger](): Forger<this> {
+    return new Forger<this>(Juncture.getPropertyAssembler(this));
   }
 
-  protected readonly DEF: Composer<this> = this[jSymbols.createComposer]();
+  protected readonly FORGE: Forger<this> = this[jSymbols.createForger]();
 }

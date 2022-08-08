@@ -20,6 +20,9 @@ import {
 import {
   createInternalSelectAccessor, createSelectAccessor, InternalSelectAccessor, SelectAccessor
 } from '../accessors/select-accessor';
+import {
+  createInternalSourceAccessor, createSourceAccessor, InternalSourceAccessor, SourceAccessor
+} from '../accessors/source-accessor';
 import { createValueAccessor, ValueAccessor } from '../accessors/value-accessor';
 import { Ctx } from '../ctx';
 import { InternalBinKit } from './bin-kit';
@@ -31,6 +34,7 @@ export interface AccessorKit<J extends Juncture = Juncture> {
   readonly reduce: ReduceAccessor<J>;
   readonly prepare: PrepareAccessor<J>;
   readonly dispatch: DispatchAccessor<J>;
+  readonly source: SourceAccessor<J>;
 }
 
 export function equipAccessorKit(accessors: any, ctx: Ctx) {
@@ -39,6 +43,7 @@ export function equipAccessorKit(accessors: any, ctx: Ctx) {
   defineLazyProperty(accessors, 'reduce', () => createReduceAccessor(ctx));
   defineLazyProperty(accessors, 'prepare', () => createPrepareAccessor(ctx));
   defineLazyProperty(accessors, 'dispatch', () => createDispatchAccessor(ctx));
+  defineLazyProperty(accessors, 'source', () => createSourceAccessor(ctx));
 }
 // #endregion
 
@@ -49,6 +54,7 @@ export interface InternalAccessorKit<J extends Juncture = Juncture> {
   readonly reduce: InternalReduceAccessor<J>;
   readonly prepare: InternalPrepareAccessor<J>;
   readonly dispatch: InternalDispatchAccessor<J>;
+  readonly source: InternalSourceAccessor<J>;
 }
 
 export function equipInternalAccessorKit(accessors: any, ctx: Ctx, internalBins: InternalBinKit) {
@@ -57,5 +63,6 @@ export function equipInternalAccessorKit(accessors: any, ctx: Ctx, internalBins:
   defineLazyProperty(accessors, 'reduce', () => createInternalReduceAccessor(ctx, internalBins));
   defineLazyProperty(accessors, 'prepare', () => createInternalPrepareAccessor(ctx, internalBins));
   defineLazyProperty(accessors, 'dispatch', () => createInternalDispatchAccessor(ctx, internalBins));
+  defineLazyProperty(accessors, 'source', () => createInternalSourceAccessor(ctx));
 }
 // #endregion

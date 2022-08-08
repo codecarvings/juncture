@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DefAccess, DefType, getFilteredDefKeys } from '../../definition/def';
-import { MixedDef } from '../../definition/mixed-def';
 import {
-  isParamSelectorDef, isSelectorDef, notAUniSelectorDef, UniSelectorDef
-} from '../../definition/selector';
+  Def, DefAccess, DefType, getFilteredDefKeys, NotSuitableDefType
+} from '../../definition/def';
+import { ParamSelectorDef } from '../../definition/param-selector';
+import { SelectorDef } from '../../definition/selector';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
 import { defineLazyProperty } from '../../util/object';
@@ -18,31 +18,32 @@ import { Ctx } from '../ctx';
 import { SelectorFrameHost } from '../frames/selector-frame';
 
 // #region Common
-type SelectBinItem<D> = D extends UniSelectorDef<any, any, infer B> ? B : typeof notAUniSelectorDef;
+type SelectBinItem<D> =
+  D extends SelectorDef<infer B, any> ? B
+    : D extends ParamSelectorDef<infer B, any> ? B
+      : NotSuitableDefType;
 
+const binTypes = [DefType.selector, DefType.paramSelector];
 function createSelectBinBase<J extends Juncture>(
   ctx: Ctx,
   selectorFrameHost: SelectorFrameHost<J>,
   internalUse: boolean
 ) {
   const { juncture } = ctx;
-  const keys = getFilteredDefKeys(juncture, DefType.selector, internalUse);
+  const keys = getFilteredDefKeys(juncture, binTypes, internalUse);
   const bin: any = {};
   keys.forEach(key => {
-    const def = (juncture as any)[key];
-    if (isSelectorDef(def)) {
+    const def: Def<any, any, any> = (juncture as any)[key];
+    if (def.type === DefType.selector) {
       Object.defineProperty(bin, key, {
         get: () => def[jSymbols.defPayload](selectorFrameHost.selector)
       });
-    } else if (isParamSelectorDef(def)) {
+    } else {
       defineLazyProperty(
         bin,
         key,
         () => (...args: any) => def[jSymbols.defPayload](selectorFrameHost.selector)(...args)
       );
-    } else {
-      // eslint-disable-next-line max-len
-      throw Error(`Unable to create SelectorBin: Unknwon variety: "${(def as MixedDef<any, any, any, any>).variety}"`);
     }
   });
   return bin;
@@ -52,7 +53,9 @@ function createSelectBinBase<J extends Juncture>(
 // #region SelectBin
 export type SelectBin<J> = {
   readonly [K in keyof J as
-  J[K] extends UniSelectorDef<any, DefAccess.public, any> ? K : never
+  J[K] extends SelectorDef<any, DefAccess.public> ? K
+    : J[K] extends ParamSelectorDef<any, DefAccess.public> ? K
+      : never
   ]: SelectBinItem<J[K]>;
 };
 

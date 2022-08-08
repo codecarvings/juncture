@@ -7,25 +7,25 @@
  */
 
 import { DefAccess, DefType, isDef } from '../../definition/def';
-import { createSelectorDef } from '../../definition/selector';
+import { createParamSelectorDef } from '../../definition/param-selector';
 import { jSymbols } from '../../symbols';
 
-describe('createSelectorDef', () => {
-  test('should create a public SelectorDef by passing a selector only', () => {
-    const mySelector = () => undefined;
-    const def = createSelectorDef(mySelector);
+describe('createParamSelectorDef', () => {
+  test('should create a public ParamSelectorDef by passing a selector only', () => {
+    const mySelector = () => () => undefined;
+    const def = createParamSelectorDef(mySelector);
     expect(isDef(def)).toBe(true);
-    expect(def.type).toBe(DefType.selector);
+    expect(def.type).toBe(DefType.paramSelector);
     expect(def[jSymbols.defPayload]).toBe(mySelector);
     expect(def.access).toBe(DefAccess.public);
   });
 
-  test('should create a SelectorDef by passing an access specifier and a selector', () => {
-    const mySelector = () => undefined;
+  test('should create a ParamSelectorDef by passing a selector and an access specifier', () => {
+    const mySelector = () => () => undefined;
     const myAccess = DefAccess.private;
-    const def = createSelectorDef(mySelector, myAccess);
+    const def = createParamSelectorDef(mySelector, myAccess);
     expect(isDef(def)).toBe(true);
-    expect(def.type).toBe(DefType.selector);
+    expect(def.type).toBe(DefType.paramSelector);
     expect(def[jSymbols.defPayload]).toBe(mySelector);
     expect(def.access).toBe(myAccess);
   });

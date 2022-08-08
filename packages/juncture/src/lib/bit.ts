@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ComposableJuncture } from '../composable-juncture';
-import { Composer, CreateDefForOverrideArgs } from '../composer';
 import { OverrideSchemaFrame } from '../context/frames/schema-frame';
+import { DefType } from '../definition/def';
 import {
-  createSchemaDef, isSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
+  createSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
 } from '../definition/schema';
+import { ForgeableJuncture } from '../forgeable-juncture';
+import { CreateDefForOverrideArgs, Forger } from '../forger';
 import { Juncture, JunctureType, ValueOf } from '../juncture';
 import { jSymbols } from '../symbols';
 
@@ -35,10 +36,10 @@ export class BitSchema<V = any> extends Schema<V> {
 }
 // #endregion
 
-// #region Composer
-export class BitComposer<J extends BitJuncture> extends Composer<J> {
+// #region Forger
+export class BitForger<J extends BitJuncture> extends Forger<J> {
   protected createDefForOverride(args: CreateDefForOverrideArgs) {
-    if (isSchemaDef(args.parentDef)) {
+    if (args.parentDef.type === DefType.schema) {
       if (args.fnName === 'setDefaultValue') {
         return createSchemaDef(() => {
           const parent = args.parentDef[jSymbols.defPayload]();
@@ -52,7 +53,7 @@ export class BitComposer<J extends BitJuncture> extends Composer<J> {
     return super.createDefForOverride(args);
   }
 
-  readonly override!: Composer<J>['override'] & {
+  readonly override!: Forger<J>['override'] & {
     <D extends SchemaDef<BitSchema<any>>>(parent: D): {
       setDefaultValue<F extends (frame: OverrideSchemaFrame<SchemaOfSchemaDef<D>>)
       => ValueOfSchema<SchemaOfSchemaDef<D>>>
@@ -63,22 +64,22 @@ export class BitComposer<J extends BitJuncture> extends Composer<J> {
 // #endregion
 
 // #region Juncture
-export abstract class BitJuncture extends ComposableJuncture {
+export abstract class BitJuncture extends ForgeableJuncture {
   abstract readonly schema: SchemaDef<BitSchema>;
 
-  protected [jSymbols.createComposer](): BitComposer<this> {
-    return new BitComposer<this>(Juncture.getPropertyAssembler(this));
+  protected [jSymbols.createForger](): BitForger<this> {
+    return new BitForger<this>(Juncture.getPropertyAssembler(this));
   }
 
-  protected readonly DEF!: BitComposer<this>;
+  protected readonly FORGE!: BitForger<this>;
 }
 // #endregion
 
 // #region Specializations
 export abstract class SettableBitJuncture extends BitJuncture {
-  reset = this.DEF.reducer(({ select }) => () => select().defaultValue);
+  reset = this.FORGE.reducer(({ select }) => () => select().defaultValue);
 
-  set = this.DEF.reducer(() => (value: ValueOf<this>) => value);
+  set = this.FORGE.reducer(() => (value: ValueOf<this>) => value);
 }
 
 export abstract class SettableStringBitJuncture extends SettableBitJuncture {
@@ -88,17 +89,17 @@ export abstract class SettableStringBitJuncture extends SettableBitJuncture {
 export abstract class SettableNumberBitJuncture extends SettableBitJuncture {
   abstract schema: SchemaDef<BitSchema<number>>;
 
-  add = this.DEF.reducer(({ value }) => (num: number) => value() + num);
+  add = this.FORGE.reducer(({ value }) => (num: number) => value() + num);
 
-  inc = this.DEF.reducer(({ value }) => () => value() + 1);
+  inc = this.FORGE.reducer(({ value }) => () => value() + 1);
 
-  dec = this.DEF.reducer(({ value }) => () => value() - 1);
+  dec = this.FORGE.reducer(({ value }) => () => value() - 1);
 }
 
 export abstract class SettableBooleanBitJuncture extends SettableBitJuncture {
   abstract schema: SchemaDef<BitSchema<boolean>>;
 
-  switch = this.DEF.reducer(({ value }) => () => !value());
+  switch = this.FORGE.reducer(({ value }) => () => !value());
 }
 
 export abstract class SettableSymbolBitJuncture extends SettableBitJuncture {

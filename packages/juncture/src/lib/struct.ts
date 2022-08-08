@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ComposableJuncture } from '../composable-juncture';
-import { Composer } from '../composer';
 import {
   Ctx, CtxLayout, CtxMediator, ManagedCtxMap
 } from '../context/ctx';
 import { createCursor, Cursor } from '../context/cursor';
 import { PathFragment } from '../context/path';
 import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
+import { ForgeableJuncture } from '../forgeable-juncture';
+import { Forger } from '../forger';
 import {
   CursorMapOfJunctureTypeMap, Juncture, JunctureType,
   JunctureTypeMap,
@@ -60,8 +60,8 @@ export class StructSchema<JTM extends JunctureTypeMap = any> extends Schema<Stru
 }
 // #endregion
 
-// #region Composer
-export class StructComposer<J extends StructJuncture> extends Composer<J> {
+// #region Forger
+export class StructForger<J extends StructJuncture> extends Forger<J> {
 }
 // #endregion
 
@@ -142,9 +142,9 @@ export type StructCursor<J extends StructJuncture> = Cursor<J> & CursorMapOfJunc
 // #endregion
 
 // #region Juncture
-export abstract class StructJuncture extends ComposableJuncture {
-  protected [jSymbols.createComposer](): StructComposer<this> {
-    return new StructComposer<this>(Juncture.getPropertyAssembler(this));
+export abstract class StructJuncture extends ForgeableJuncture {
+  protected [jSymbols.createForger](): StructForger<this> {
+    return new StructForger<this>(Juncture.getPropertyAssembler(this));
   }
 
   [jSymbols.createCtx](layout: CtxLayout, mediator: CtxMediator): StructCtx {
@@ -165,7 +165,7 @@ export abstract class StructJuncture extends ComposableJuncture {
     return ctx.cursor as StructCursor<this>;
   }
 
-  protected readonly DEF!: StructComposer<this>;
+  protected readonly FORGE!: StructForger<this>;
 
   abstract readonly schema: SchemaDef<StructSchema>;
 }

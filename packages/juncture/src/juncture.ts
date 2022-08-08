@@ -10,9 +10,8 @@ import { Ctx, CtxLayout, CtxMediator } from './context/ctx';
 import { getCtx } from './context/ctx-host';
 import { createCursor, Cursor } from './context/cursor';
 import { Path } from './context/path';
-import { DefAccess } from './definition/def';
 import { Schema, SchemaDef, SchemaOfSchemaDef } from './definition/schema';
-import { createSelectorDef, SelectorDef } from './definition/selector';
+import { createSelectorDef, PubSelectorDef } from './definition/selector';
 import { Initializable } from './fabric/initializable';
 import { PropertyAssembler, PropertyAssemblerHost } from './fabric/property-assembler';
 import { Singleton } from './fabric/singleton';
@@ -57,22 +56,22 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     const assembler = Juncture.getPropertyAssembler(this);
 
     this.defaultValue = assembler
-      .registerStaticProperty(createSelectorDef(DefAccess.public, (
+      .registerStaticProperty(createSelectorDef((
         frame: any
       ) => getCtx(frame._).schema.defaultValue));
 
     this.path = assembler
-      .registerStaticProperty(createSelectorDef(DefAccess.public, (
+      .registerStaticProperty(createSelectorDef((
         frame: any
       ) => getCtx(frame._).layout.path));
 
     this.isMounted = assembler
-      .registerStaticProperty(createSelectorDef(DefAccess.public, (
+      .registerStaticProperty(createSelectorDef((
         frame: any
       ) => getCtx(frame._).isMounted));
 
     this.value = assembler
-      .registerStaticProperty(createSelectorDef(DefAccess.public, (
+      .registerStaticProperty(createSelectorDef((
         frame: any
       ) => getCtx(frame._).value));
   }
@@ -80,13 +79,13 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
   // #region Defs
   abstract readonly schema: SchemaDef<Schema>;
 
-  readonly defaultValue: SelectorDef<ValueOf<this>>;
+  readonly defaultValue: PubSelectorDef<ValueOf<this>>;
 
-  readonly path: SelectorDef<Path>;
+  readonly path: PubSelectorDef<Path>;
 
-  readonly isMounted: SelectorDef<boolean>;
+  readonly isMounted: PubSelectorDef<boolean>;
 
-  readonly value: SelectorDef<ValueOf<this>>;
+  readonly value: PubSelectorDef<ValueOf<this>>;
   // #endregion
 
   // #region Static

@@ -9,6 +9,7 @@
 import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../util/object';
 import { DispatchBin, InternalDispatchBin } from '../bins/dispatch-bin';
+import { InternalSourceBin, SourceBin } from '../bins/source-bin';
 import {
   Cursor, InternalCursorHost, JunctureOfCursor
 } from '../cursor';
@@ -19,6 +20,10 @@ export interface ReactorFrame<J extends Juncture> extends InternalFrame<J> {
   dispatch(): InternalDispatchBin<J>;
   dispatch(_: this['_']): InternalDispatchBin<J>;
   dispatch<C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
+
+  source(): InternalSourceBin<J>;
+  source(_: this['_']): InternalSourceBin<J>;
+  source<C extends Cursor>(_: C): SourceBin<JunctureOfCursor<C>>;
 }
 
 export interface ReactorFrameHost<J extends Juncture> {
@@ -31,6 +36,7 @@ export function createReactorFrame<J extends Juncture>(
 ): ReactorFrame<J> {
   const frame: any = createInternalFrame(internalCursorProviuder, accessors);
   defineLazyProperty(frame, 'dispatch', () => accessors.dispatch);
+  defineLazyProperty(frame, 'source', () => accessors.source);
   return frame;
 }
 

@@ -7,7 +7,7 @@
  */
 
 import {
-  createDef, Def, DefAccess, DefType, isDef
+  createDef, Def, DefAccess, DefType
 } from './def';
 
 // #region Schema
@@ -20,14 +20,10 @@ export type ValueOfSchema<X extends Schema> = X['defaultValue'];
 // #endregion
 
 // #region Def
-export type SchemaDef<B extends Schema> = Def<DefType.schema, DefAccess.public, () => B>;
+export type SchemaDef<B extends Schema> = Def<DefType.schema, () => B, DefAccess.public>;
 
 export function createSchemaDef<B extends Schema>(schemaFactory: () => B): SchemaDef<B> {
-  return createDef(DefType.schema, DefAccess.public, schemaFactory);
-}
-
-export function isSchemaDef(obj: any): obj is SchemaDef<Schema> {
-  return isDef(obj, DefType.schema, DefAccess.public);
+  return createDef(DefType.schema, schemaFactory, DefAccess.public);
 }
 
 // ---  Derivations

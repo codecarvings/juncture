@@ -59,7 +59,7 @@ test('experiment with frames', () => {
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {
-    displayName = this.DEF.selector(({ select, _ }) => {
+    displayName = this.FORGE.selector(({ select, _ }) => {
       const result = `${select(_.name).value} ${select(_.age).value.toString()}`;
       return result;
     });
@@ -80,22 +80,28 @@ test('experiment with frames 2', () => {
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {
-    displayName = this.DEF.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
+    displayName = this.FORGE.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
 
-    set = this.DEF.reducer(() => (value: ValueOf<this>) => value);
+    set = this.FORGE.reducer(() => (value: ValueOf<this>) => value);
 
-    protectedSet = this.DEF.protected.reducer(() => () => undefined!);
+    protectedSet = this.FORGE.protected.reducer(() => () => undefined!);
 
-    privateSet = this.DEF.private.reducer(() => () => undefined!);
+    privateSet = this.FORGE.private.reducer(() => () => undefined!);
 
-    r1 = this.DEF.reactor(({ dispatch, _ }) => {
+    r1 = this.FORGE.reactor(({ dispatch, _ }) => {
       const id = setInterval(() => {
         dispatch(_.age).inc();
       }, 1000);
       return () => clearInterval(id);
     });
 
-    abc = this.DEF.private.selector(() => 21);
+    abc = this.FORGE.private.selector(() => 21);
+  }
+
+  class J2 extends J1 {
+    ff1 = this.FORGE.selector(() => '');
+
+    abc = this.FORGE.override(super.abc).selector(() => 33);
   }
 
   const root = new Root(J1, {
@@ -128,16 +134,16 @@ test('experiment with frames 2', () => {
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {
-    displayName = this.DEF.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
+    displayName = this.FORGE.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
 
-    set = this.DEF.reducer(() => (value: {
+    set = this.FORGE.reducer(() => (value: {
       name: string,
       age: number,
     }) => ({
       name: value.name, age: value.age
     }));
 
-    fullValue = this.DEF.selector(({ value }) => ({
+    fullValue = this.FORGE.selector(({ value }) => ({
       ...value(),
       name: value().name,
       age: value().age
