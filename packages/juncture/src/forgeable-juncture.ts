@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Forger } from './forger';
+import { Forger } from './construction/forger';
 import { Juncture } from './juncture';
 import { jSymbols } from './symbols';
 

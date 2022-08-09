@@ -9,8 +9,8 @@
 import { jSymbols } from '../symbols';
 
 describe('jSymbols', () => {
-  test('should contain the defPayload symbol', () => {
-    expect(typeof jSymbols.defPayload).toBe('symbol');
+  test('should contain the payload symbol', () => {
+    expect(typeof jSymbols.payload).toBe('symbol');
   });
 
   test('should contain the init symbol', () => {
@@ -25,8 +25,8 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createForger).toBe('symbol');
   });
 
-  test('should contain the createCtx symbol', () => {
-    expect(typeof jSymbols.createCtx).toBe('symbol');
+  test('should contain the createGear symbol', () => {
+    expect(typeof jSymbols.createGear).toBe('symbol');
   });
 
   test('should contain the createCursor symbol', () => {
@@ -37,8 +37,8 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createInternalCursor).toBe('symbol');
   });
 
-  test('should contain the ctx symbol', () => {
-    expect(typeof jSymbols.ctx).toBe('symbol');
+  test('should contain the gear symbol', () => {
+    expect(typeof jSymbols.gear).toBe('symbol');
   });
 
   test('should contain the juncture symbol', () => {

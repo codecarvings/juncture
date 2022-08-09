@@ -6,21 +6,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { createSchema, Schema } from '../construction/descriptors/schema';
+import { Forger } from '../construction/forger';
+import { JunctureSchema } from '../construction/schema';
+import { createCursor, Cursor } from '../engine/cursor';
 import {
-  Ctx, CtxLayout, CtxMediator, ManagedCtxMap
-} from '../context/ctx';
-import { createCursor, Cursor } from '../context/cursor';
-import { PathFragment } from '../context/path';
-import { createSchemaDef, Schema, SchemaDef } from '../definition/schema';
+  Gear, GearLayout, GearMediator, ManagedGearMap
+} from '../engine/gear';
+import { PathFragment } from '../engine/path';
 import { ForgeableJuncture } from '../forgeable-juncture';
-import { Forger } from '../forger';
 import {
   CursorMapOfJunctureTypeMap, Juncture, JunctureType,
   JunctureTypeMap,
   SchemaOf, ValueOfType
 } from '../juncture';
+import { defineLazyProperty, mappedAssign } from '../misc/object-helpers';
 import { jSymbols } from '../symbols';
-import { defineLazyProperty, mappedAssign } from '../util/object';
 
 // #region Value & Schema
 export type StructValue<JTM extends JunctureTypeMap> = {
@@ -34,7 +35,7 @@ let createStructSchema: <JTM extends JunctureTypeMap>(
   Children: JTM, defaultValue?: PartialStructValue<JTM>)
 => StructSchema<JTM>;
 
-export class StructSchema<JTM extends JunctureTypeMap = any> extends Schema<StructValue<JTM>> {
+export class StructSchema<JTM extends JunctureTypeMap = any> extends JunctureSchema<StructValue<JTM>> {
   protected constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
     const childKeys = Object.keys(Children);
     const childDefaultValue = mappedAssign(
@@ -65,14 +66,14 @@ export class StructForger<J extends StructJuncture> extends Forger<J> {
 }
 // #endregion
 
-// #region Ctx & Cursors
-export class StructCtx extends Ctx {
+// #region Engine
+export class StructGear extends Gear {
   readonly schema!: StructSchema;
 
   // #region Value stuff
   protected valueDidUpdate(): void {
     this.schema.childKeys.forEach(key => {
-      this.children[key].ctx.detectValueChange();
+      this.children[key].gear.detectValueChange();
     });
   }
 
@@ -88,20 +89,20 @@ export class StructCtx extends Ctx {
   // #endregion
 
   // #region Children stuff
-  protected createChildren(): ManagedCtxMap {
+  protected createChildren(): ManagedGearMap {
     const { setValue } = this.mediator;
     return mappedAssign(
       {},
       this.schema.childKeys,
       key => {
         let unmount: () => void = undefined!;
-        const layout: CtxLayout = {
+        const layout: GearLayout = {
           parent: this,
           path: [...this.layout.path, key],
           isUnivocal: this.layout.isUnivocal,
           isDivergent: false
         };
-        const mediator: CtxMediator = {
+        const mediator: GearMediator = {
           ...this.mediator,
           enroll: um => { unmount = um; },
           getValue: () => this._value[key],
@@ -112,26 +113,26 @@ export class StructCtx extends Ctx {
             });
           }
         };
-        const ctx = Juncture.createCtx(this.schema.Children[key], layout, mediator);
-        return { ctx, unmount };
+        const gear = Juncture.createGear(this.schema.Children[key], layout, mediator);
+        return { gear, unmount };
       }
     );
   }
 
-  protected readonly children: ManagedCtxMap = this.createChildren();
+  protected readonly children: ManagedGearMap = this.createChildren();
 
-  resolveFragment(fragment: PathFragment): Ctx {
+  resolveFragment(fragment: PathFragment): Gear {
     const result = this.children[fragment as any];
     if (result) {
-      return result.ctx;
+      return result.gear;
     }
     return super.resolveFragment(fragment);
   }
   // #endregion
 
   // #region Mount stuff
-  protected ctxWillUnmount(): void {
-    super.ctxWillUnmount();
+  protected gearWillUnmount(): void {
+    super.gearWillUnmount();
     this.schema.childKeys.forEach(key => this.children[key].unmount());
   }
   // #endregion
@@ -147,27 +148,27 @@ export abstract class StructJuncture extends ForgeableJuncture {
     return new StructForger<this>(Juncture.getPropertyAssembler(this));
   }
 
-  [jSymbols.createCtx](layout: CtxLayout, mediator: CtxMediator): StructCtx {
-    return new StructCtx(this, layout, mediator);
+  [jSymbols.createGear](layout: GearLayout, mediator: GearMediator): StructGear {
+    return new StructGear(this, layout, mediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](ctx: StructCtx): StructCursor<this> {
-    const _: any = createCursor(ctx);
-    ctx.schema.childKeys.forEach(key => {
-      defineLazyProperty(_, key, () => ctx.resolveFragment(key).cursor, { enumerable: true });
+  [jSymbols.createCursor](gear: StructGear): StructCursor<this> {
+    const _: any = createCursor(gear);
+    gear.schema.childKeys.forEach(key => {
+      defineLazyProperty(_, key, () => gear.resolveFragment(key).cursor, { enumerable: true });
     });
     return _;
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createInternalCursor](ctx: StructCtx): StructCursor<this> {
-    return ctx.cursor as StructCursor<this>;
+  [jSymbols.createInternalCursor](gear: StructGear): StructCursor<this> {
+    return gear.cursor as StructCursor<this>;
   }
 
   protected readonly FORGE!: StructForger<this>;
 
-  abstract readonly schema: SchemaDef<StructSchema>;
+  abstract readonly schema: Schema<StructSchema>;
 }
 
 // ---  Derivations
@@ -177,7 +178,7 @@ export type ChildrenOf<J extends StructJuncture> = SchemaOf<J>['Children'];
 // #region Builder types
 // --- Inert
 interface Struct<JTM extends JunctureTypeMap> extends StructJuncture {
-  schema: SchemaDef<StructSchema<JTM>>;
+  schema: Schema<StructSchema<JTM>>;
 }
 interface StructType<JTM extends JunctureTypeMap> extends JunctureType<Struct<JTM>> { }
 // #endregion
@@ -186,7 +187,7 @@ interface StructType<JTM extends JunctureTypeMap> extends JunctureType<Struct<JT
 function createStructType<JT extends abstract new(...args: any) => StructJuncture,
   JTM extends JunctureTypeMap>(BaseType: JT, Children: JTM, defaultValue?: PartialStructValue<JTM>) {
   abstract class Struct extends BaseType {
-    schema = createSchemaDef(() => createStructSchema(Children, defaultValue));
+    schema = createSchema(() => createStructSchema(Children, defaultValue));
   }
   return Struct;
 }

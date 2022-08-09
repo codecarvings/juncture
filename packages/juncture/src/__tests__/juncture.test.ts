@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -7,16 +6,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx, CtxLayout, CtxMediator } from '../context/ctx';
-import { isCtxHost } from '../context/ctx-host';
-import { DefAccess, DefType, isDef } from '../definition/def';
-import { createSchemaDef, Schema } from '../definition/schema';
+/* eslint-disable max-len */
+
+import { AccessModifier } from '../construction/access-modifier';
+import { DescriptorType, isDescriptor } from '../construction/descriptor';
+import { createSchema } from '../construction/descriptors/schema';
+import { JunctureSchema } from '../construction/schema';
+import { Gear, GearLayout, GearMediator } from '../engine/gear';
+import { getGear, isGearHost } from '../engine/gear-host';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
 describe('Juncture', () => {
   class MyJuncture extends Juncture {
-    schema = createSchemaDef(() => new Schema('dv'));
+    schema = createSchema(() => new JunctureSchema('dv'));
   }
 
   test('should be a class instantiable without arguments', () => {
@@ -65,14 +68,14 @@ describe('Juncture', () => {
       });
     });
 
-    describe('[jSymbols.createCtx] property', () => {
-      const layout: CtxLayout = {
+    describe('[jSymbols.createGear] property', () => {
+      const layout: GearLayout = {
         parent: null,
         path: [],
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: CtxMediator = {
+      const mediator: GearMediator = {
         enroll: () => { },
         getValue: () => undefined,
         setValue: () => { },
@@ -80,31 +83,31 @@ describe('Juncture', () => {
       };
 
       test('should be a method', () => {
-        expect(typeof juncture[jSymbols.createCtx]).toBe('function');
+        expect(typeof juncture[jSymbols.createGear]).toBe('function');
       });
 
-      test('should create a new Ctx for the provided Juncture instance, layout and mediator', () => {
-        const ctx = juncture[jSymbols.createCtx](layout, mediator);
-        expect(ctx).toBeInstanceOf(Ctx);
-        expect(ctx.juncture).toBe(juncture);
-        expect(ctx.layout).toBe(layout);
+      test('should create a new Gear for the provided Juncture instance, layout and mediator', () => {
+        const gear = juncture[jSymbols.createGear](layout, mediator);
+        expect(gear).toBeInstanceOf(Gear);
+        expect(gear.juncture).toBe(juncture);
+        expect(gear.layout).toBe(layout);
       });
 
-      test('should always return a new Ctx', () => {
-        const ctx1 = juncture[jSymbols.createCtx](layout, mediator);
-        const ctx2 = juncture[jSymbols.createCtx](layout, mediator);
-        expect(ctx2).not.toBe(ctx1);
+      test('should always return a new Gear', () => {
+        const gear1 = juncture[jSymbols.createGear](layout, mediator);
+        const gear2 = juncture[jSymbols.createGear](layout, mediator);
+        expect(gear2).not.toBe(gear1);
       });
     });
 
     describe('[jSymbols.createCursor] property', () => {
-      const layout: CtxLayout = {
+      const layout: GearLayout = {
         parent: null,
         path: [],
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: CtxMediator = {
+      const mediator: GearMediator = {
         enroll: () => { },
         getValue: () => undefined,
         setValue: () => { },
@@ -115,28 +118,29 @@ describe('Juncture', () => {
         expect(typeof juncture[jSymbols.createCursor]).toBe('function');
       });
 
-      test('should create a new Cursor for the provided Ctx', () => {
-        const ctx = juncture[jSymbols.createCtx](layout, mediator);
-        const cursor = juncture[jSymbols.createCursor](ctx);
-        expect(isCtxHost(cursor, ctx)).toBe(true);
+      test('should create a new Cursor for the provided Gear', () => {
+        const gear = juncture[jSymbols.createGear](layout, mediator);
+        const cursor = juncture[jSymbols.createCursor](gear);
+        expect(isGearHost(cursor)).toBe(true);
+        expect(getGear(cursor)).toBe(gear);
       });
 
       test('should always return a new Cursor', () => {
-        const ctx = juncture[jSymbols.createCtx](layout, mediator);
-        const cursor1 = juncture[jSymbols.createCursor](ctx);
-        const cursor2 = juncture[jSymbols.createCursor](ctx);
+        const gear = juncture[jSymbols.createGear](layout, mediator);
+        const cursor1 = juncture[jSymbols.createCursor](gear);
+        const cursor2 = juncture[jSymbols.createCursor](gear);
         expect(cursor2).not.toBe(cursor1);
       });
     });
 
     describe('[jSymbols.createPrivateCursor] property', () => {
-      const layout: CtxLayout = {
+      const layout: GearLayout = {
         parent: null,
         path: [],
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: CtxMediator = {
+      const mediator: GearMediator = {
         enroll: () => { },
         getValue: () => undefined,
         setValue: () => { },
@@ -147,41 +151,41 @@ describe('Juncture', () => {
         expect(typeof juncture[jSymbols.createInternalCursor]).toBe('function');
       });
 
-      test('should return the cursor of the ctx', () => {
-        const ctx = juncture[jSymbols.createCtx](layout, mediator);
-        const cursor = juncture[jSymbols.createInternalCursor](ctx);
-        expect(cursor).toBe(ctx.cursor);
+      test('should return the cursor of the Gear', () => {
+        const gear = juncture[jSymbols.createGear](layout, mediator);
+        const cursor = juncture[jSymbols.createInternalCursor](gear);
+        expect(cursor).toBe(gear.cursor);
       });
     });
 
-    test('should contain the "schema" SchemaDef', () => {
-      expect(isDef(juncture.schema)).toBe(true);
-      expect(juncture.schema.type).toBe(DefType.schema);
-      expect(juncture.schema.access).toBe(DefAccess.public);
+    test('should contain the "schema" Schema', () => {
+      expect(isDescriptor(juncture.schema)).toBe(true);
+      expect(juncture.schema.type).toBe(DescriptorType.schema);
+      expect(juncture.schema.access).toBe(AccessModifier.public);
     });
 
-    test('should contain a "defaultValue" PubSelectorDef', () => {
-      expect(isDef(juncture.defaultValue)).toBe(true);
-      expect(juncture.defaultValue.type).toBe(DefType.selector);
-      expect(juncture.defaultValue.access).toBe(DefAccess.public);
+    test('should contain a "defaultValue" PubSelector', () => {
+      expect(isDescriptor(juncture.defaultValue)).toBe(true);
+      expect(juncture.defaultValue.type).toBe(DescriptorType.selector);
+      expect(juncture.defaultValue.access).toBe(AccessModifier.public);
     });
 
-    test('should contain a "path" PubSelectorDef ', () => {
-      expect(isDef(juncture.path)).toBe(true);
-      expect(juncture.path.type).toBe(DefType.selector);
-      expect(juncture.path.access).toBe(DefAccess.public);
+    test('should contain a "path" PubSelector', () => {
+      expect(isDescriptor(juncture.path)).toBe(true);
+      expect(juncture.path.type).toBe(DescriptorType.selector);
+      expect(juncture.path.access).toBe(AccessModifier.public);
     });
 
-    test('should contain a "isMounted" SelectorDef', () => {
-      expect(isDef(juncture.isMounted)).toBe(true);
-      expect(juncture.isMounted.type).toBe(DefType.selector);
-      expect(juncture.isMounted.access).toBe(DefAccess.public);
+    test('should contain a "isMounted" PubSelector', () => {
+      expect(isDescriptor(juncture.isMounted)).toBe(true);
+      expect(juncture.isMounted.type).toBe(DescriptorType.selector);
+      expect(juncture.isMounted.access).toBe(AccessModifier.public);
     });
 
-    test('should contain a "value" SelectorDef', () => {
-      expect(isDef(juncture.value)).toBe(true);
-      expect(juncture.value.type).toBe(DefType.selector);
-      expect(juncture.value.access).toBe(DefAccess.public);
+    test('should contain a "value" Selector', () => {
+      expect(isDescriptor(juncture.value)).toBe(true);
+      expect(juncture.value.type).toBe(DescriptorType.selector);
+      expect(juncture.value.access).toBe(AccessModifier.public);
     });
   });
 
@@ -278,7 +282,7 @@ describe('Juncture', () => {
       describe('when passing a Juncture Type', () => {
         test('should return the schema for the provided Juncture Type', () => {
           const schema = Juncture.getSchema(MyJuncture);
-          expect(schema).toBeInstanceOf(Schema);
+          expect(schema).toBeInstanceOf(JunctureSchema);
           expect(schema.defaultValue).toBe('dv');
         });
 
@@ -288,12 +292,12 @@ describe('Juncture', () => {
           expect(schema2).toBe(schema1);
         });
 
-        test('should invoke the factory contained in the SchemaDef of the "schema" property', () => {
+        test('should invoke the factory contained in the Schema of the "schema" property', () => {
           class MyJuncture2 extends Juncture {
-            schema = createSchemaDef(jest.fn(() => new Schema('')));
+            schema = createSchema(jest.fn(() => new JunctureSchema('')));
           }
           const instance = Juncture.getInstance(MyJuncture2);
-          const fn = instance.schema[jSymbols.defPayload] as unknown as jest.Mock<Schema<string>, []>;
+          const fn = instance.schema[jSymbols.payload] as unknown as jest.Mock<JunctureSchema<string>, []>;
           expect(fn).toHaveBeenCalledTimes(0);
           Juncture.getSchema(MyJuncture2);
           expect(fn).toHaveBeenCalledTimes(1);
@@ -306,7 +310,7 @@ describe('Juncture', () => {
         test('should return the schema for the provided Juncture instance', () => {
           const juncture = Juncture.getInstance(MyJuncture);
           const schema = Juncture.getSchema(juncture);
-          expect(schema).toBeInstanceOf(Schema);
+          expect(schema).toBeInstanceOf(JunctureSchema);
           expect(schema.defaultValue).toBe('dv');
         });
 
@@ -317,12 +321,12 @@ describe('Juncture', () => {
           expect(schema2).toBe(schema1);
         });
 
-        test('should invoke the factory contained in the SchemaDef of the "schema" property', () => {
+        test('should invoke the factory contained in the Schema of the "schema" property', () => {
           class MyJuncture2 extends Juncture {
-            schema = createSchemaDef(jest.fn(() => new Schema('')));
+            schema = createSchema(jest.fn(() => new JunctureSchema('')));
           }
           const instance = Juncture.getInstance(MyJuncture2);
-          const fn = instance.schema[jSymbols.defPayload] as unknown as jest.Mock<Schema<string>, []>;
+          const fn = instance.schema[jSymbols.payload] as unknown as jest.Mock<JunctureSchema<string>, []>;
           expect(fn).toHaveBeenCalledTimes(0);
           Juncture.getSchema(instance);
           expect(fn).toHaveBeenCalledTimes(1);
@@ -332,14 +336,14 @@ describe('Juncture', () => {
       });
     });
 
-    describe('createCtx', () => {
-      const layout: CtxLayout = {
+    describe('createGear', () => {
+      const layout: GearLayout = {
         parent: null,
         path: [],
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: CtxMediator = {
+      const mediator: GearMediator = {
         enroll: () => { },
         getValue: () => undefined,
         setValue: () => { },
@@ -347,26 +351,26 @@ describe('Juncture', () => {
       };
 
       test('should be a method', () => {
-        expect(typeof Juncture.createCtx).toBe('function');
+        expect(typeof Juncture.createGear).toBe('function');
       });
 
-      test('should create a new Ctx for the provided Juncture type, layout and mediator', () => {
-        const ctx = Juncture.createCtx(MyJuncture, layout, mediator);
-        expect(ctx).toBeInstanceOf(Ctx);
-        expect(ctx.juncture).toBe(Juncture.getInstance(MyJuncture));
-        expect(ctx.layout).toBe(layout);
+      test('should create a new Gear for the provided Juncture type, layout and mediator', () => {
+        const gear = Juncture.createGear(MyJuncture, layout, mediator);
+        expect(gear).toBeInstanceOf(Gear);
+        expect(gear.juncture).toBe(Juncture.getInstance(MyJuncture));
+        expect(gear.layout).toBe(layout);
       });
 
-      test('should invoke the instance method [jSymbols.createCtx]', () => {
+      test('should invoke the instance method [jSymbols.createGear]', () => {
         const juncture = Juncture.getInstance(MyJuncture);
-        const originalFactory = juncture[jSymbols.createCtx].bind(juncture);
+        const originalFactory = juncture[jSymbols.createGear].bind(juncture);
         const factory = jest.fn(originalFactory);
-        (juncture as any)[jSymbols.createCtx] = factory;
+        (juncture as any)[jSymbols.createGear] = factory;
 
         expect(factory).toHaveBeenCalledTimes(0);
-        Juncture.createCtx(MyJuncture, layout, mediator);
+        Juncture.createGear(MyJuncture, layout, mediator);
         expect(factory).toHaveBeenCalledTimes(1);
-        Juncture.createCtx(MyJuncture, layout, mediator);
+        Juncture.createGear(MyJuncture, layout, mediator);
         expect(factory).toHaveBeenCalledTimes(2);
       });
     });

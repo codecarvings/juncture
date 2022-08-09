@@ -6,20 +6,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { OverrideSchemaFrame } from '../context/frames/schema-frame';
-import { DefType } from '../definition/def';
-import {
-  createSchemaDef, Schema, SchemaDef, SchemaOfSchemaDef, ValueOfSchema
-} from '../definition/schema';
+import { DescriptorType } from '../construction/descriptor';
+import { BodyOfSchema, createSchema, Schema } from '../construction/descriptors/schema';
+import { CreateDescriptorForOverrideArgs, Forger } from '../construction/forger';
+import { JunctureSchema, ValueOfSchema } from '../construction/schema';
+import { OverrideSchemaFrame } from '../engine/frames/schema-frame';
 import { ForgeableJuncture } from '../forgeable-juncture';
-import { CreateDefForOverrideArgs, Forger } from '../forger';
 import { Juncture, JunctureType, ValueOf } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
 let createBitSchema: <V>(defaultValue: V) => BitSchema<V>;
 
-export class BitSchema<V = any> extends Schema<V> {
+export class BitSchema<V = any> extends JunctureSchema<V> {
   // Constructor is protected because type of the value cannot be changed in an inherited class
   // to avoid problems with reducers in the super class
   // Example:
@@ -38,11 +37,11 @@ export class BitSchema<V = any> extends Schema<V> {
 
 // #region Forger
 export class BitForger<J extends BitJuncture> extends Forger<J> {
-  protected createDefForOverride(args: CreateDefForOverrideArgs) {
-    if (args.parentDef.type === DefType.schema) {
+  protected createDescriptorForOverride(args: CreateDescriptorForOverrideArgs) {
+    if (args.parent.type === DescriptorType.schema) {
       if (args.fnName === 'setDefaultValue') {
-        return createSchemaDef(() => {
-          const parent = args.parentDef[jSymbols.defPayload]();
+        return createSchema(() => {
+          const parent = args.parent[jSymbols.payload]();
           const frame2 = { parent };
           const defaultValue2 = args.fnArgs[0](frame2);
           return createBitSchema(defaultValue2);
@@ -50,13 +49,13 @@ export class BitForger<J extends BitJuncture> extends Forger<J> {
       }
     }
 
-    return super.createDefForOverride(args);
+    return super.createDescriptorForOverride(args);
   }
 
   readonly override!: Forger<J>['override'] & {
-    <D extends SchemaDef<BitSchema<any>>>(parent: D): {
-      setDefaultValue<F extends (frame: OverrideSchemaFrame<SchemaOfSchemaDef<D>>)
-      => ValueOfSchema<SchemaOfSchemaDef<D>>>
+    <D extends Schema<BitSchema<any>>>(parent: D): {
+      setDefaultValue<F extends (frame: OverrideSchemaFrame<BodyOfSchema<D>>)
+      => ValueOfSchema<BodyOfSchema<D>>>
       (selectorFn: F): D;
     };
   };
@@ -65,7 +64,7 @@ export class BitForger<J extends BitJuncture> extends Forger<J> {
 
 // #region Juncture
 export abstract class BitJuncture extends ForgeableJuncture {
-  abstract readonly schema: SchemaDef<BitSchema>;
+  abstract readonly schema: Schema<BitSchema>;
 
   protected [jSymbols.createForger](): BitForger<this> {
     return new BitForger<this>(Juncture.getPropertyAssembler(this));
@@ -83,11 +82,11 @@ export abstract class SettableBitJuncture extends BitJuncture {
 }
 
 export abstract class SettableStringBitJuncture extends SettableBitJuncture {
-  abstract schema: SchemaDef<BitSchema<string>>;
+  abstract schema: Schema<BitSchema<string>>;
 }
 
 export abstract class SettableNumberBitJuncture extends SettableBitJuncture {
-  abstract schema: SchemaDef<BitSchema<number>>;
+  abstract schema: Schema<BitSchema<number>>;
 
   add = this.FORGE.reducer(({ value }) => (num: number) => value() + num);
 
@@ -97,20 +96,20 @@ export abstract class SettableNumberBitJuncture extends SettableBitJuncture {
 }
 
 export abstract class SettableBooleanBitJuncture extends SettableBitJuncture {
-  abstract schema: SchemaDef<BitSchema<boolean>>;
+  abstract schema: Schema<BitSchema<boolean>>;
 
   switch = this.FORGE.reducer(({ value }) => () => !value());
 }
 
 export abstract class SettableSymbolBitJuncture extends SettableBitJuncture {
-  abstract schema: SchemaDef<BitSchema<symbol>>;
+  abstract schema: Schema<BitSchema<symbol>>;
 }
 // #endregion
 
 // #region Builder types
 // --- Inert
 interface Bit<V> extends BitJuncture {
-  schema: SchemaDef<BitSchema<V>>;
+  schema: Schema<BitSchema<V>>;
 }
 interface BitType<V> extends JunctureType<Bit<V>> { }
 
@@ -128,27 +127,27 @@ interface SymbolBitType extends JunctureType<SymbolBit> { }
 
 // --- Settable
 interface SettableBit<V> extends SettableBitJuncture {
-  schema: SchemaDef<BitSchema<V>>;
+  schema: Schema<BitSchema<V>>;
 }
 interface SettableBitType<V> extends JunctureType<SettableBit<V>> { }
 
 interface SettableStringBit extends SettableStringBitJuncture {
-  schema: SchemaDef<BitSchema<string>>;
+  schema: Schema<BitSchema<string>>;
 }
 interface SettableStringBitType extends JunctureType<SettableStringBit> { }
 
 interface SettableNumberBit extends SettableNumberBitJuncture {
-  schema: SchemaDef<BitSchema<number>>;
+  schema: Schema<BitSchema<number>>;
 }
 interface SettableNumberBitType extends JunctureType<SettableNumberBit> { }
 
 interface SettableBooleanBit extends SettableBooleanBitJuncture {
-  schema: SchemaDef<BitSchema<boolean>>;
+  schema: Schema<BitSchema<boolean>>;
 }
 interface SettableBooleanBitType extends JunctureType<SettableBooleanBit> { }
 
 interface SettableSymbolBit extends SettableSymbolBitJuncture {
-  schema: SchemaDef<BitSchema<symbol>>;
+  schema: Schema<BitSchema<symbol>>;
 }
 interface SettableSymbolBitType extends JunctureType<SettableSymbolBit> { }
 // #endregion
@@ -156,7 +155,7 @@ interface SettableSymbolBitType extends JunctureType<SettableSymbolBit> { }
 // #region Builder
 function createBitType<JT extends abstract new(...args: any) => BitJuncture>(BaseType: JT, defaultValue: any) {
   abstract class Bit extends BaseType {
-    schema = createSchemaDef(() => createBitSchema(defaultValue));
+    schema = createSchema(() => createBitSchema(defaultValue));
   }
   return Bit;
 }

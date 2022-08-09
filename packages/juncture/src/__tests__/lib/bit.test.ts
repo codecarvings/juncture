@@ -9,12 +9,13 @@
 /* eslint-disable no-multi-assign */
 /* eslint-disable max-len */
 
-import { DefType, isDef } from '../../definition/def';
+import { DescriptorType, isDescriptor } from '../../construction/descriptor';
 import {
-  createSchemaDef, Schema, SchemaDef
-} from '../../definition/schema';
-import { createSelectorDef } from '../../definition/selector';
-import { PropertyAssembler } from '../../fabric/property-assembler';
+  createSchema, Schema
+} from '../../construction/descriptors/schema';
+import { createSelector } from '../../construction/descriptors/selector';
+import { PropertyAssembler } from '../../construction/property-assembler';
+import { JunctureSchema } from '../../construction/schema';
 import { ForgeableJuncture } from '../../forgeable-juncture';
 import { Juncture } from '../../juncture';
 import {
@@ -33,7 +34,7 @@ export class TestBitSchema<V> extends BitSchema<V> {
 
 describe('BitSchema', () => {
   test('should be a subclass of Schema', () => {
-    expect(BitSchema.prototype).toBeInstanceOf(Schema);
+    expect(BitSchema.prototype).toBeInstanceOf(JunctureSchema);
   });
 
   test('should be a class instantiable by passing any type of defaultValue', () => {
@@ -48,7 +49,7 @@ describe('BitSchema', () => {
 
 describe('BitForger', () => {
   class MyBit extends BitJuncture {
-    schema = createSchemaDef(() => new Schema({
+    schema = createSchema(() => new JunctureSchema({
       firstName: ''
     }));
   }
@@ -64,12 +65,12 @@ describe('BitForger', () => {
     });
 
     describe('override', () => {
-      describe('when passing a BitSchemaDef as type argument, proxy should provide access to', () => {
-        let myOriginalSchema: SchemaDef<BitSchema<{
+      describe('when passing a BitSchema as type argument, proxy should provide access to', () => {
+        let myOriginalSchema: Schema<BitSchema<{
           firstName: string;
         }>>;
         beforeEach(() => {
-          myOriginalSchema = container.mySchema = assembler.registerStaticProperty(createSchemaDef(() => new TestBitSchema({
+          myOriginalSchema = container.mySchema = assembler.registerStaticProperty(createSchema(() => new TestBitSchema({
             firstName: 'Sergio'
           })));
           assembler.wire();
@@ -82,17 +83,17 @@ describe('BitForger', () => {
             expect(typeof proxy.setDefaultValue).toBe('function');
           });
 
-          test('should create, after property wiring, a new SchemaDef of BitSchema assignable to the parent, by passing a schema factory', () => {
+          test('should create, after property wiring, a new Schema of BitSchema assignable to the parent, by passing a schema factory', () => {
             const proxy = forger.override(myOriginalSchema);
-            let myNewSchema: SchemaDef<BitSchema<{
+            let myNewSchema: Schema<BitSchema<{
               firstName: string
             }>> = container.mySchema = proxy.setDefaultValue(() => ({
               firstName: 'Diego'
             }));
             assembler.wire();
             myNewSchema = container.mySchema;
-            expect(isDef(myNewSchema)).toBe(true);
-            expect(myNewSchema.type).toBe(DefType.schema);
+            expect(isDescriptor(myNewSchema)).toBe(true);
+            expect(myNewSchema.type).toBe(DescriptorType.schema);
             expect(myNewSchema).not.toBe(myOriginalSchema);
           });
 
@@ -113,14 +114,14 @@ describe('BitForger', () => {
               firstName: `${parent.defaultValue.firstName}2`
             }));
             assembler.wire();
-            const result: BitSchema<{ firstName: string }> = container.mySchema[jSymbols.defPayload]();
+            const result: BitSchema<{ firstName: string }> = container.mySchema[jSymbols.payload]();
             expect(result.defaultValue).toEqual({
               firstName: 'Sergio2'
             });
           });
 
-          test('should throw error during wire if the parent is not a SchemaDef', () => {
-            container.mySchema = assembler.registerStaticProperty(createSelectorDef(() => undefined));
+          test('should throw error during wire if the parent is not a Schema', () => {
+            container.mySchema = assembler.registerStaticProperty(createSelector(() => undefined));
             const proxy = forger.override(myOriginalSchema);
             container.mySchema = proxy.setDefaultValue(() => ({
               firstName: 'test'
@@ -142,7 +143,7 @@ describe('Bit', () => {
 
   test('should be a class instantiable without arguments', () => {
     class MyBit extends BitJuncture {
-      schema = createSchemaDef(() => new TestBitSchema(undefined));
+      schema = createSchema(() => new TestBitSchema(undefined));
     }
     const juncture = new MyBit();
     expect(juncture).toBeInstanceOf(Juncture);
@@ -150,7 +151,7 @@ describe('Bit', () => {
 
   test('should have BitForger as forger', () => {
     class MyBit extends BitJuncture {
-      schema = createSchemaDef(() => new TestBitSchema(undefined));
+      schema = createSchema(() => new TestBitSchema(undefined));
     }
     const juncture = Juncture.getInstance(MyBit);
     expect((juncture as any).FORGE).toBeInstanceOf(BitForger);

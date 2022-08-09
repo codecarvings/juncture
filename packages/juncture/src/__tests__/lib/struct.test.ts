@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -7,14 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx } from '../../context/ctx';
-import { Schema } from '../../definition/schema';
+/* eslint-disable max-len */
+
+import { JunctureSchema } from '../../construction/schema';
+import { Gear } from '../../engine/gear';
+import { JMachine } from '../../j-machine';
 import { JunctureTypeMap } from '../../juncture';
 import { jBit } from '../../lib/bit';
 import {
-    jStruct, PartialStructValue, StructCtx, StructSchema
+  jStruct, PartialStructValue, StructGear, StructSchema
 } from '../../lib/struct';
-import { Root } from '../../root';
 
 // Exposes constructor as public
 export class TestStructSchema<JTM extends JunctureTypeMap> extends StructSchema<JTM> {
@@ -25,7 +26,7 @@ export class TestStructSchema<JTM extends JunctureTypeMap> extends StructSchema<
 
 describe('StructSchema', () => {
   test('should be a subclass of Schema', () => {
-    expect(StructSchema.prototype).toBeInstanceOf(Schema);
+    expect(StructSchema.prototype).toBeInstanceOf(JunctureSchema);
   });
 
   describe('constructor', () => {
@@ -86,9 +87,9 @@ describe('StructSchema', () => {
   });
 });
 
-describe('StructCtx', () => {
-  test('should be a subclass of Ctx', () => {
-    expect(StructCtx.prototype).toBeInstanceOf(Ctx);
+describe('StructGear', () => {
+  test('should be a subclass of Gear', () => {
+    expect(StructGear.prototype).toBeInstanceOf(Gear);
   });
 });
 
@@ -106,6 +107,6 @@ xtest('temp test', () => {
     totAge = this.FORGE.selector(({ value, _ }) => value(_.father.age) + value(_.mother.age));
   }
 
-  const root = new Root(Parents);
-  expect(root.frame.select().totAge).toBe(2);
+  const machine = new JMachine(Parents);
+  expect(machine.frame.select().totAge).toBe(2);
 });

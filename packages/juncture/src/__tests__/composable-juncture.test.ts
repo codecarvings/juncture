@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -7,14 +6,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchemaDef, Schema } from '../definition/schema';
+/* eslint-disable max-len */
+
+import { createSchema } from '../construction/descriptors/schema';
+import { Forger } from '../construction/forger';
+import { JunctureSchema } from '../construction/schema';
 import { ForgeableJuncture } from '../forgeable-juncture';
-import { Forger } from '../forger';
 import { Juncture } from '../juncture';
 
 describe('ForgeableJuncture', () => {
   class MyJuncture extends ForgeableJuncture {
-    schema = createSchemaDef(() => new Schema(''));
+    schema = createSchema(() => new JunctureSchema(''));
 
     test = 21;
 

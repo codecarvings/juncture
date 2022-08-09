@@ -6,15 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Ctx, CtxLayout, CtxMediator } from './context/ctx';
-import { getCtx } from './context/ctx-host';
-import { createCursor, Cursor } from './context/cursor';
-import { Path } from './context/path';
-import { Schema, SchemaDef, SchemaOfSchemaDef } from './definition/schema';
-import { createSelectorDef, PubSelectorDef } from './definition/selector';
-import { Initializable } from './fabric/initializable';
-import { PropertyAssembler, PropertyAssemblerHost } from './fabric/property-assembler';
-import { Singleton } from './fabric/singleton';
+import { BodyOfSchema, Schema } from './construction/descriptors/schema';
+import { createSelector, Selector } from './construction/descriptors/selector';
+import { PropertyAssembler, PropertyAssemblerHost } from './construction/property-assembler';
+import { JunctureSchema } from './construction/schema';
+import { createCursor, Cursor } from './engine/cursor';
+import { Gear, GearLayout, GearMediator } from './engine/gear';
+import { getGear } from './engine/gear-host';
+import { Path } from './engine/path';
+import { Initializable } from './misc/initializable';
+import { Singleton } from './misc/singleton';
 import { jSymbols } from './symbols';
 
 // #region Symbols
@@ -37,18 +38,18 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     PropertyAssembler.get(this).wire();
   }
 
-  [jSymbols.createCtx](layout: CtxLayout, mediator: CtxMediator): Ctx {
-    return new Ctx(this, layout, mediator);
+  [jSymbols.createGear](layout: GearLayout, mediator: GearMediator): Gear {
+    return new Gear(this, layout, mediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](ctx: Ctx): Cursor<this> {
-    return createCursor(ctx) as Cursor<this>;
+  [jSymbols.createCursor](gear: Gear): Cursor<this> {
+    return createCursor(gear) as Cursor<this>;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createInternalCursor](ctx: Ctx): Cursor<this> {
-    return ctx.cursor as Cursor<this>;
+  [jSymbols.createInternalCursor](gear: Gear): Cursor<this> {
+    return gear.cursor as Cursor<this>;
   }
   // #endregion
 
@@ -56,36 +57,36 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     const assembler = Juncture.getPropertyAssembler(this);
 
     this.defaultValue = assembler
-      .registerStaticProperty(createSelectorDef((
+      .registerStaticProperty(createSelector((
         frame: any
-      ) => getCtx(frame._).schema.defaultValue));
+      ) => getGear(frame._).schema.defaultValue));
 
     this.path = assembler
-      .registerStaticProperty(createSelectorDef((
+      .registerStaticProperty(createSelector((
         frame: any
-      ) => getCtx(frame._).layout.path));
+      ) => getGear(frame._).layout.path));
 
     this.isMounted = assembler
-      .registerStaticProperty(createSelectorDef((
+      .registerStaticProperty(createSelector((
         frame: any
-      ) => getCtx(frame._).isMounted));
+      ) => getGear(frame._).isMounted));
 
     this.value = assembler
-      .registerStaticProperty(createSelectorDef((
+      .registerStaticProperty(createSelector((
         frame: any
-      ) => getCtx(frame._).value));
+      ) => getGear(frame._).value));
   }
 
-  // #region Defs
-  abstract readonly schema: SchemaDef<Schema>;
+  // #region Descriptors
+  abstract readonly schema: Schema<JunctureSchema>;
 
-  readonly defaultValue: PubSelectorDef<ValueOf<this>>;
+  readonly defaultValue: Selector<ValueOf<this>>;
 
-  readonly path: PubSelectorDef<Path>;
+  readonly path: Selector<Path>;
 
-  readonly isMounted: PubSelectorDef<boolean>;
+  readonly isMounted: Selector<boolean>;
 
-  readonly value: PubSelectorDef<ValueOf<this>>;
+  readonly value: Selector<ValueOf<this>>;
   // #endregion
 
   // #region Static
@@ -104,21 +105,21 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     return undefined!;
   }
 
-  static createCtx(Type: JunctureType, layoyt: CtxLayout, mediator: CtxMediator): Ctx {
+  static createGear(Type: JunctureType, layoyt: GearLayout, mediator: GearMediator): Gear {
     const juncture = Juncture.getInstance(Type);
-    return juncture[jSymbols.createCtx](layoyt, mediator);
+    return juncture[jSymbols.createGear](layoyt, mediator);
   }
   // #endregion
 }
 
 (Juncture as any).getSchema = Singleton.getAttachment(
   junctureSymbols.schemaCache,
-  juncture => juncture.schema[jSymbols.defPayload]()
+  juncture => juncture.schema[jSymbols.payload]()
 );
 
 // ---  Derivations
-export type SchemaOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>;
-export type ValueOf<J extends Juncture> = SchemaOfSchemaDef<J['schema']>['defaultValue'];
+export type SchemaOf<J extends Juncture> = BodyOfSchema<J['schema']>;
+export type ValueOf<J extends Juncture> = BodyOfSchema<J['schema']>['defaultValue'];
 
 // Use inference to keep type name
 export type CursorOf<J extends Juncture> = J extends {
