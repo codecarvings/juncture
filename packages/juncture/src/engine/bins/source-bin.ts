@@ -6,9 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../construction/access-modifier';
-import { GenericParamSelector } from '../../construction/descriptors/param-selector';
-import { GenericSelector } from '../../construction/descriptors/selector';
+import { AccessModifier } from '../../design/access-modifier';
+import { GenericParamSelector } from '../../design/descriptors/param-selector';
+import { GenericSelector } from '../../design/descriptors/selector';
 import { Juncture } from '../../juncture';
 import { Gear } from '../gear';
 

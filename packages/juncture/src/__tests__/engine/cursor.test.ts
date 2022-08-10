@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchema } from '../../construction/descriptors/schema';
-import { JunctureSchema } from '../../construction/schema';
+import { createSchema } from '../../design/descriptors/schema';
+import { JunctureSchema } from '../../design/schema';
 import { createCursor } from '../../engine/cursor';
 import { Gear, GearLayout, GearMediator } from '../../engine/gear';
 import { getGear, isGearHost } from '../../engine/gear-host';

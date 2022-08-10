@@ -6,16 +6,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../construction/access-modifier';
+import { AccessModifier } from '../../design/access-modifier';
 import {
-  Descriptor, DescriptorType, getFilteredDescriptorKeys, NotSuitableDescriptor
-} from '../../construction/descriptor';
-import { GenericReducer } from '../../construction/descriptors/reducer';
-import { GenericTrigger } from '../../construction/descriptors/trigger';
+  Descriptor, getFilteredDescriptorKeys, NotSuitableDescriptor
+} from '../../design/descriptor';
+import { DescriptorType } from '../../design/descriptor-type';
+import { GenericReducer } from '../../design/descriptors/reducer';
+import { GenericTrigger } from '../../design/descriptors/trigger';
 import { Juncture, ValueOf } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
-import { OverloadParameters } from '../../misc/overloaed-function-types';
 import { jSymbols } from '../../symbols';
+import { defineLazyProperty } from '../../tool/object';
+import { OverloadParameters } from '../../tool/overload-types';
 import { ReducerFrameHost } from '../frames/reducer-frame';
 import { TriggerFrameHost } from '../frames/trigger-frame';
 import { Gear } from '../gear';

@@ -7,7 +7,7 @@
  */
 
 import { InternalCursorOf, Juncture, ValueOf } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
+import { defineLazyProperty } from '../../tool/object';
 import { InternalSelectBin, SelectBin } from '../bins/select-bin';
 import { Cursor, InternalCursorHost, JunctureOfCursor } from '../cursor';
 import { InternalAccessorKit } from '../kits/accessor-kit';

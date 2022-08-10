@@ -8,10 +8,10 @@
 
 /* eslint-disable max-len */
 
-import { createSchema } from '../construction/descriptors/schema';
-import { Forger } from '../construction/forger';
-import { JunctureSchema } from '../construction/schema';
+import { createSchema } from '../design/descriptors/schema';
+import { JunctureSchema } from '../design/schema';
 import { ForgeableJuncture } from '../forgeable-juncture';
+import { Forger } from '../forger';
 import { Juncture } from '../juncture';
 
 describe('ForgeableJuncture', () => {

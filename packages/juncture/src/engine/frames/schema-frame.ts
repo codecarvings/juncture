@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JunctureSchema } from '../../construction/schema';
+import { JunctureSchema } from '../../design/schema';
 
 export interface OverrideSchemaFrame<X extends JunctureSchema> {
   readonly parent: X;

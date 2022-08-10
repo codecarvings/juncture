@@ -7,7 +7,7 @@
  */
 
 import { Juncture } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
+import { defineLazyProperty } from '../../tool/object';
 import { InternalReduceBin, ReduceBin } from '../bins/reduce-bin';
 import {
   Cursor, InternalCursorHost, JunctureOfCursor

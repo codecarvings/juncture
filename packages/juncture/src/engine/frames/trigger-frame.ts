@@ -7,7 +7,7 @@
  */
 
 import { Juncture } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
+import { defineLazyProperty } from '../../tool/object';
 import { InternalPrepareBin, PrepareBin } from '../bins/prepare-bin';
 import { Cursor, InternalCursorHost, JunctureOfCursor } from '../cursor';
 import { InternalAccessorKit } from '../kits/accessor-kit';

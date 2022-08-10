@@ -6,22 +6,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchema, Schema } from '../construction/descriptors/schema';
-import { Forger } from '../construction/forger';
-import { JunctureSchema } from '../construction/schema';
+import { createSchema, Schema } from '../design/descriptors/schema';
+import { JunctureSchema } from '../design/schema';
 import { createCursor, Cursor } from '../engine/cursor';
 import {
-  Gear, GearLayout, GearMediator, ManagedGearMap
+  Gear, GearController, GearLayout, GearMediator, ManagedGearMap
 } from '../engine/gear';
 import { PathFragment } from '../engine/path';
 import { ForgeableJuncture } from '../forgeable-juncture';
+import { Forger } from '../forger';
 import {
   CursorMapOfJunctureTypeMap, Juncture, JunctureType,
   JunctureTypeMap,
   SchemaOf, ValueOfType
 } from '../juncture';
-import { defineLazyProperty, mappedAssign } from '../misc/object-helpers';
 import { jSymbols } from '../symbols';
+import { defineLazyProperty, mappedAssign } from '../tool/object';
 
 // #region Value & Schema
 export type StructValue<JTM extends JunctureTypeMap> = {
@@ -30,11 +30,6 @@ export type StructValue<JTM extends JunctureTypeMap> = {
 export type PartialStructValue<JTM extends JunctureTypeMap> = {
   readonly [K in keyof JTM]?: ValueOfType<JTM[K]>;
 };
-
-let createStructSchema: <JTM extends JunctureTypeMap>(
-  Children: JTM, defaultValue?: PartialStructValue<JTM>)
-=> StructSchema<JTM>;
-
 export class StructSchema<JTM extends JunctureTypeMap = any> extends JunctureSchema<StructValue<JTM>> {
   protected constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
     const childKeys = Object.keys(Children);
@@ -52,12 +47,13 @@ export class StructSchema<JTM extends JunctureTypeMap = any> extends JunctureSch
   }
 
   readonly childKeys: string[];
+}
 
-  static #staticInit = (() => {
-    createStructSchema = <JTM2 extends JunctureTypeMap>(
-      Children: JTM2, defaultValue?: PartialStructValue<JTM2>
-    ) => new StructSchema<JTM2>(Children, defaultValue);
-  })();
+function createStructSchema<JTM extends JunctureTypeMap>(
+  Children: JTM,
+  defaultValue?: PartialStructValue<JTM>
+): StructSchema<JTM> {
+  return new (StructSchema as any)(Children, defaultValue);
 }
 // #endregion
 
@@ -95,26 +91,26 @@ export class StructGear extends Gear {
       {},
       this.schema.childKeys,
       key => {
-        let unmount: () => void = undefined!;
         const layout: GearLayout = {
           parent: this,
           path: [...this.layout.path, key],
           isUnivocal: this.layout.isUnivocal,
           isDivergent: false
         };
+        let controller: GearController = undefined!;
         const mediator: GearMediator = {
           ...this.mediator,
-          enroll: um => { unmount = um; },
+          enroll: c => { controller = c; },
           getValue: () => this._value[key],
-          setValue: newValue => {
+          setValue: childValue => {
             setValue({
               ...this._value,
-              [key]: newValue
+              [key]: childValue
             });
           }
         };
         const gear = Juncture.createGear(this.schema.Children[key], layout, mediator);
-        return { gear, unmount };
+        return { gear, controller };
       }
     );
   }
@@ -131,9 +127,14 @@ export class StructGear extends Gear {
   // #endregion
 
   // #region Mount stuff
+  protected gearDidMount(): void {
+    super.gearDidMount();
+    this.schema.childKeys.forEach(key => this.children[key].controller.mount());
+  }
+
   protected gearWillUnmount(): void {
     super.gearWillUnmount();
-    this.schema.childKeys.forEach(key => this.children[key].unmount());
+    this.schema.childKeys.forEach(key => this.children[key].controller.unmount());
   }
   // #endregion
 }
@@ -193,11 +194,11 @@ function createStructType<JT extends abstract new(...args: any) => StructJunctur
 }
 
 interface StructBuilder {
-  of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: PartialStructValue<JTM>): StructType<JTM>;
+  Of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: PartialStructValue<JTM>): StructType<JTM>;
 }
 
 export const jStruct: StructBuilder = {
-  of: <JTM extends JunctureTypeMap>(
+  Of: <JTM extends JunctureTypeMap>(
     Children: JTM,
     defaultValue?: PartialStructValue<JTM>
   ) => createStructType(StructJuncture, Children, defaultValue) as any

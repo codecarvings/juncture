@@ -7,7 +7,7 @@
  */
 
 import { Juncture } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
+import { defineLazyProperty } from '../../tool/object';
 import { InternalCursorHost } from '../cursor';
 import { createReactorFrame, ReactorFrame } from '../frames/reactor-frame';
 import { createReducerFrame, ReducerFrame } from '../frames/reducer-frame';

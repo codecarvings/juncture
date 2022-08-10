@@ -8,10 +8,11 @@
 
 /* eslint-disable max-len */
 
-import { AccessModifier } from '../construction/access-modifier';
-import { DescriptorType, isDescriptor } from '../construction/descriptor';
-import { createSchema } from '../construction/descriptors/schema';
-import { JunctureSchema } from '../construction/schema';
+import { AccessModifier } from '../design/access-modifier';
+import { isDescriptor } from '../design/descriptor';
+import { DescriptorType } from '../design/descriptor-type';
+import { createSchema } from '../design/descriptors/schema';
+import { JunctureSchema } from '../design/schema';
 import { Gear, GearLayout, GearMediator } from '../engine/gear';
 import { getGear, isGearHost } from '../engine/gear-host';
 import { Juncture } from '../juncture';

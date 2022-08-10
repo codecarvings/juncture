@@ -6,15 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../construction/access-modifier';
+import { AccessModifier } from '../../design/access-modifier';
 import {
-  Descriptor, DescriptorType, getFilteredDescriptorKeys, NotSuitableDescriptor
-} from '../../construction/descriptor';
-import { GenericParamSelector } from '../../construction/descriptors/param-selector';
-import { GenericSelector } from '../../construction/descriptors/selector';
+  Descriptor, getFilteredDescriptorKeys, NotSuitableDescriptor
+} from '../../design/descriptor';
+import { DescriptorType } from '../../design/descriptor-type';
+import { GenericParamSelector } from '../../design/descriptors/param-selector';
+import { GenericSelector } from '../../design/descriptors/selector';
 import { Juncture } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
 import { jSymbols } from '../../symbols';
+import { defineLazyProperty } from '../../tool/object';
 import { SelectorFrameHost } from '../frames/selector-frame';
 import { Gear } from '../gear';
 

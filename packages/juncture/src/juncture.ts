@@ -6,17 +6,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { BodyOfSchema, Schema } from './construction/descriptors/schema';
-import { createSelector, Selector } from './construction/descriptors/selector';
-import { PropertyAssembler, PropertyAssemblerHost } from './construction/property-assembler';
-import { JunctureSchema } from './construction/schema';
+import { BodyOfSchema, Schema } from './design/descriptors/schema';
+import { createSelector, Selector } from './design/descriptors/selector';
+import { JunctureSchema } from './design/schema';
 import { createCursor, Cursor } from './engine/cursor';
 import { Gear, GearLayout, GearMediator } from './engine/gear';
 import { getGear } from './engine/gear-host';
 import { Path } from './engine/path';
-import { Initializable } from './misc/initializable';
-import { Singleton } from './misc/singleton';
 import { jSymbols } from './symbols';
+import { Initializable } from './tool/initializable';
+import { PropertyAssembler, PropertyAssemblerHost } from './tool/property-assembler';
+import { Singleton } from './tool/singleton';
 
 // #region Symbols
 const schemaCacheSymbol = Symbol('schemaCache');

@@ -8,9 +8,9 @@
 
 /* eslint-disable max-len */
 
-import { JunctureSchema } from '../construction/schema';
+import { JunctureSchema } from '../design/schema';
 import { Juncture } from '../juncture';
-import { defineLazyProperty } from '../misc/object-helpers';
+import { defineLazyProperty } from '../tool/object';
 import { Action } from './action';
 import { Core } from './core';
 import { Cursor } from './cursor';
@@ -31,8 +31,13 @@ export interface GearLayout {
   readonly isDivergent: boolean;
 }
 
+export interface GearController {
+  mount(): void;
+  unmount(): void;
+}
+
 export interface GearMediator {
-  enroll(fn: () => void): void;
+  enroll(controller: GearController): void;
   getValue(): any;
   setValue(newValue: any): void;
   dispatch(action: Action): void;
@@ -64,12 +69,24 @@ export class Gear {
     defineLazyProperty(this, 'frame', () => this.core.frame, revocablePropOptions);
     defineLazyProperty(this, 'bins', () => this.core.bins, revocablePropOptions);
 
-    mediator.enroll(() => {
-      if (!this._isMounted) {
-        throw Error(`Cannot unmount Gear ${pathToString(this.layout.path)}: already unmounted`);
+    mediator.enroll({
+      mount: () => {
+        if (this._isMounted) {
+          throw Error(`Cannot mount Gear ${pathToString(this.layout.path)}: already mounted`);
+        }
+        this._isMounted = true;
+        this.gearDidMount();
+      },
+      unmount: () => {
+        if (this._isMounted === false) {
+          throw Error(`Cannot unmount Gear ${pathToString(this.layout.path)}: already unmounted`);
+        }
+        if (this._isMounted !== true) {
+          throw Error(`Cannot unmount Gear ${pathToString(this.layout.path)}: not mounted`);
+        }
+        this.gearWillUnmount();
+        this._isMounted = false;
       }
-      this.gearWillUnmount();
-      this._isMounted = false;
     });
   }
 
@@ -141,10 +158,14 @@ export class Gear {
   // #endregion
 
   // #region Mount stuff
-  protected _isMounted: boolean = true;
+  protected _isMounted: boolean = undefined!;
 
   get isMounted(): boolean {
     return this._isMounted;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  protected gearDidMount(): void {
   }
 
   protected gearWillUnmount(): void {
@@ -170,7 +191,7 @@ export class Gear {
 // #region MaagedGear
 export interface ManagedGear<G extends Gear = Gear> {
   readonly gear: G;
-  readonly unmount: () => void;
+  readonly controller: GearController;
 }
 
 export interface ManagedGearMap {

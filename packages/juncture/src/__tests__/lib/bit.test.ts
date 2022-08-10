@@ -9,13 +9,13 @@
 /* eslint-disable no-multi-assign */
 /* eslint-disable max-len */
 
-import { DescriptorType, isDescriptor } from '../../construction/descriptor';
+import { isDescriptor } from '../../design/descriptor';
+import { DescriptorType } from '../../design/descriptor-type';
 import {
   createSchema, Schema
-} from '../../construction/descriptors/schema';
-import { createSelector } from '../../construction/descriptors/selector';
-import { PropertyAssembler } from '../../construction/property-assembler';
-import { JunctureSchema } from '../../construction/schema';
+} from '../../design/descriptors/schema';
+import { createSelector } from '../../design/descriptors/selector';
+import { JunctureSchema } from '../../design/schema';
 import { ForgeableJuncture } from '../../forgeable-juncture';
 import { Juncture } from '../../juncture';
 import {
@@ -23,6 +23,7 @@ import {
   SettableBooleanBitJuncture, SettableNumberBitJuncture, SettableStringBitJuncture, SettableSymbolBitJuncture
 } from '../../lib/bit';
 import { jSymbols } from '../../symbols';
+import { PropertyAssembler } from '../../tool/property-assembler';
 
 // Exposes constructor as public
 export class TestBitSchema<V> extends BitSchema<V> {

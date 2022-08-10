@@ -8,8 +8,8 @@
 
 /* eslint-disable max-len */
 
-import { defineLazyProperty } from '../misc/object-helpers';
 import { jSymbols } from '../symbols';
+import { defineLazyProperty } from '../tool/object';
 import { Dispatcher } from './action';
 import { Cursor } from './cursor';
 import { createFrame, Frame } from './frames/frame';

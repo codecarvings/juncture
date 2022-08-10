@@ -8,13 +8,13 @@
 
 /* eslint-disable max-len */
 
-import { JunctureSchema } from '../../construction/schema';
+import { JunctureSchema } from '../../design/schema';
 import { Gear } from '../../engine/gear';
 import { JMachine } from '../../j-machine';
 import { JunctureTypeMap } from '../../juncture';
 import { jBit } from '../../lib/bit';
 import {
-  jStruct, PartialStructValue, StructGear, StructSchema
+    jStruct, PartialStructValue, StructGear, StructSchema
 } from '../../lib/struct';
 
 // Exposes constructor as public
@@ -94,13 +94,13 @@ describe('StructGear', () => {
 });
 
 xtest('temp test', () => {
-  class Person extends jStruct.of({
+  class Person extends jStruct.Of({
     firstName: jBit.String,
     lastName: jBit.String,
     age: jBit.Of(1)
   }) { }
 
-  class Parents extends jStruct.of({
+  class Parents extends jStruct.Of({
     father: Person,
     mother: Person
   }) {

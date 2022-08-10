@@ -7,7 +7,7 @@
  */
 
 import { Juncture } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
+import { defineLazyProperty } from '../../tool/object';
 import { Dispatcher } from '../action';
 import {
   createDispatchBin, createInternalDispatchBin, DispatchBin, InternalDispatchBin

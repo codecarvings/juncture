@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchema } from '../construction/descriptors/schema';
-import { JunctureSchema } from '../construction/schema';
+import { createSchema } from '../design/descriptors/schema';
+import { JunctureSchema } from '../design/schema';
 import { JMachine } from '../j-machine';
 import { Juncture, JunctureTypeMap, ValueOf } from '../juncture';
 import { jBit } from '../lib/bit';
@@ -25,8 +25,8 @@ describe('JMachine', () => {
   });
 
   test('should be instantiable by passing a Juncture Type and a custom initial value', () => {
-    const initialState = { myValue: 'custom' };
-    const machine = new JMachine(MyJuncture, initialState);
+    const initialValue = { myValue: 'custom' };
+    const machine = new JMachine(MyJuncture, initialValue);
     expect(typeof machine).toBe('object');
   });
 
@@ -46,9 +46,9 @@ describe('JMachine', () => {
           expect(machine.value).toBe(myDefaultValue);
         });
         test('should contain the value passed in the constructor', () => {
-          const initialState = { myValue: 'custom' };
-          const app2 = new JMachine(MyJuncture, initialState);
-          expect(app2.value).toBe(initialState);
+          const initialValue = { myValue: 'custom' };
+          const app2 = new JMachine(MyJuncture, initialValue);
+          expect(app2.value).toBe(initialValue);
         });
       });
     });
@@ -56,7 +56,7 @@ describe('JMachine', () => {
 });
 
 test('experiment with frames', () => {
-  class J1 extends jStruct.of({
+  class J1 extends jStruct.Of({
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {
@@ -77,7 +77,7 @@ test('experiment with frames', () => {
 });
 
 test('experiment with frames 2', () => {
-  class J1 extends jStruct.of({
+  class J1 extends jStruct.Of({
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {
@@ -131,7 +131,7 @@ test('experiment with frames 2', () => {
 });
 
 test('experiment with frames 2', () => {
-  class J1 extends jStruct.of({
+  class J1 extends jStruct.Of({
     name: jBit.Of('Sergio'),
     age: jBit.settable.Of(46)
   }) {

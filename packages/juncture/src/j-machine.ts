@@ -8,7 +8,9 @@
 
 import { Action } from './engine/action';
 import { Frame } from './engine/frames/frame';
-import { Gear, GearLayout, GearMediator } from './engine/gear';
+import {
+  Gear, GearController, GearLayout, GearMediator, ManagedGear
+} from './engine/gear';
 import { getGear, isGearHost } from './engine/gear-host';
 import { Juncture, JunctureType, ValueOfType } from './juncture';
 
@@ -23,7 +25,10 @@ export class JMachine<JT extends JunctureType> {
 
     this._value = this.getInitialValue(value);
 
-    this.gear = this.createGear();
+    const managedGear = this.createGear();
+    this.gear = managedGear.gear;
+    this.gearUnmount = managedGear.controller.unmount;
+    managedGear.controller.mount();
     this.frame = this.gear.frame as any;
   }
 
@@ -45,15 +50,16 @@ export class JMachine<JT extends JunctureType> {
 
   protected gearUnmount: () => void = undefined!;
 
-  protected createGear(): Gear {
+  protected createGear(): ManagedGear {
     const layout: GearLayout = {
       path: [],
       parent: null,
       isUnivocal: true,
       isDivergent: false
     };
+    let controller: GearController = undefined!;
     const mediator: GearMediator = {
-      enroll: um => { this.gearUnmount = um; },
+      enroll: c => { controller = c; },
       getValue: () => this._value,
       setValue: newValue => {
         // New Value check performed in Gear.executeAction method
@@ -63,7 +69,8 @@ export class JMachine<JT extends JunctureType> {
       dispatch: this.dispatch
     };
 
-    return Juncture.createGear(this.Type, layout, mediator);
+    const gear = Juncture.createGear(this.Type, layout, mediator);
+    return { gear, controller };
   }
 
   get status(): JMachineStatus {
@@ -81,10 +88,16 @@ export class JMachine<JT extends JunctureType> {
 
   // eslint-disable-next-line class-methods-use-this
   dispatch(action: Action) {
-    // TODO: Implement this
+    let target: Gear;
     if (isGearHost(action.target)) {
-      const gear = getGear(action.target);
-      gear.executeAction(action.key, action.args);
+      // GearRef
+      target = getGear(action.target);
+    } else {
+      target = this.gear.resolve(action.target);
+    }
+    target.executeAction(action.key, action.args);
+    if (action.callback) {
+      action.callback();
     }
   }
 

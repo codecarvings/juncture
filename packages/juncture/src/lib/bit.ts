@@ -6,18 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DescriptorType } from '../construction/descriptor';
-import { BodyOfSchema, createSchema, Schema } from '../construction/descriptors/schema';
-import { CreateDescriptorForOverrideArgs, Forger } from '../construction/forger';
-import { JunctureSchema, ValueOfSchema } from '../construction/schema';
+import { DescriptorType } from '../design/descriptor-type';
+import { BodyOfSchema, createSchema, Schema } from '../design/descriptors/schema';
+import { JunctureSchema, ValueOfSchema } from '../design/schema';
 import { OverrideSchemaFrame } from '../engine/frames/schema-frame';
 import { ForgeableJuncture } from '../forgeable-juncture';
+import { CreateDescriptorForOverrideArgs, Forger } from '../forger';
 import { Juncture, JunctureType, ValueOf } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
-let createBitSchema: <V>(defaultValue: V) => BitSchema<V>;
-
 export class BitSchema<V = any> extends JunctureSchema<V> {
   // Constructor is protected because type of the value cannot be changed in an inherited class
   // to avoid problems with reducers in the super class
@@ -27,11 +25,10 @@ export class BitSchema<V = any> extends JunctureSchema<V> {
   protected constructor(defaultValue: V) {
     super(defaultValue);
   }
+}
 
-  // Initialization without static block
-  static #staticInit = (() => {
-    createBitSchema = <V2>(defaultValue: V2) => new BitSchema<V2>(defaultValue);
-  })();
+function createBitSchema<V>(defaultValue: V): BitSchema<V> {
+  return new (BitSchema as any)(defaultValue);
 }
 // #endregion
 

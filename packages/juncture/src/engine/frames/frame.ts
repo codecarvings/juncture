@@ -7,7 +7,7 @@
  */
 
 import { CursorOf, Juncture, ValueOf } from '../../juncture';
-import { defineLazyProperty } from '../../misc/object-helpers';
+import { defineLazyProperty } from '../../tool/object';
 import { DispatchBin } from '../bins/dispatch-bin';
 import { SelectBin } from '../bins/select-bin';
 import { SourceBin } from '../bins/source-bin';

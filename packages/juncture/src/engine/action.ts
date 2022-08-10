@@ -12,6 +12,7 @@ export interface Action {
   readonly target: Path;
   readonly key: string;
   readonly args: any;
+  readonly callback?: () => void;
 }
 
 export function createAction(target: Path, key: string, args: any): Action {
