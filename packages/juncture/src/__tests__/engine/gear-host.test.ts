@@ -10,6 +10,7 @@ import { createSchema } from '../../design/descriptors/schema';
 import { JunctureSchema } from '../../design/schema';
 import { Gear, GearLayout, GearMediator } from '../../engine/gear';
 import { addGearLink, getGear, isGearHost } from '../../engine/gear-host';
+import { JMachineGearMediator } from '../../j-machine';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
 
@@ -23,15 +24,18 @@ const layout: GearLayout = {
   isDivergent: false,
   isUnivocal: true
 };
-const mediator: GearMediator = {
-  enroll: () => { },
+const gearMediator: GearMediator = {
   getValue: () => undefined,
-  setValue: () => { },
+  setValue: () => { }
+};
+const machineMediator: JMachineGearMediator = {
+  enrollGear: () => { },
+  createControlledGear: () => undefined!,
   dispatch: () => {}
 };
 
-const gear1 = new Gear(juncture, layout, mediator);
-const gear2 = new Gear(juncture, layout, mediator);
+const gear1 = new Gear(juncture, layout, gearMediator, machineMediator);
+const gear2 = new Gear(juncture, layout, gearMediator, machineMediator);
 
 describe('addGearLink', () => {
   test('should add a property [jSymbols.gear] containing a refernce to the provided Gear', () => {

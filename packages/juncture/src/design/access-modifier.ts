@@ -7,7 +7,7 @@
  */
 
 export enum AccessModifier {
-  public = 'pub',
-  protected = 'prt',
-  private = 'prv'
+  public = 'public',
+  protected = 'protected',
+  private = 'private'
 }

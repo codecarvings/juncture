@@ -10,11 +10,12 @@ import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { createCursor, Cursor } from '../engine/cursor';
 import {
-  Gear, GearController, GearLayout, GearMediator, ManagedGearMap
+  Gear, GearLayout, GearMap, GearMediator
 } from '../engine/gear';
 import { PathFragment } from '../engine/path';
 import { ForgeableJuncture } from '../forgeable-juncture';
 import { Forger } from '../forger';
+import { JMachineGearMediator } from '../j-machine';
 import {
   CursorMapOfJunctureTypeMap, Juncture, JunctureType,
   JunctureTypeMap,
@@ -69,7 +70,7 @@ export class StructGear extends Gear {
   // #region Value stuff
   protected valueDidUpdate(): void {
     this.schema.childKeys.forEach(key => {
-      this.children[key].gear.detectValueChange();
+      this.children[key].detectValueChange();
     });
   }
 
@@ -85,8 +86,8 @@ export class StructGear extends Gear {
   // #endregion
 
   // #region Children stuff
-  protected createChildren(): ManagedGearMap {
-    const { setValue } = this.mediator;
+  protected createChildren(): GearMap {
+    const { setValue } = this.gearMediator;
     return mappedAssign(
       {},
       this.schema.childKeys,
@@ -97,10 +98,7 @@ export class StructGear extends Gear {
           isUnivocal: this.layout.isUnivocal,
           isDivergent: false
         };
-        let controller: GearController = undefined!;
-        const mediator: GearMediator = {
-          ...this.mediator,
-          enroll: c => { controller = c; },
+        const gearMediator: GearMediator = {
           getValue: () => this._value[key],
           setValue: childValue => {
             setValue({
@@ -109,32 +107,19 @@ export class StructGear extends Gear {
             });
           }
         };
-        const gear = Juncture.createGear(this.schema.Children[key], layout, mediator);
-        return { gear, controller };
+        return Juncture.createGear(this.schema.Children[key], layout, gearMediator, this.machineMediator);
       }
     );
   }
 
-  protected readonly children: ManagedGearMap = this.createChildren();
+  protected readonly children: GearMap = this.createChildren();
 
   resolveFragment(fragment: PathFragment): Gear {
     const result = this.children[fragment as any];
     if (result) {
-      return result.gear;
+      return result;
     }
     return super.resolveFragment(fragment);
-  }
-  // #endregion
-
-  // #region Mount stuff
-  protected gearDidMount(): void {
-    super.gearDidMount();
-    this.schema.childKeys.forEach(key => this.children[key].controller.mount());
-  }
-
-  protected gearWillUnmount(): void {
-    super.gearWillUnmount();
-    this.schema.childKeys.forEach(key => this.children[key].controller.unmount());
   }
   // #endregion
 }
@@ -149,8 +134,12 @@ export abstract class StructJuncture extends ForgeableJuncture {
     return new StructForger<this>(Juncture.getPropertyAssembler(this));
   }
 
-  [jSymbols.createGear](layout: GearLayout, mediator: GearMediator): StructGear {
-    return new StructGear(this, layout, mediator);
+  [jSymbols.createGear](
+    layout: GearLayout,
+    mediator: GearMediator,
+    machineMediator: JMachineGearMediator
+  ): StructGear {
+    return new StructGear(this, layout, mediator, machineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this

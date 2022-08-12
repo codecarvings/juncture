@@ -9,9 +9,11 @@
 import { createSchema, Schema } from '../../design/descriptors/schema';
 import { JunctureSchema } from '../../design/schema';
 import {
-  Gear, GearController, GearLayout, GearMediator
+    Gear, GearLayout, GearMediator, GearMountStatus
 } from '../../engine/gear';
 import { getGear, isGearHost } from '../../engine/gear-host';
+import { GearManager } from '../../engine/gear-manager';
+import { JMachineGearMediator } from '../../j-machine';
 import { Juncture, JunctureType } from '../../juncture';
 import { jSymbols } from '../../symbols';
 
@@ -30,48 +32,56 @@ describe('Gear', () => {
   });
 
   describe('constructor', () => {
-    test('should accept a juncture, a GearLayout and GearMediator object', () => {
+    test('should accept a juncture, a GearLayout, a GearMediator and a JMachineGearMediator', () => {
       const layout: GearLayout = {
         parent: null,
         path: [],
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: GearMediator = {
-        enroll: () => { },
+      const gearMediator: GearMediator = {
         getValue: () => undefined,
-        setValue: () => { },
+        setValue: () => { }
+      };
+      const machineMediator: JMachineGearMediator = {
+        enrollGear: () => { },
+        createControlledGear: () => undefined!,
         dispatch: () => {}
       };
 
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const gear = new Gear(juncture, layout, mediator);
+        const gear = new Gear(juncture, layout, gearMediator, machineMediator);
       }).not.toThrow();
     });
   });
 
   describe('instance', () => {
-    let controller: GearController = undefined!;
+    let gearManager: GearManager;
     let layout: GearLayout;
-    let mediator: GearMediator;
+    let gearMediator: GearMediator;
+    let machineMediator: JMachineGearMediator;
     let gear: Gear;
 
     beforeEach(() => {
+      gearManager = new GearManager();
       layout = {
         parent: null,
         path: [],
         isDivergent: false,
         isUnivocal: true
       };
-      mediator = {
-        enroll: c => { controller = c; },
+      gearMediator = {
         getValue: () => 1,
-        setValue: () => { },
+        setValue: () => { }
+      };
+      machineMediator = {
+        enrollGear: gearManager.enrollGear,
+        createControlledGear: () => undefined!,
         dispatch: () => {}
       };
 
-      gear = new Gear(juncture, layout, mediator);
+      gear = Juncture.createGear(MyJunctureType, layout, gearMediator, machineMediator);
     });
 
     test('should have a "juncture" property containing a reference to the original Juncture', () => {
@@ -80,6 +90,10 @@ describe('Gear', () => {
 
     test('should have a "layout" property containing the same value of the provided layout', () => {
       expect(gear.layout).toBe(layout);
+    });
+
+    test('should have a "mountStatus" initially set to "pending"', () => {
+      expect(gear.mountStatus).toBe(GearMountStatus.pending);
     });
 
     describe('cursor property', () => {
@@ -99,25 +113,35 @@ describe('Gear', () => {
       });
     });
 
-    describe('after unmount has been ivoked', () => {
-      xtest('should have property "isMounted" set to false', () => {
-        expect(gear.isMounted).toBe(true);
-        controller.unmount();
-        expect(gear.isMounted).toBe(false);
+    describe('after mount', () => {
+      beforeEach(() => {
+        gearManager.sync();
       });
 
-      xtest('should throw error if tryng to access the value property', () => {
-        expect(gear.value).toBe(1);
-        controller.unmount();
+      test('should have a "mountStatus" set to "mouted"', () => {
+        expect(gear.mountStatus).toBe(GearMountStatus.mounted);
+      });
+    });
+
+    describe('after unmount', () => {
+      beforeEach(() => {
+        gearManager.sync();
+        gearManager.dismissGear(gear);
+        gearManager.sync();
+      });
+
+      test('should have property "mountStatus" set to "unmounted"', () => {
+        expect(gear.mountStatus).toBe(GearMountStatus.unmounted);
+      });
+
+      test('should throw error if tryng to access the value property', () => {
         expect(() => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const val = gear.value;
         }).toThrow();
       });
 
-      xtest('should throw error if tryng to access the cursor property', () => {
-        expect(isGearHost(gear.cursor)).toBe(true);
-        controller.unmount();
+      test('should throw error if tryng to access the cursor property', () => {
         expect(() => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _ = gear.cursor;

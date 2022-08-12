@@ -10,9 +10,12 @@ import { BodyOfSchema, Schema } from './design/descriptors/schema';
 import { createSelector, Selector } from './design/descriptors/selector';
 import { JunctureSchema } from './design/schema';
 import { createCursor, Cursor } from './engine/cursor';
-import { Gear, GearLayout, GearMediator } from './engine/gear';
+import {
+  Gear, GearLayout, GearMediator, GearMountStatus
+} from './engine/gear';
 import { getGear } from './engine/gear-host';
 import { Path } from './engine/path';
+import { JMachineGearMediator } from './j-machine';
 import { jSymbols } from './symbols';
 import { Initializable } from './tool/initializable';
 import { PropertyAssembler, PropertyAssemblerHost } from './tool/property-assembler';
@@ -38,8 +41,8 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     PropertyAssembler.get(this).wire();
   }
 
-  [jSymbols.createGear](layout: GearLayout, mediator: GearMediator): Gear {
-    return new Gear(this, layout, mediator);
+  [jSymbols.createGear](layout: GearLayout, gearMediator: GearMediator, machineMediator: JMachineGearMediator): Gear {
+    return new Gear(this, layout, gearMediator, machineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -69,7 +72,7 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     this.isMounted = assembler
       .registerStaticProperty(createSelector((
         frame: any
-      ) => getGear(frame._).isMounted));
+      ) => getGear(frame._).mountStatus === GearMountStatus.mounted));
 
     this.value = assembler
       .registerStaticProperty(createSelector((
@@ -105,9 +108,14 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
     return undefined!;
   }
 
-  static createGear(Type: JunctureType, layoyt: GearLayout, mediator: GearMediator): Gear {
+  static createGear(
+    Type: JunctureType,
+    layoyt: GearLayout,
+    gearMediator: GearMediator,
+    machineMediator: JMachineGearMediator
+  ): Gear {
     const juncture = Juncture.getInstance(Type);
-    return juncture[jSymbols.createGear](layoyt, mediator);
+    return juncture[jSymbols.createGear](layoyt, gearMediator, machineMediator);
   }
   // #endregion
 }

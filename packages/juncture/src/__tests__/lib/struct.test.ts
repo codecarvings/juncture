@@ -14,7 +14,7 @@ import { JMachine } from '../../j-machine';
 import { JunctureTypeMap } from '../../juncture';
 import { jBit } from '../../lib/bit';
 import {
-    jStruct, PartialStructValue, StructGear, StructSchema
+  jStruct, PartialStructValue, StructGear, StructSchema
 } from '../../lib/struct';
 
 // Exposes constructor as public
@@ -93,7 +93,7 @@ describe('StructGear', () => {
   });
 });
 
-xtest('temp test', () => {
+test('temp test', () => {
   class Person extends jStruct.Of({
     firstName: jBit.String,
     lastName: jBit.String,

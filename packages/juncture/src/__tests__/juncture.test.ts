@@ -15,6 +15,7 @@ import { createSchema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { Gear, GearLayout, GearMediator } from '../engine/gear';
 import { getGear, isGearHost } from '../engine/gear-host';
+import { JMachineGearMediator } from '../j-machine';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
@@ -76,10 +77,13 @@ describe('Juncture', () => {
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: GearMediator = {
-        enroll: () => { },
+      const gearMediator: GearMediator = {
         getValue: () => undefined,
-        setValue: () => { },
+        setValue: () => { }
+      };
+      const machineMediator: JMachineGearMediator = {
+        enrollGear: () => { },
+        createControlledGear: () => undefined!,
         dispatch: () => {}
       };
 
@@ -87,16 +91,16 @@ describe('Juncture', () => {
         expect(typeof juncture[jSymbols.createGear]).toBe('function');
       });
 
-      test('should create a new Gear for the provided Juncture instance, layout and mediator', () => {
-        const gear = juncture[jSymbols.createGear](layout, mediator);
+      test('should create a new Gear for the provided Juncture instance, layout and mediators', () => {
+        const gear = juncture[jSymbols.createGear](layout, gearMediator, machineMediator);
         expect(gear).toBeInstanceOf(Gear);
         expect(gear.juncture).toBe(juncture);
         expect(gear.layout).toBe(layout);
       });
 
       test('should always return a new Gear', () => {
-        const gear1 = juncture[jSymbols.createGear](layout, mediator);
-        const gear2 = juncture[jSymbols.createGear](layout, mediator);
+        const gear1 = juncture[jSymbols.createGear](layout, gearMediator, machineMediator);
+        const gear2 = juncture[jSymbols.createGear](layout, gearMediator, machineMediator);
         expect(gear2).not.toBe(gear1);
       });
     });
@@ -108,10 +112,13 @@ describe('Juncture', () => {
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: GearMediator = {
-        enroll: () => { },
+      const gearMediator: GearMediator = {
         getValue: () => undefined,
-        setValue: () => { },
+        setValue: () => { }
+      };
+      const machineMediator: JMachineGearMediator = {
+        enrollGear: () => { },
+        createControlledGear: () => undefined!,
         dispatch: () => {}
       };
 
@@ -120,14 +127,14 @@ describe('Juncture', () => {
       });
 
       test('should create a new Cursor for the provided Gear', () => {
-        const gear = juncture[jSymbols.createGear](layout, mediator);
+        const gear = juncture[jSymbols.createGear](layout, gearMediator, machineMediator);
         const cursor = juncture[jSymbols.createCursor](gear);
         expect(isGearHost(cursor)).toBe(true);
         expect(getGear(cursor)).toBe(gear);
       });
 
       test('should always return a new Cursor', () => {
-        const gear = juncture[jSymbols.createGear](layout, mediator);
+        const gear = juncture[jSymbols.createGear](layout, gearMediator, machineMediator);
         const cursor1 = juncture[jSymbols.createCursor](gear);
         const cursor2 = juncture[jSymbols.createCursor](gear);
         expect(cursor2).not.toBe(cursor1);
@@ -141,10 +148,13 @@ describe('Juncture', () => {
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: GearMediator = {
-        enroll: () => { },
+      const gearMediator: GearMediator = {
         getValue: () => undefined,
-        setValue: () => { },
+        setValue: () => { }
+      };
+      const machineMediator: JMachineGearMediator = {
+        enrollGear: () => { },
+        createControlledGear: () => undefined!,
         dispatch: () => {}
       };
 
@@ -153,7 +163,7 @@ describe('Juncture', () => {
       });
 
       test('should return the cursor of the Gear', () => {
-        const gear = juncture[jSymbols.createGear](layout, mediator);
+        const gear = juncture[jSymbols.createGear](layout, gearMediator, machineMediator);
         const cursor = juncture[jSymbols.createInternalCursor](gear);
         expect(cursor).toBe(gear.cursor);
       });
@@ -344,10 +354,13 @@ describe('Juncture', () => {
         isDivergent: false,
         isUnivocal: true
       };
-      const mediator: GearMediator = {
-        enroll: () => { },
+      const gearMediator: GearMediator = {
         getValue: () => undefined,
-        setValue: () => { },
+        setValue: () => { }
+      };
+      const machineMediator: JMachineGearMediator = {
+        enrollGear: () => { },
+        createControlledGear: () => undefined!,
         dispatch: () => {}
       };
 
@@ -355,8 +368,8 @@ describe('Juncture', () => {
         expect(typeof Juncture.createGear).toBe('function');
       });
 
-      test('should create a new Gear for the provided Juncture type, layout and mediator', () => {
-        const gear = Juncture.createGear(MyJuncture, layout, mediator);
+      test('should create a new Gear for the provided Juncture type, layout and mediators', () => {
+        const gear = Juncture.createGear(MyJuncture, layout, gearMediator, machineMediator);
         expect(gear).toBeInstanceOf(Gear);
         expect(gear.juncture).toBe(Juncture.getInstance(MyJuncture));
         expect(gear.layout).toBe(layout);
@@ -369,9 +382,9 @@ describe('Juncture', () => {
         (juncture as any)[jSymbols.createGear] = factory;
 
         expect(factory).toHaveBeenCalledTimes(0);
-        Juncture.createGear(MyJuncture, layout, mediator);
+        Juncture.createGear(MyJuncture, layout, gearMediator, machineMediator);
         expect(factory).toHaveBeenCalledTimes(1);
-        Juncture.createGear(MyJuncture, layout, mediator);
+        Juncture.createGear(MyJuncture, layout, gearMediator, machineMediator);
         expect(factory).toHaveBeenCalledTimes(2);
       });
     });

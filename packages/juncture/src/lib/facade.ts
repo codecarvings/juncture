@@ -10,11 +10,12 @@ import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { createCursor, Cursor } from '../engine/cursor';
 import {
-  Gear, GearController, GearLayout, GearMediator, ManagedGear
+  Gear, GearLayout, GearMediator
 } from '../engine/gear';
 import { PathFragment } from '../engine/path';
 import { ForgeableJuncture } from '../forgeable-juncture';
 import { Forger } from '../forger';
+import { JMachineGearMediator } from '../j-machine';
 import {
   CursorOfType,
   Juncture, JunctureType, SchemaOf, ValueOfType
@@ -49,49 +50,33 @@ export class FacadeGear extends Gear {
 
   // #region Value stuff
   protected valueDidUpdate(): void {
-    this.child.gear.detectValueChange();
+    this.child.detectValueChange();
   }
   // #endregion
 
   // #region Children stuff
-  protected createChild(): ManagedGear {
-    const { setValue } = this.mediator;
+  protected createChild(): Gear {
+    const { setValue } = this.gearMediator;
     const layout: GearLayout = {
       parent: this,
       path: [...this.layout.path, childKey],
       isUnivocal: this.layout.isUnivocal,
       isDivergent: false
     };
-    let controller: GearController = undefined!;
-    const mediator: GearMediator = {
-      ...this.mediator,
-      enroll: c => { controller = c; },
+    const gearMediator: GearMediator = {
       getValue: () => this._value,
       setValue
     };
-    const gear = Juncture.createGear(this.schema.Child, layout, mediator);
-    return { gear, controller };
+    return Juncture.createGear(this.schema.Child, layout, gearMediator, this.machineMediator);
   }
 
-  protected readonly child: ManagedGear = this.createChild();
+  protected readonly child: Gear = this.createChild();
 
   resolveFragment(fragment: PathFragment): Gear {
     if (fragment === childKey) {
-      return this.child.gear;
+      return this.child;
     }
     return super.resolveFragment(fragment);
-  }
-  // #endregion
-
-  // #region Mount stuff
-  protected gearDidMount(): void {
-    super.gearDidMount();
-    this.child.controller.mount();
-  }
-
-  protected gearWillUnmount(): void {
-    super.gearWillUnmount();
-    this.child.controller.unmount();
   }
   // #endregion
 }
@@ -108,8 +93,12 @@ export abstract class FacadeJuncture extends ForgeableJuncture {
     return new FacadeForger<this>(Juncture.getPropertyAssembler(this));
   }
 
-  [jSymbols.createGear](layout: GearLayout, mediator: GearMediator): FacadeGear {
-    return new FacadeGear(this, layout, mediator);
+  [jSymbols.createGear](
+    layout: GearLayout,
+    gearMediator: GearMediator,
+    machineMediator: JMachineGearMediator
+  ): FacadeGear {
+    return new FacadeGear(this, layout, gearMediator, machineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars

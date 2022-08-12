@@ -11,6 +11,7 @@ import { JunctureSchema } from '../../design/schema';
 import { Gear, GearLayout, GearMediator } from '../../engine/gear';
 import { getGear, isGearHost } from '../../engine/gear-host';
 import { createGearRef } from '../../engine/gear-ref';
+import { JMachineGearMediator } from '../../j-machine';
 import { Juncture } from '../../juncture';
 
 class MyJuncture extends Juncture {
@@ -23,14 +24,18 @@ const layout: GearLayout = {
   isDivergent: false,
   isUnivocal: true
 };
-const mediator: GearMediator = {
-  enroll: () => { },
+const gearMediator: GearMediator = {
   getValue: () => undefined,
-  setValue: () => { },
+  setValue: () => { }
+};
+const machineMediator: JMachineGearMediator = {
+  enrollGear: () => { },
+  createControlledGear: () => undefined!,
   dispatch: () => {}
 };
-const gear1 = new Gear(juncture, layout, mediator);
-const gear2 = new Gear(juncture, layout, mediator);
+
+const gear1 = new Gear(juncture, layout, gearMediator, machineMediator);
+const gear2 = new Gear(juncture, layout, gearMediator, machineMediator);
 
 describe('createGearRef', () => {
   test('should create a GearRef by passing a Gear', () => {

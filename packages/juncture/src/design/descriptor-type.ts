@@ -7,10 +7,10 @@
  */
 
 export enum DescriptorType {
-  schema = 'scm',
-  selector = 'sel',
-  paramSelector = 'psl',
-  reducer = 'red',
-  trigger = 'trg',
-  reactor = 'rea'
+  schema = 'schema',
+  selector = 'selector',
+  paramSelector = 'paramSelector',
+  reducer = 'reducer',
+  trigger = 'trigger',
+  reactor = 'reactor'
 }

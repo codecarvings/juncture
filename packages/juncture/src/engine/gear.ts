@@ -9,9 +9,9 @@
 /* eslint-disable max-len */
 
 import { JunctureSchema } from '../design/schema';
+import { JMachineGearMediator } from '../j-machine';
 import { Juncture } from '../juncture';
 import { defineLazyProperty } from '../tool/object';
-import { Action } from './action';
 import { Core } from './core';
 import { Cursor } from './cursor';
 import { Frame } from './frames/frame';
@@ -31,16 +31,32 @@ export interface GearLayout {
   readonly isDivergent: boolean;
 }
 
-export interface GearController {
+export interface GearMediator {
+  getValue(): any;
+  setValue(newValue: any): void;
+}
+
+export enum GearMountStatus {
+  pending = 'pending',
+  preMounted = 'preMounted',
+  mounted = 'mounted',
+  unmounted = 'unmounted'
+}
+
+export interface ManagedGear {
+  readonly gear: Gear;
+  preMount(): void;
   mount(): void;
   unmount(): void;
 }
 
-export interface GearMediator {
-  enroll(controller: GearController): void;
-  getValue(): any;
-  setValue(newValue: any): void;
-  dispatch(action: Action): void;
+export interface ControlledGear {
+  readonly gear: Gear;
+  scheduleUnmount(): void;
+}
+
+export interface ControlledGearMap {
+  readonly [key: string]: ControlledGear;
 }
 
 // #endregion
@@ -53,12 +69,17 @@ export class Gear {
 
   readonly ref!: GearRef;
 
-  constructor(readonly juncture: Juncture, readonly layout: GearLayout, protected readonly mediator: GearMediator) {
+  constructor(
+    readonly juncture: Juncture,
+    readonly layout: GearLayout,
+    protected readonly gearMediator: GearMediator,
+    protected readonly machineMediator: JMachineGearMediator
+  ) {
     this.schema = Juncture.getSchema(juncture);
 
     defineLazyProperty(this, 'ref', () => createGearRef(this));
 
-    this._value = mediator.getValue();
+    this._value = gearMediator.getValue();
     Object.defineProperty(this, 'value', {
       get: () => this._value,
       ...revocablePropOptions
@@ -69,32 +90,15 @@ export class Gear {
     defineLazyProperty(this, 'frame', () => this.core.frame, revocablePropOptions);
     defineLazyProperty(this, 'bins', () => this.core.bins, revocablePropOptions);
 
-    mediator.enroll({
-      mount: () => {
-        if (this._isMounted) {
-          throw Error(`Cannot mount Gear ${pathToString(this.layout.path)}: already mounted`);
-        }
-        this._isMounted = true;
-        this.gearDidMount();
-      },
-      unmount: () => {
-        if (this._isMounted === false) {
-          throw Error(`Cannot unmount Gear ${pathToString(this.layout.path)}: already unmounted`);
-        }
-        if (this._isMounted !== true) {
-          throw Error(`Cannot unmount Gear ${pathToString(this.layout.path)}: not mounted`);
-        }
-        this.gearWillUnmount();
-        this._isMounted = false;
-      }
-    });
+    this.ensureMountStatus = this.ensureMountStatus.bind(this);
+    machineMediator.enrollGear(this.createManagedGear());
   }
 
   // #region Core stuff
   protected readonly core: Core;
 
   protected createCore(): Core {
-    return new Core(this, this.mediator);
+    return new Core(this, this.machineMediator);
   }
 
   readonly cursor!: Cursor;
@@ -126,12 +130,12 @@ export class Gear {
     const value = reducerFn(...args);
 
     if (value !== this._value) {
-      this.mediator.setValue(value);
+      this.gearMediator.setValue(value);
     }
   }
 
   detectValueChange() {
-    const value = this.mediator.getValue();
+    const value = this.gearMediator.getValue();
     if (value === this._value) {
       return;
     }
@@ -158,24 +162,56 @@ export class Gear {
   // #endregion
 
   // #region Mount stuff
-  protected _isMounted: boolean = undefined!;
+  private ensureMountStatus(desc: string, expected: GearMountStatus) {
+    if (this._mountStatus !== expected) {
+      throw Error(`Cannot ${desc} Gear ${pathToString(this.layout.path)}: current mount status: ${this._mountStatus}`);
+    }
+  }
 
-  get isMounted(): boolean {
-    return this._isMounted;
+  protected createManagedGear(): ManagedGear {
+    return {
+      gear: this,
+      preMount: () => {
+        this.ensureMountStatus('preMount', GearMountStatus.pending);
+        this.gearWillMount();
+        this._mountStatus = GearMountStatus.preMounted;
+      },
+      mount: () => {
+        this.ensureMountStatus('mount', GearMountStatus.preMounted);
+        this._mountStatus = GearMountStatus.mounted;
+        this.gearDidMount();
+      },
+      unmount: () => {
+        this.ensureMountStatus('unmount', GearMountStatus.mounted);
+        this.gearWillUnmount();
+        this._mountStatus = GearMountStatus.unmounted;
+      }
+    };
+  }
+
+  protected _mountStatus: GearMountStatus = GearMountStatus.pending;
+
+  get mountStatus(): GearMountStatus {
+    return this._mountStatus;
   }
 
   // eslint-disable-next-line class-methods-use-this
+  protected gearWillMount(): void { }
+
   protected gearDidMount(): void {
+    this.core.reactors.start();
   }
 
   protected gearWillUnmount(): void {
+    this.core.reactors.stop();
+
     const getRevoked = (desc: string) => () => {
       throw Error(`Cannot access ${desc}: Gear ${pathToString(this.layout.path)} not mounted`);
     };
 
-    const mediatorKeys = Object.keys(this.mediator);
+    const mediatorKeys = Object.keys(this.gearMediator);
     mediatorKeys.forEach(key => {
-      defineLazyProperty(this.mediator, key, getRevoked(`mediator.${key}`));
+      defineLazyProperty(this.gearMediator, key, getRevoked(`mediator.${key}`));
     });
 
     defineLazyProperty(this, 'value', getRevoked('value'));
@@ -186,15 +222,7 @@ export class Gear {
   // #endregion
 }
 
-// #endregion
-
-// #region MaagedGear
-export interface ManagedGear<G extends Gear = Gear> {
-  readonly gear: G;
-  readonly controller: GearController;
-}
-
-export interface ManagedGearMap {
-  readonly [key: string]: ManagedGear;
+export interface GearMap {
+  readonly [key: string]: Gear;
 }
 // #endregion

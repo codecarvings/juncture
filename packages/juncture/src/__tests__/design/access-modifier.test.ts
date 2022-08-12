@@ -10,14 +10,14 @@ import { AccessModifier } from '../../design/access-modifier';
 
 describe('AccessModifier', () => {
   test('should contain the public access type', () => {
-    expect(AccessModifier.public).toBe('pub');
+    expect(AccessModifier.public).toBe('public');
   });
 
   test('should contain the protected access type', () => {
-    expect(AccessModifier.protected).toBe('prt');
+    expect(AccessModifier.protected).toBe('protected');
   });
 
   test('should contain the private access type', () => {
-    expect(AccessModifier.private).toBe('prv');
+    expect(AccessModifier.private).toBe('private');
   });
 });

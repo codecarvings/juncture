@@ -105,6 +105,7 @@ test('experiment with frames 2', () => {
     abc = this.FORGE.override(super.abc).selector(() => 33);
   }
 
+  jest.useFakeTimers();
   const machine = new JMachine(J1, {
     name: 'Mirco',
     age: 47
@@ -128,6 +129,15 @@ test('experiment with frames 2', () => {
     age: 99
   });
   expect(select(_.age).value).toBe(99);
+
+  jest.advanceTimersByTime(1200);
+  expect(select(_.age).value).toBe(100);
+
+  jest.advanceTimersByTime(3000);
+  expect(select(_.age).value).toBe(103);
+
+  machine.stop();
+  jest.useRealTimers();
 });
 
 test('experiment with frames 2', () => {

@@ -9,14 +9,22 @@
 import { Action } from './engine/action';
 import { Frame } from './engine/frames/frame';
 import {
-  Gear, GearController, GearLayout, GearMediator, ManagedGear
+  ControlledGear, Gear, GearLayout, GearMediator, GearMountStatus, ManagedGear
 } from './engine/gear';
 import { getGear, isGearHost } from './engine/gear-host';
+import { GearManager } from './engine/gear-manager';
 import { Juncture, JunctureType, ValueOfType } from './juncture';
 
 export enum JMachineStatus {
+  initializing = 'initializing',
   running = 'running',
   stopped = 'stopped'
+}
+
+export interface JMachineGearMediator {
+  enrollGear(managedGear: ManagedGear): void
+  createControlledGear(Type: JunctureType, layout: GearLayout, gearMediator: GearMediator): ControlledGear;
+  dispatch(action: Action): void;
 }
 
 export class JMachine<JT extends JunctureType> {
@@ -25,10 +33,10 @@ export class JMachine<JT extends JunctureType> {
 
     this._value = this.getInitialValue(value);
 
-    const managedGear = this.createGear();
-    this.gear = managedGear.gear;
-    this.gearUnmount = managedGear.controller.unmount;
-    managedGear.controller.mount();
+    this.gearManager = this.createGearManger();
+
+    this.gear = this.createGear();
+
     this.frame = this.gear.frame as any;
   }
 
@@ -46,35 +54,62 @@ export class JMachine<JT extends JunctureType> {
   // #endregion
 
   // #region Mount stuff
+
+  // eslint-disable-next-line class-methods-use-this
+  protected createGearManger(): GearManager {
+    return new GearManager();
+  }
+
+  protected readonly gearManager: GearManager;
+
   protected readonly gear: Gear;
 
-  protected gearUnmount: () => void = undefined!;
-
-  protected createGear(): ManagedGear {
+  protected createGear(): Gear {
     const layout: GearLayout = {
       path: [],
       parent: null,
       isUnivocal: true,
       isDivergent: false
     };
-    let controller: GearController = undefined!;
-    const mediator: GearMediator = {
-      enroll: c => { controller = c; },
+    const gearMediator: GearMediator = {
       getValue: () => this._value,
       setValue: newValue => {
         // New Value check performed in Gear.executeAction method
         this._value = newValue;
         this.gear.detectValueChange();
+        this.gearManager.sync();
+      }
+    };
+    const machineMediator: JMachineGearMediator = {
+      enrollGear: this.gearManager.enrollGear,
+      createControlledGear: (
+        Type: JunctureType,
+        layout2: GearLayout,
+        gearMediator2: GearMediator
+      ): ControlledGear => {
+        const gear = Juncture.createGear(Type, layout2, gearMediator2, machineMediator);
+        return {
+          gear,
+          scheduleUnmount: () => {
+            this.gearManager.dismissGear(gear);
+          }
+        };
       },
       dispatch: this.dispatch
     };
 
-    const gear = Juncture.createGear(this.Type, layout, mediator);
-    return { gear, controller };
+    return Juncture.createGear(this.Type, layout, gearMediator, machineMediator);
   }
 
   get status(): JMachineStatus {
-    return this.gear.isMounted ? JMachineStatus.running : JMachineStatus.stopped;
+    switch (this.gear.mountStatus) {
+      case GearMountStatus.mounted:
+        return JMachineStatus.running;
+      case GearMountStatus.unmounted:
+        return JMachineStatus.stopped;
+      default:
+        return JMachineStatus.initializing;
+    }
   }
 
   stop() {
@@ -82,10 +117,12 @@ export class JMachine<JT extends JunctureType> {
       throw Error('JMachine already stopped');
     }
 
-    this.gearUnmount();
+    this.gearManager.dismissGear(this.gear);
+    this.gearManager.sync();
   }
   // #endregion
 
+  // #region Frame stuff
   // eslint-disable-next-line class-methods-use-this
   dispatch(action: Action) {
     let target: Gear;
@@ -103,4 +140,5 @@ export class JMachine<JT extends JunctureType> {
 
   // TODO: Implement getFrame and remove static frame...
   readonly frame: Frame<InstanceType<JT>>;
+  // #endregion
 }

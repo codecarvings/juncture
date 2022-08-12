@@ -10,6 +10,7 @@
 
 import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../tool/object';
+import { ReactorRunner } from './ reactor-runner';
 import { Dispatcher } from './action';
 import { Cursor } from './cursor';
 import { createFrame, Frame } from './frames/frame';
@@ -39,7 +40,7 @@ export class Core {
 
   readonly internalAccessors: InternalAccessorKit = {} as any;
 
-  constructor(gear: Gear, dispatcher: Dispatcher) {
+  constructor(protected readonly gear: Gear, dispatcher: Dispatcher) {
     defineLazyProperty(this, 'cursor', () => gear.juncture[jSymbols.createCursor](gear));
     defineLazyProperty(this, 'frame', () => createFrame(this, this.accessors));
     equipBinKit(this.bins, gear, this.internalFrames, dispatcher);
@@ -49,5 +50,15 @@ export class Core {
     equipInternalFrameKit(this.internalFrames, this as any, this.internalAccessors);
     equipInternalBinKit(this.internalBins, gear, this.internalFrames, dispatcher);
     equipInternalAccessorKit(this.internalAccessors, gear, this.internalBins);
+
+    this.reactors = this.createReactorRunner();
   }
+
+  readonly reactors: ReactorRunner;
+
+  protected createReactorRunner(): ReactorRunner {
+    return new ReactorRunner(this.gear, this.internalFrames);
+  }
+
+  // #endregion
 }

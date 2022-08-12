@@ -9,15 +9,14 @@
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { createCursor, Cursor } from '../engine/cursor';
-import {
-  Gear, GearController, GearLayout, GearMediator, ManagedGear
-} from '../engine/gear';
+import { ControlledGear, Gear, GearLayout, GearMediator, GearMountStatus } from '../engine/gear';
 import { PathFragment } from '../engine/path';
 import { ForgeableJuncture } from '../forgeable-juncture';
 import { Forger } from '../forger';
+import { JMachineGearMediator } from '../j-machine';
 import {
-  CursorOfType,
-  Juncture, JunctureType, SchemaOf, ValueOfType
+    CursorOfType,
+    Juncture, JunctureType, SchemaOf, ValueOfType
 } from '../juncture';
 import { jSymbols } from '../symbols';
 
@@ -47,31 +46,29 @@ export class ListForger<J extends ListJuncture> extends Forger<J> {
 export class ListGear extends Gear {
   readonly schema!: ListSchema;
 
-  constructor(juncture: Juncture, layout: GearLayout, mediator: GearMediator) {
-    super(juncture, layout, mediator);
-    this.reconcileChildren();
-  }
-
   // #region Value stuff
+  readonly _value!: any[];
+
   protected valueDidUpdate(): void {
     this.reconcileChildren();
-    this.children.forEach(child => child.gear.detectValueChange());
+    this.children.forEach(child => {
+      if (child.gear.mountStatus === GearMountStatus.mounted) {
+        child.gear.detectValueChange();
+      }
+    });
   }
   // #endregion
 
   // #region Children stuff
-  protected createChild(index: number): ManagedGear {
-    const { setValue } = this.mediator;
+  protected createChild(index: number): ControlledGear {
+    const { setValue } = this.gearMediator;
     const layout: GearLayout = {
       parent: this,
       path: [...this.layout.path, index],
-      isUnivocal: this.layout.isUnivocal,
-      isDivergent: false
+      isUnivocal: false,
+      isDivergent: true
     };
-    let controller: GearController = undefined!;
-    const mediator: GearMediator = {
-      ...this.mediator,
-      enroll: c => { controller = c; },
+    const gearMediator: GearMediator = {
       getValue: () => this._value[index],
       setValue: childValue => {
         const newValue = [...this._value];
@@ -79,11 +76,15 @@ export class ListGear extends Gear {
         setValue(newValue);
       }
     };
-    const gear = Juncture.createGear(this.schema.Child, layout, mediator);
-    return { gear, controller };
+
+    return this.machineMediator.createControlledGear(this.schema.Child, layout, gearMediator);
   }
 
-  protected readonly children: ManagedGear[] = [];
+  protected createChildren(): ControlledGear[] {
+    return this._value.map((_v, index) => this.createChild(index));
+  }
+
+  protected readonly children: ControlledGear[] = this.createChildren();
 
   protected reconcileChildren() {
     const valueLen = this._value.length;
@@ -95,15 +96,11 @@ export class ListGear extends Gear {
       this.children.length = valueLen;
       for (let i = childrenLen; i < valueLen; i += 1) {
         this.children[i] = this.createChild(i);
-        if (this._isMounted) {
-          this.children[i].controller.mount();
-        }
       }
     } else {
-      for (let i = valueLen; i < childrenLen; i += 1) {
-        this.children[i].controller.unmount();
-      }
+      const childToUnmount = this.children.slice(valueLen);
       this.children.length = valueLen;
+      childToUnmount.forEach(child => child.scheduleUnmount());
     }
   }
 
@@ -114,18 +111,6 @@ export class ListGear extends Gear {
       }
     }
     return super.resolveFragment(fragment);
-  }
-  // #endregion
-
-  // #region Mount stuff
-  protected gearDidMount(): void {
-    super.gearDidMount();
-    this.children.forEach(child => child.controller.mount());
-  }
-
-  protected gearWillUnmount(): void {
-    super.gearWillUnmount();
-    this.children.forEach(child => child.controller.unmount());
   }
   // #endregion
 }
@@ -142,8 +127,12 @@ export abstract class ListJuncture extends ForgeableJuncture {
     return new ListForger<this>(Juncture.getPropertyAssembler(this));
   }
 
-  [jSymbols.createGear](layout: GearLayout, mediator: GearMediator): ListGear {
-    return new ListGear(this, layout, mediator);
+  [jSymbols.createGear](
+    layout: GearLayout,
+    gearMediator: GearMediator,
+    machineMediator: JMachineGearMediator
+  ): ListGear {
+    return new ListGear(this, layout, gearMediator, machineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars

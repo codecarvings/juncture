@@ -47,7 +47,7 @@ export function isDescriptor(obj: any): obj is Descriptor<any, any, any> {
   return true;
 }
 
-export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], internalUse: boolean): string[] {
+export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], internalUse?: boolean): string[] {
   return Object.keys(obj).filter(key => {
     const prop = (obj as any)[key];
     if (!isDescriptor(prop)) {
@@ -57,8 +57,10 @@ export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], 
       return false;
     }
 
-    if (!internalUse && prop.access !== AccessModifier.public) {
-      return false;
+    if (internalUse !== undefined) {
+      if (!internalUse && prop.access !== AccessModifier.public) {
+        return false;
+      }
     }
     return true;
   });
