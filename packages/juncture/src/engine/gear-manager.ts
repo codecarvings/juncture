@@ -100,9 +100,6 @@ export class GearManager {
 
     if (this.gearsToMount.size > 0) {
       this.gearsToMount.forEach(snapshot => {
-        snapshot.managedGear.preMount();
-      });
-      this.gearsToMount.forEach(snapshot => {
         snapshot.managedGear.mount();
       });
       this.gearsToMount.forEach(snapshot => {

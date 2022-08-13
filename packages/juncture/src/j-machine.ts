@@ -55,12 +55,12 @@ export class JMachine<JT extends JunctureType> {
 
   // #region Mount stuff
 
+  protected readonly gearManager: GearManager;
+
   // eslint-disable-next-line class-methods-use-this
   protected createGearManger(): GearManager {
     return new GearManager();
   }
-
-  protected readonly gearManager: GearManager;
 
   protected readonly gear: Gear;
 

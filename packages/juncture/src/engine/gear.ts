@@ -38,14 +38,12 @@ export interface GearMediator {
 
 export enum GearMountStatus {
   pending = 'pending',
-  preMounted = 'preMounted',
   mounted = 'mounted',
   unmounted = 'unmounted'
 }
 
 export interface ManagedGear {
   readonly gear: Gear;
-  preMount(): void;
   mount(): void;
   unmount(): void;
 }
@@ -171,13 +169,8 @@ export class Gear {
   protected createManagedGear(): ManagedGear {
     return {
       gear: this,
-      preMount: () => {
-        this.ensureMountStatus('preMount', GearMountStatus.pending);
-        this.gearWillMount();
-        this._mountStatus = GearMountStatus.preMounted;
-      },
       mount: () => {
-        this.ensureMountStatus('mount', GearMountStatus.preMounted);
+        this.ensureMountStatus('mount', GearMountStatus.pending);
         this._mountStatus = GearMountStatus.mounted;
         this.gearDidMount();
       },
@@ -196,8 +189,6 @@ export class Gear {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected gearWillMount(): void { }
-
   protected gearDidMount(): void {
     this.core.reactors.start();
   }
