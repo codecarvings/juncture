@@ -97,10 +97,6 @@ test('experiment with frames 2', () => {
         dispatch(_.age).inc();
       }, 1000);
 
-      // const sub = source(_.age).value.change.subscribe(() => {
-      //   dispatch(_.ageChanges).inc();
-      // });
-
       return () => {
         clearInterval(id);
         // sub.unsubscribe();

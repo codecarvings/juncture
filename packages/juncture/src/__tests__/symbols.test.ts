@@ -13,10 +13,6 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.payload).toBe('symbol');
   });
 
-  test('should contain the eventPicker symbol', () => {
-    expect(typeof jSymbols.eventPicker).toBe('symbol');
-  });
-
   test('should contain the init symbol', () => {
     expect(typeof jSymbols.init).toBe('symbol');
   });

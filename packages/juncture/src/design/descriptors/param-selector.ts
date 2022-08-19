@@ -8,20 +8,17 @@
 
 import { Observable } from 'rxjs';
 import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
+import { OverloadParameters, OverloadReturnType } from '../../tool/overload-types';
 import { AccessModifier } from '../access-modifier';
 import {
-  createDescriptor
+  createDescriptor, Descriptor
 } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
-import { DescriptorWithEvents } from '../descriptor-with-events';
 
 export type ParamSelectorAccess = AccessModifier.public | AccessModifier.private;
 
 export interface GenericParamSelector<B extends (...args: any) => any, A extends ParamSelectorAccess>
-  extends DescriptorWithEvents<DescriptorType.paramSelector, InternalFrameConsumer<B>, {
-    // change(...args: OverloadParameters<B>): Observable<OverloadReturnType<B>>
-    change(...args: Parameters<B>): Observable<ReturnType<B>>
-  }, A> { }
+  extends Descriptor<DescriptorType.paramSelector, InternalFrameConsumer<B>, A> { }
 
 export interface ParamSelector<B extends (...args: any) => any>
   extends GenericParamSelector<B, AccessModifier.public> { }
@@ -42,4 +39,10 @@ export function createParamSelector<B extends (...args: any) => any>(
 
 // ---  Derivations
 export type BodyOfParamSelector<D extends GenericParamSelector<any, any>>
-   = D extends GenericParamSelector<infer B, any> ? B : never;
+  = D extends GenericParamSelector<infer B, any> ? B : never;
+
+// #region Observables
+export interface ParamSelectorObservables<B extends (...args: any) => any> {
+  change(...args : OverloadParameters<B>): Observable<OverloadReturnType<B>>
+}
+// #endregion

@@ -10,17 +10,14 @@ import { Observable } from 'rxjs';
 import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
 import { AccessModifier } from '../access-modifier';
 import {
-  createDescriptor
+  createDescriptor, Descriptor
 } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
-import { DescriptorWithEvents } from '../descriptor-with-events';
 
 type SelectorAccess = AccessModifier.public | AccessModifier.private;
 
 export interface GenericSelector<B, A extends SelectorAccess>
-  extends DescriptorWithEvents<DescriptorType.selector, InternalFrameConsumer<B>, {
-    change: Observable<B>
-  }, A> { }
+  extends Descriptor<DescriptorType.selector, InternalFrameConsumer<B>, A> { }
 
 export interface Selector<B> extends GenericSelector<B, AccessModifier.public> { }
 
@@ -42,3 +39,9 @@ export function createSelector<B>(
 // ---  Derivations
 export type BodyOfSelector<D extends GenericSelector<any, any>>
   = D extends GenericSelector<infer B, any> ? B : never;
+
+// #region Observables
+export interface SelectorObservables<B> {
+  readonly change: Observable<B>;
+}
+// #endregion
