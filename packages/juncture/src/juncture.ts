@@ -9,7 +9,7 @@
 import { BodyOfSchema, Schema } from './design/descriptors/schema';
 import { createSelector, Selector } from './design/descriptors/selector';
 import { JunctureSchema } from './design/schema';
-import { createCursor, Cursor } from './engine/cursor';
+import { createCursor, Cursor } from './engine/equipment/cursor';
 import {
   Gear, GearLayout, GearMediator, GearMountStatus
 } from './engine/gear';
@@ -18,6 +18,7 @@ import { Path } from './engine/path';
 import { JMachineGearMediator } from './j-machine';
 import { jSymbols } from './symbols';
 import { Initializable } from './tool/initializable';
+import { getObjectAttachment } from './tool/object';
 import { PropertyAssembler, PropertyAssemblerHost } from './tool/property-assembler';
 import { Singleton } from './tool/singleton';
 
@@ -102,10 +103,10 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
   }
 
   static getSchema<JT extends JunctureType>(Type: JT): SchemaOfType<JT>;
-  static getSchema<J extends Juncture>(Type: J): SchemaOf<J>;
-  static getSchema() {
-    // method implemented below
-    return undefined!;
+  static getSchema<J extends Juncture>(juncture: J): SchemaOf<J>;
+  static getSchema(juncture_or_Type: Juncture | JunctureType) {
+    const juncture = Singleton.getInstance(juncture_or_Type) as Juncture;
+    return getObjectAttachment(juncture, junctureSymbols.schemaCache, () => juncture.schema[jSymbols.payload]());
   }
 
   static createGear(
@@ -119,11 +120,6 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
   }
   // #endregion
 }
-
-(Juncture as any).getSchema = Singleton.getAttachment(
-  junctureSymbols.schemaCache,
-  juncture => juncture.schema[jSymbols.payload]()
-);
 
 // ---  Derivations
 export type SchemaOf<J extends Juncture> = BodyOfSchema<J['schema']>;

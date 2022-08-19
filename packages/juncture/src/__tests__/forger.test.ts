@@ -18,7 +18,7 @@ import { createSchema, Schema } from '../design/descriptors/schema';
 import { PrivateSelector, Selector } from '../design/descriptors/selector';
 import { PrivateTrigger, ProtectedTrigger, Trigger } from '../design/descriptors/trigger';
 import { JunctureSchema } from '../design/schema';
-import { Action } from '../engine/action';
+import { Instruction } from '../engine/instruction';
 import { Forger, PrivateForger, ProtectedForger } from '../forger';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
@@ -468,12 +468,12 @@ describe('Forger', () => {
       });
 
       describe('when passing a Trigger as type argument, proxy should provide access to', () => {
-        let myOriginalDesc: Trigger<(value: string) => Action[]>;
+        let myOriginalDesc: Trigger<(value: string) => Instruction[]>;
         beforeEach(() => {
           myOriginalDesc = container.myDesc = forger.trigger(() => (value: string) => [{
-            target: [],
+            target: null!,
             key: 'dummy',
-            args: [value]
+            payload: [value]
           }]);
           assembler.wire();
           myOriginalDesc = container.myDesc;
@@ -487,7 +487,7 @@ describe('Forger', () => {
 
           test('should create, after property wiring, a new Trigger assignable to the parent, by passing a trigger function', () => {
             const proxy = forger.override(myOriginalDesc);
-            let myNewDesc: Trigger<(value: string) => Action[]> = container.myDesc = proxy
+            let myNewDesc: Trigger<(value: string) => Instruction[]> = container.myDesc = proxy
               .trigger(() => () => []);
             assembler.wire();
             myNewDesc = container.myDesc;
@@ -502,9 +502,9 @@ describe('Forger', () => {
             assembler.wire();
             const result = container.myDesc[jSymbols.payload]()('abc');
             expect(result).toEqual([{
-              target: [],
+              target: null,
               key: 'dummy',
-              args: ['abc2']
+              payload: ['abc2']
             }]);
           });
 
@@ -518,17 +518,17 @@ describe('Forger', () => {
           });
 
           test('should return a ProtectedTrigger if the parent is protected', () => {
-            let myOriginalProtectedDesc: ProtectedTrigger<(value: string) => Action[]> = container.myProtectedDesc = forger
+            let myOriginalProtectedDesc: ProtectedTrigger<(value: string) => Instruction[]> = container.myProtectedDesc = forger
               .protected.trigger(() => (value: string) => [{
-                target: [],
+                target: null!,
                 key: 'dummy',
-                args: [value]
+                payload: [value]
               }]);
             assembler.wire();
             myOriginalProtectedDesc = container.myProtectedDesc;
 
             const proxy = forger.override(myOriginalProtectedDesc);
-            let myNewProtectedDesc: ProtectedTrigger<(value: string) => Action[]> = container.myProtectedDesc = proxy
+            let myNewProtectedDesc: ProtectedTrigger<(value: string) => Instruction[]> = container.myProtectedDesc = proxy
               .trigger(() => () => []);
             assembler.wire();
             myNewProtectedDesc = container.myProtectedDesc;
@@ -537,20 +537,20 @@ describe('Forger', () => {
           });
 
           test('should return a PrivateTrigger if the parent is private', () => {
-            let myOriginalPrivateDesc: PrivateTrigger<(value: string) => Action[]> = container.myPrivateReducer = forger
+            let myOriginalPrivateDesc: PrivateTrigger<(value: string) => Instruction[]> = container.myPrivateDesc = forger
               .private.trigger(() => (value: string) => [{
-                target: [],
+                target: null!,
                 key: 'dummy',
-                args: [value]
+                payload: [value]
               }]);
             assembler.wire();
-            myOriginalPrivateDesc = container.myPrivateReducer;
+            myOriginalPrivateDesc = container.myPrivateDesc;
 
             const proxy = forger.override(myOriginalPrivateDesc);
-            let myNewPrivateDesc: PrivateTrigger<(value: string) => Action[]> = container.myPrivateReducer = proxy
+            let myNewPrivateDesc: PrivateTrigger<(value: string) => Instruction[]> = container.myPrivateDesc = proxy
               .trigger(() => () => []);
             assembler.wire();
-            myNewPrivateDesc = container.myPrivateReducer;
+            myNewPrivateDesc = container.myPrivateDesc;
             expect(myOriginalPrivateDesc.access).toBe(AccessModifier.private);
             expect(myNewPrivateDesc.access).toBe(AccessModifier.private);
           });

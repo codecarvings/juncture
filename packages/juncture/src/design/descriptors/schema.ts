@@ -13,7 +13,8 @@ import {
 import { DescriptorType } from '../descriptor-type';
 import { JunctureSchema } from '../schema';
 
-export type Schema<B extends JunctureSchema> = Descriptor<DescriptorType.schema, () => B, AccessModifier.public>;
+export type Schema<B extends JunctureSchema> =
+  Descriptor<DescriptorType.schema, () => B, AccessModifier.public>;
 
 export function createSchema<B extends JunctureSchema>(schemaFactory: () => B): Schema<B> {
   return createDescriptor(DescriptorType.schema, schemaFactory, AccessModifier.public);

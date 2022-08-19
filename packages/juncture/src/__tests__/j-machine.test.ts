@@ -83,6 +83,8 @@ test('experiment with frames 2', () => {
   }) {
     displayName = this.FORGE.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
 
+    pSel = this.FORGE.paramSelector(() => (str: string) => str.length);
+
     set = this.FORGE.reducer(() => (value: ValueOf<this>) => value);
 
     protectedSet = this.FORGE.protected.reducer(() => () => undefined!);
@@ -99,6 +101,7 @@ test('experiment with frames 2', () => {
     abc = this.FORGE.private.selector(() => 21);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   class J2 extends J1 {
     ff1 = this.FORGE.selector(() => '');
 
@@ -147,12 +150,10 @@ test('experiment with frames 2', () => {
   }) {
     displayName = this.FORGE.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
 
-    set = this.FORGE.reducer(() => (value: {
-      name: string,
-      age: number,
-    }) => ({
-      name: value.name, age: value.age
-    }));
+    set = this.FORGE.trigger(({ set, _ }) => (name: string, age: number) => [
+      set(_.name, name),
+      set(_.age, age)
+    ]);
 
     fullValue = this.FORGE.selector(({ value }) => ({
       ...value(),
@@ -177,7 +178,7 @@ test('experiment with frames 2', () => {
   const machine = new JMachine(J2);
   const { _, select, dispatch } = machine.frame;
   expect(select(_).fullValue.height).toBe(183);
-  dispatch().set({ name: 'Mario', age: 7 });
+  dispatch().set('Mario', 7);
   expect(select(_.age).value).toBe(7);
   expect(select(_.height).value).toBe(183);
 

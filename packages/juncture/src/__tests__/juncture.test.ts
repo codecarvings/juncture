@@ -82,8 +82,15 @@ describe('Juncture', () => {
         setValue: () => { }
       };
       const machineMediator: JMachineGearMediator = {
-        enrollGear: () => { },
-        createControlledGear: () => undefined!,
+        gear: {
+          enroll: () => { },
+          createControlled: () => undefined!
+        },
+        transaction: {
+          begin: () => { },
+          registerAlteredGear: () => { },
+          commit: () => { }
+        },
         dispatch: () => {}
       };
 
@@ -117,8 +124,15 @@ describe('Juncture', () => {
         setValue: () => { }
       };
       const machineMediator: JMachineGearMediator = {
-        enrollGear: () => { },
-        createControlledGear: () => undefined!,
+        gear: {
+          enroll: () => { },
+          createControlled: () => undefined!
+        },
+        transaction: {
+          begin: () => { },
+          registerAlteredGear: () => { },
+          commit: () => { }
+        },
         dispatch: () => {}
       };
 
@@ -153,8 +167,15 @@ describe('Juncture', () => {
         setValue: () => { }
       };
       const machineMediator: JMachineGearMediator = {
-        enrollGear: () => { },
-        createControlledGear: () => undefined!,
+        gear: {
+          enroll: () => { },
+          createControlled: () => undefined!
+        },
+        transaction: {
+          begin: () => { },
+          registerAlteredGear: () => { },
+          commit: () => { }
+        },
         dispatch: () => {}
       };
 
@@ -359,8 +380,15 @@ describe('Juncture', () => {
         setValue: () => { }
       };
       const machineMediator: JMachineGearMediator = {
-        enrollGear: () => { },
-        createControlledGear: () => undefined!,
+        gear: {
+          enroll: () => { },
+          createControlled: () => undefined!
+        },
+        transaction: {
+          begin: () => { },
+          registerAlteredGear: () => { },
+          commit: () => { }
+        },
         dispatch: () => {}
       };
 

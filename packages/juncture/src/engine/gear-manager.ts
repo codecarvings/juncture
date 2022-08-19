@@ -18,7 +18,8 @@ interface GearSnapshot {
 
 export class GearManager {
   constructor() {
-    this.enrollGear = this.enrollGear.bind(this);
+    this.enroll = this.enroll.bind(this);
+    this.sync = this.sync.bind(this);
   }
 
   protected gearsToMount = new Map<Gear, GearSnapshot>();
@@ -29,7 +30,7 @@ export class GearManager {
 
   protected syncRequired = false;
 
-  enrollGear(managedGear: ManagedGear) {
+  enroll(managedGear: ManagedGear) {
     if (this.mountedGears.has(managedGear.gear) || this.gearsToMount.has(managedGear.gear)) {
       // eslint-disable-next-line max-len
       throw Error(`Gear manager cannot enroll gear ${pathToString(managedGear.gear.layout.path)}: already been enrolled`);
@@ -59,7 +60,7 @@ export class GearManager {
     this.syncRequired = true;
   }
 
-  dismissGear(gear: Gear) {
+  dismiss(gear: Gear) {
     if (!this.mountedGears.has(gear)) {
       if (this.gearsToMount.has(gear)) {
         throw Error(`Gear manager cannot unmount gear ${pathToString(gear.layout.path)}: not yet mounted`);
@@ -90,8 +91,6 @@ export class GearManager {
 
       allManagedGears.forEach(managedGear => {
         this.mountedGears.delete(managedGear.gear);
-      });
-      allManagedGears.forEach(managedGear => {
         managedGear.unmount();
       });
 
@@ -100,10 +99,8 @@ export class GearManager {
 
     if (this.gearsToMount.size > 0) {
       this.gearsToMount.forEach(snapshot => {
-        snapshot.managedGear.mount();
-      });
-      this.gearsToMount.forEach(snapshot => {
         this.mountedGears.set(snapshot.managedGear.gear, snapshot);
+        snapshot.managedGear.mount();
       });
 
       this.gearsToMount.clear();

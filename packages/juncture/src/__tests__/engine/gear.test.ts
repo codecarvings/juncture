@@ -44,8 +44,15 @@ describe('Gear', () => {
         setValue: () => { }
       };
       const machineMediator: JMachineGearMediator = {
-        enrollGear: () => { },
-        createControlledGear: () => undefined!,
+        gear: {
+          enroll: () => { },
+          createControlled: () => undefined!
+        },
+        transaction: {
+          begin: () => { },
+          registerAlteredGear: () => { },
+          commit: () => { }
+        },
         dispatch: () => {}
       };
 
@@ -76,8 +83,15 @@ describe('Gear', () => {
         setValue: () => { }
       };
       machineMediator = {
-        enrollGear: gearManager.enrollGear,
-        createControlledGear: () => undefined!,
+        gear: {
+          enroll: gearManager.enroll,
+          createControlled: () => undefined!
+        },
+        transaction: {
+          begin: () => { },
+          registerAlteredGear: () => { },
+          commit: () => { }
+        },
         dispatch: () => {}
       };
 
@@ -126,7 +140,7 @@ describe('Gear', () => {
     describe('after unmount', () => {
       beforeEach(() => {
         gearManager.sync();
-        gearManager.dismissGear(gear);
+        gearManager.dismiss(gear);
         gearManager.sync();
       });
 

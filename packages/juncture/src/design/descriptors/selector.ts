@@ -9,14 +9,17 @@
 import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
 import { AccessModifier } from '../access-modifier';
 import {
-  createDescriptor, Descriptor
+  createDescriptor
 } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
+import { DescriptorWithEvents } from '../descriptor-with-events';
 
 type SelectorAccess = AccessModifier.public | AccessModifier.private;
 
 export interface GenericSelector<B, A extends SelectorAccess>
-  extends Descriptor<DescriptorType.selector, InternalFrameConsumer<B>, A> { }
+  extends DescriptorWithEvents<DescriptorType.selector, InternalFrameConsumer<B>, {
+    change: Promise<Event>
+  }, A> { }
 
 export interface Selector<B> extends GenericSelector<B, AccessModifier.public> { }
 

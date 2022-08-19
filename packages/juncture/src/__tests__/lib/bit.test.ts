@@ -164,7 +164,7 @@ describe('SettableBit', () => {
     expect(SettableBitJuncture.prototype).toBeInstanceOf(BitJuncture);
   });
 
-  describe('reducers', () => {
+  describe('applicable', () => {
     describe('reset', () => {
       // TODO: Implement this
     });
@@ -185,7 +185,7 @@ describe('SettableNumberBit', () => {
     expect(SettableNumberBitJuncture.prototype).toBeInstanceOf(SettableBitJuncture);
   });
 
-  describe('reducers', () => {
+  describe('applicable', () => {
     describe('add', () => {
       // TODO: Implement this
     });
@@ -203,7 +203,7 @@ describe('SettableBooleanBit', () => {
     expect(SettableBooleanBitJuncture.prototype).toBeInstanceOf(SettableBitJuncture);
   });
 
-  describe('reducers', () => {
+  describe('applicable', () => {
     describe('switch', () => {
       // TODO: Implement this
     });

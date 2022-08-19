@@ -11,22 +11,17 @@ import { defineLazyProperty } from '../../tool/object';
 import { DispatchBin } from '../bins/dispatch-bin';
 import { SelectBin } from '../bins/select-bin';
 import { SourceBin } from '../bins/source-bin';
-import { Cursor, CursorHost, JunctureOfCursor } from '../cursor';
+import {
+  Cursor, CursorHost, JunctureOfCursor, ValueOfCursor
+} from '../equipment/cursor';
+import { ValueHandlerHost } from '../equipment/value-handler';
 import { AccessorKit } from '../kits/accessor-kit';
-
-// export interface UnbindedFrame<Z> {
-//   readonly _: Z;
-
-//   value<C extends Cursor>(_: C): ValueOf<JunctureOfCursor<C>>;
-//   select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
-//   dispach<C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
-// }
 
 export interface Frame<J extends Juncture = Juncture> {
   readonly _ : CursorOf<J>;
 
   value(): ValueOf<J>;
-  value<C extends Cursor>(_: C): ValueOf<JunctureOfCursor<C>>;
+  value<C extends Cursor>(_: C): ValueOfCursor<C>;
 
   select(): SelectBin<J>;
   select<C extends Cursor>(_: C): SelectBin<JunctureOfCursor<C>>;
@@ -40,11 +35,12 @@ export interface Frame<J extends Juncture = Juncture> {
 
 export function createFrame<J extends Juncture>(
   cursorHost: CursorHost<J>,
+  valueHandlerHost: ValueHandlerHost<J>,
   accessors: AccessorKit<J>
 ): Frame<J> {
   const frame: any = { };
   defineLazyProperty(frame, '_', () => cursorHost.cursor);
-  defineLazyProperty(frame, 'value', () => accessors.value);
+  defineLazyProperty(frame, 'value', () => valueHandlerHost.value.get);
   defineLazyProperty(frame, 'select', () => accessors.select);
   defineLazyProperty(frame, 'dispatch', () => accessors.dispatch);
   defineLazyProperty(frame, 'source', () => accessors.source);

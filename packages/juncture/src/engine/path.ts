@@ -35,14 +35,14 @@ export function pathToString(path: Path, absolute = true): string {
   return `[${absolute ? '/' : ''}${result}]`;
 }
 
-export function isSameOrDescendantPath(path1: Path, path2: Path): boolean {
-  const len1 = path1.length;
-  const len2 = path2.length;
-  if (len2 < len1) {
+export function isSameOrDescendantPath(parent: Path, child: Path): boolean {
+  const parentLen = parent.length;
+  const childLen = child.length;
+  if (childLen < parentLen) {
     return false;
   }
-  for (let i = 0; i < len1; i += 1) {
-    if (path2[i] !== path1[i]) {
+  for (let i = 0; i < parentLen; i += 1) {
+    if (child[i] !== parent[i]) {
       return false;
     }
   }

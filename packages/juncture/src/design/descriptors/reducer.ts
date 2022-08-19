@@ -40,4 +40,4 @@ export function createReducer<B extends (...args: any) => any>(
 
 // ---  Derivations
 export type BodyOfReducer<D extends GenericReducer<any, any>>
-  = D extends GenericReducer<infer B, any> ? B : never;
+    = D extends GenericReducer<infer B, any> ? B : never;

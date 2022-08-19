@@ -29,8 +29,15 @@ const gearMediator: GearMediator = {
   setValue: () => { }
 };
 const machineMediator: JMachineGearMediator = {
-  enrollGear: () => { },
-  createControlledGear: () => undefined!,
+  gear: {
+    enroll: () => { },
+    createControlled: () => undefined!
+  },
+  transaction: {
+    begin: () => { },
+    registerAlteredGear: () => { },
+    commit: () => { }
+  },
   dispatch: () => {}
 };
 

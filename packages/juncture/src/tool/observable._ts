@@ -1,0 +1,65 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface SymbolConstructor {
+  readonly observable: unique symbol;
+}
+
+interface Observable {
+
+  subscribe(observer : Observer): Subscription;
+
+  subscribe(onNext: Function, onError?: Function, onComplete?: Function) : Subscription;
+
+  // Returns itself
+  [Symbol.observable](): this;
+}
+
+interface ObservableConstructor {
+  new(subscriber: SubscriberFunction): O;
+
+  of(...items) : Observable;
+
+  from(observable) : Observable;
+}
+
+interface Subscription {
+
+  // Cancels the subscription
+  unsubscribe() : void;
+
+  // A boolean value indicating whether the subscription is closed
+  get closed() : Boolean;
+}
+
+interface SubscriberFunction {
+  (observer: SubscriptionObserver) : (() => void) | Subscription;
+}
+
+interface Observer {
+
+  // Receives the subscription object when `subscribe` is called
+  start(subscription : Subscription);
+
+  // Receives the next value in the sequence
+  next(value);
+
+  // Receives the sequence error
+  error(errorValue);
+
+  // Receives a completion notification
+  complete();
+}
+
+interface SubscriptionObserver {
+
+  // Sends the next value in the sequence
+  next(value);
+
+  // Sends the sequence error
+  error(errorValue);
+
+  // Sends the completion notification
+  complete();
+
+  // A boolean value indicating whether the subscription is closed
+  get closed() : Boolean;
+}

@@ -38,8 +38,19 @@ export function defineLazyProperty(object: any, key: PropertyKey, factory: () =>
   });
 }
 
-export function mappedAssign(object: any, keys: ReadonlyArray<string>, mapFn: (key: string) => any): any {
+export function mappedAssign(object: any, keys: string[], mapFn: (key: string) => any): any {
   // eslint-disable-next-line no-param-reassign
   keys.forEach(key => { object[key] = mapFn(key); });
   return object;
+}
+
+export function getObjectAttachment<F extends () => any>(obj: any, cacheKey: symbol, resolverFn: F): ReturnType<F> {
+  if (obj[cacheKey]) {
+    return obj[cacheKey].val;
+  }
+
+  const val = resolverFn();
+  // eslint-disable-next-line no-param-reassign
+  obj[cacheKey] = { val }; // Encapsultate the cache value into an object to handle falsy values
+  return val;
 }

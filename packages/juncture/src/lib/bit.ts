@@ -18,10 +18,10 @@ import { jSymbols } from '../symbols';
 // #region Value & Schema
 export class BitSchema<V = any> extends JunctureSchema<V> {
   // Constructor is protected because type of the value cannot be changed in an inherited class
-  // to avoid problems with reducers in the super class
+  // to avoid problems with triggers in the super class
   // Example:
   // Super class type is { firstName: string }), if sub - class is chaged to { firstName: string, lastName: string }
-  // reducers in the super class will cause inexpected problems
+  // triggers in the super class will cause inexpected problems
   protected constructor(defaultValue: V) {
     super(defaultValue);
   }

@@ -6,17 +6,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../../juncture';
+import { Juncture, ValueOf } from '../../juncture';
 import { defineLazyProperty } from '../../tool/object';
-import { InternalPrepareBin, PrepareBin } from '../bins/prepare-bin';
-import { Cursor, InternalCursorHost, JunctureOfCursor } from '../cursor';
+import { ApplyBin, InternalApplyBin } from '../bins/apply-bin';
+import {
+  Cursor, InternalCursorHost, JunctureOfCursor, ValueOfCursor
+} from '../equipment/cursor';
+import { ValueHandlerHost } from '../equipment/value-handler';
+import { Instruction } from '../instruction';
 import { InternalAccessorKit } from '../kits/accessor-kit';
 import { createInternalFrame, InternalFrame } from './internal-frame';
 
 export interface TriggerFrame<J extends Juncture> extends InternalFrame<J> {
-  prepare(): InternalPrepareBin<J>;
-  prepare(_: this['_']): InternalPrepareBin<J>;
-  prepare<C extends Cursor>(_: C): PrepareBin<JunctureOfCursor<C>>;
+  set(value: ValueOf<J>): Instruction;
+  set<C extends Cursor>(_: C, value: ValueOfCursor<C>): Instruction;
+
+  apply(): InternalApplyBin<J>;
+  apply(_: this['_']): InternalApplyBin<J>;
+  apply<C extends Cursor>(_: C): ApplyBin<JunctureOfCursor<C>>;
 }
 
 export interface TriggerFrameHost<J extends Juncture> {
@@ -24,11 +31,13 @@ export interface TriggerFrameHost<J extends Juncture> {
 }
 
 export function createTriggerFrame<J extends Juncture>(
-  internalCursorProviuder: InternalCursorHost<J>,
+  internalCursorHost: InternalCursorHost<J>,
+  valueHandlerHost: ValueHandlerHost<J>,
   accessors: InternalAccessorKit<J>
 ): InternalFrame<J> {
-  const frame: any = createInternalFrame(internalCursorProviuder, accessors);
-  defineLazyProperty(frame, 'prepare', () => accessors.prepare);
+  const frame: any = createInternalFrame(internalCursorHost, valueHandlerHost, accessors);
+  defineLazyProperty(frame, 'set', () => valueHandlerHost.value.set);
+  defineLazyProperty(frame, 'apply', () => accessors.apply);
   return frame;
 }
 

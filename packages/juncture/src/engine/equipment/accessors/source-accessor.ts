@@ -1,7 +1,15 @@
-import { InternalCursorOf, Juncture } from '../../juncture';
-import { InternalSourceBin, SourceBin } from '../bins/source-bin';
+/**
+ * @license
+ * Copyright (c) Sergio Turolla All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import { InternalCursorOf, Juncture } from '../../../juncture';
+import { InternalSourceBin, SourceBin } from '../../bins/source-bin';
+import { Gear } from '../../gear';
 import { Cursor, JunctureOfCursor } from '../cursor';
-import { Gear } from '../gear';
 
 // #region SourceAccessor
 export interface SourceAccessor<J extends Juncture> {

@@ -7,11 +7,22 @@
  */
 
 import { jSymbols } from '../symbols';
-import { isObject } from '../tool/object';
+import { getObjectAttachment, isObject } from '../tool/object';
 import { AccessModifier } from './access-modifier';
 import { DescriptorType } from './descriptor-type';
 
-export type NotSuitableDescriptor = '\u26A0 ERROR: NOT SUITABLE TYPE';
+// #region Symbols
+const intDescriptorCacheSymbol = Symbol('intDescriptorCache');
+const extDescriptorCacheSymbol = Symbol('extDescriptorCache');
+interface DescriptorSymbols {
+  readonly intDescriptorCache: typeof intDescriptorCacheSymbol;
+  readonly extDescriptorCache: typeof extDescriptorCacheSymbol;
+}
+const descriptorSymbols: DescriptorSymbols = {
+  intDescriptorCache: intDescriptorCacheSymbol,
+  extDescriptorCache: extDescriptorCacheSymbol
+};
+// #endregion
 
 // Not a class because of AccessModifier implementation (and because so can be easily expanded...)
 export interface Descriptor<T extends DescriptorType, P, A extends AccessModifier> {
@@ -47,8 +58,14 @@ export function isDescriptor(obj: any): obj is Descriptor<any, any, any> {
   return true;
 }
 
-export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], internalUse?: boolean): string[] {
-  return Object.keys(obj).filter(key => {
+export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], internalUse: boolean): string[] {
+  const cacheSymbol = internalUse ? descriptorSymbols.intDescriptorCache : descriptorSymbols.extDescriptorCache;
+  const keyCache = getObjectAttachment(obj, cacheSymbol, () => new Map<DescriptorType[], string[]>());
+  if (keyCache.has(types)) {
+    return keyCache.get(types)!;
+  }
+
+  const value = Object.keys(obj).filter(key => {
     const prop = (obj as any)[key];
     if (!isDescriptor(prop)) {
       return false;
@@ -57,11 +74,11 @@ export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], 
       return false;
     }
 
-    if (internalUse !== undefined) {
-      if (!internalUse && prop.access !== AccessModifier.public) {
-        return false;
-      }
+    if (!internalUse && prop.access !== AccessModifier.public) {
+      return false;
     }
     return true;
   });
+  keyCache.set(types, value);
+  return value;
 }

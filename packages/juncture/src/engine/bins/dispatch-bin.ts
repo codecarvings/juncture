@@ -7,10 +7,8 @@
  */
 
 import { AccessModifier } from '../../design/access-modifier';
-import {
-  getFilteredDescriptorKeys, NotSuitableDescriptor
-} from '../../design/descriptor';
-import { DescriptorType } from '../../design/descriptor-type';
+import { getFilteredDescriptorKeys } from '../../design/descriptor';
+import { applicableDescriptorTypes, NotSuitableType } from '../../design/descriptor-type';
 import { GenericReducer } from '../../design/descriptors/reducer';
 import { GenericTrigger } from '../../design/descriptors/trigger';
 import { Juncture } from '../../juncture';
@@ -23,16 +21,15 @@ import { Gear } from '../gear';
 type DispatchBinItem<D> =
   D extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => void
     : D extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => void
-      : NotSuitableDescriptor;
+      : NotSuitableType;
 
-const binTypes = [DescriptorType.reducer, DescriptorType.trigger];
 function createDispatchBinBase(
   gear: Gear,
   dispatcher: Dispatcher,
   internalUse: boolean
 ) {
   const { juncture } = gear;
-  const keys = getFilteredDescriptorKeys(juncture, binTypes, internalUse);
+  const keys = getFilteredDescriptorKeys(juncture, applicableDescriptorTypes, internalUse);
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(

@@ -6,13 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSchema } from '../../design/descriptors/schema';
-import { JunctureSchema } from '../../design/schema';
-import { createCursor } from '../../engine/cursor';
-import { Gear, GearLayout, GearMediator } from '../../engine/gear';
-import { getGear, isGearHost } from '../../engine/gear-host';
-import { JMachineGearMediator } from '../../j-machine';
-import { Juncture } from '../../juncture';
+import { createSchema } from '../../../design/descriptors/schema';
+import { JunctureSchema } from '../../../design/schema';
+import { createCursor } from '../../../engine/equipment/cursor';
+import { Gear, GearLayout, GearMediator } from '../../../engine/gear';
+import { getGear, isGearHost } from '../../../engine/gear-host';
+import { JMachineGearMediator } from '../../../j-machine';
+import { Juncture } from '../../../juncture';
 
 class MyJuncture extends Juncture {
   schema = createSchema(() => new JunctureSchema(''));
@@ -29,8 +29,15 @@ const gearMediator: GearMediator = {
   setValue: () => { }
 };
 const machineMediator: JMachineGearMediator = {
-  enrollGear: () => { },
-  createControlledGear: () => undefined!,
+  gear: {
+    enroll: () => { },
+    createControlled: () => undefined!
+  },
+  transaction: {
+    begin: () => { },
+    registerAlteredGear: () => { },
+    commit: () => { }
+  },
   dispatch: () => {}
 };
 

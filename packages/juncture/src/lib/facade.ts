@@ -8,7 +8,7 @@
 
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
-import { createCursor, Cursor } from '../engine/cursor';
+import { createCursor, Cursor } from '../engine/equipment/cursor';
 import {
   Gear, GearLayout, GearMediator
 } from '../engine/gear';
@@ -49,14 +49,13 @@ export class FacadeGear extends Gear {
   readonly schema!: FacadeSchema;
 
   // #region Value stuff
-  protected valueDidUpdate(): void {
+  protected valueDidUpdate() {
     this.child.detectValueChange();
   }
   // #endregion
 
   // #region Children stuff
   protected createChild(): Gear {
-    const { setValue } = this.gearMediator;
     const layout: GearLayout = {
       parent: this,
       path: [...this.layout.path, childKey],
@@ -65,7 +64,11 @@ export class FacadeGear extends Gear {
     };
     const gearMediator: GearMediator = {
       getValue: () => this._value,
-      setValue
+      setValue: childValue => {
+        this._value = childValue;
+        // Not a container...
+        this.gearMediator.setValue(this._value);
+      }
     };
     return Juncture.createGear(this.schema.Child, layout, gearMediator, this.machineMediator);
   }

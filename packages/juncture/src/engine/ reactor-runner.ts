@@ -22,17 +22,23 @@ interface TeardownMap {
   readonly [key: string]: () => void | undefined;
 }
 
+const descriptorTypes = [DescriptorType.reactor];
+
 export class ReactorRunner {
   constructor(protected readonly gear: Gear, protected readonly reactorFrameHost: ReactorFrameHost<Juncture>) {
-    this.keys = getFilteredDescriptorKeys(gear.juncture, [DescriptorType.reactor]);
+    this.keys = getFilteredDescriptorKeys(gear.juncture, descriptorTypes, true);
   }
 
   protected readonly keys: string[];
 
   protected teardowns: TeardownMap | undefined;
 
+  get started(): boolean {
+    return this.teardowns !== undefined;
+  }
+
   start() {
-    if (this.teardowns) {
+    if (this.started) {
       throw Error(`Cannot start reactors of ${pathToString(this.gear.layout.path)}: already started`);
     }
 
@@ -44,7 +50,7 @@ export class ReactorRunner {
   }
 
   stop() {
-    if (!this.teardowns) {
+    if (!this.started) {
       throw Error(`Cannot stop reactors of ${pathToString(this.gear.layout.path)}: not started`);
     }
 

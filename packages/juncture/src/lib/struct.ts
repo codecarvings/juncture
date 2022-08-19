@@ -8,7 +8,7 @@
 
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
-import { createCursor, Cursor } from '../engine/cursor';
+import { createCursor, Cursor } from '../engine/equipment/cursor';
 import {
   Gear, GearLayout, GearMap, GearMediator
 } from '../engine/gear';
@@ -68,13 +68,13 @@ export class StructGear extends Gear {
   readonly schema!: StructSchema;
 
   // #region Value stuff
-  protected valueDidUpdate(): void {
+  protected valueDidUpdate() {
     this.schema.childKeys.forEach(key => {
       this.children[key].detectValueChange();
     });
   }
 
-  getHarmonizedValue(value: any): any {
+  protected getHarmonizedValue(value: any): any {
     if (value === this._value) {
       return value;
     }
@@ -87,7 +87,6 @@ export class StructGear extends Gear {
 
   // #region Children stuff
   protected createChildren(): GearMap {
-    const { setValue } = this.gearMediator;
     return mappedAssign(
       {},
       this.schema.childKeys,
@@ -101,10 +100,7 @@ export class StructGear extends Gear {
         const gearMediator: GearMediator = {
           getValue: () => this._value[key],
           setValue: childValue => {
-            setValue({
-              ...this._value,
-              [key]: childValue
-            });
+            this._value[key] = childValue;
           }
         };
         return Juncture.createGear(this.schema.Children[key], layout, gearMediator, this.machineMediator);

@@ -8,15 +8,17 @@
 
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
-import { createCursor, Cursor } from '../engine/cursor';
-import { ControlledGear, Gear, GearLayout, GearMediator, GearMountStatus } from '../engine/gear';
+import { createCursor, Cursor } from '../engine/equipment/cursor';
+import {
+  ControlledGear, Gear, GearLayout, GearMediator
+} from '../engine/gear';
 import { PathFragment } from '../engine/path';
 import { ForgeableJuncture } from '../forgeable-juncture';
 import { Forger } from '../forger';
 import { JMachineGearMediator } from '../j-machine';
 import {
-    CursorOfType,
-    Juncture, JunctureType, SchemaOf, ValueOfType
+  CursorOfType,
+  Juncture, JunctureType, SchemaOf, ValueOfType
 } from '../juncture';
 import { jSymbols } from '../symbols';
 
@@ -49,19 +51,16 @@ export class ListGear extends Gear {
   // #region Value stuff
   readonly _value!: any[];
 
-  protected valueDidUpdate(): void {
+  protected valueDidUpdate() {
     this.reconcileChildren();
     this.children.forEach(child => {
-      if (child.gear.mountStatus === GearMountStatus.mounted) {
-        child.gear.detectValueChange();
-      }
+      (child.gear as ListGear).detectValueChange();
     });
   }
   // #endregion
 
   // #region Children stuff
   protected createChild(index: number): ControlledGear {
-    const { setValue } = this.gearMediator;
     const layout: GearLayout = {
       parent: this,
       path: [...this.layout.path, index],
@@ -71,13 +70,11 @@ export class ListGear extends Gear {
     const gearMediator: GearMediator = {
       getValue: () => this._value[index],
       setValue: childValue => {
-        const newValue = [...this._value];
-        newValue[index] = childValue;
-        setValue(newValue);
+        this._value[index] = childValue;
       }
     };
 
-    return this.machineMediator.createControlledGear(this.schema.Child, layout, gearMediator);
+    return this.machineMediator.gear.createControlled(this.schema.Child, layout, gearMediator);
   }
 
   protected createChildren(): ControlledGear[] {

@@ -1,8 +1,16 @@
-import { InternalCursorOf, Juncture } from '../../juncture';
+/**
+ * @license
+ * Copyright (c) Sergio Turolla All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import { InternalCursorOf, Juncture } from '../../../juncture';
+import { InternalSelectBin, InternalSelectBinHost, SelectBin } from '../../bins/select-bin';
+import { Gear } from '../../gear';
 import { createAccessorFactory, createInternalAccessorFactory } from '../accessor';
-import { InternalSelectBin, InternalSelectBinHost, SelectBin } from '../bins/select-bin';
 import { Cursor, JunctureOfCursor } from '../cursor';
-import { Gear } from '../gear';
 
 // #region SelectAccessor
 export interface SelectAccessor<J extends Juncture> {

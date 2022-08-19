@@ -28,11 +28,10 @@ import {
 import {
   BodyOfTrigger, createTrigger, GenericTrigger, PrivateTrigger, ProtectedTrigger, Trigger
 } from './design/descriptors/trigger';
-import { Action } from './engine/action';
+import { InternalFrame, OverrideInternalFrame } from './engine/frames/internal-frame';
 import { OverrideReactorFrame, ReactorFrame } from './engine/frames/reactor-frame';
-import { OverrideReducerFrame, ReducerFrame } from './engine/frames/reducer-frame';
-import { OverrideSelectorFrame, SelectorFrame } from './engine/frames/selector-frame';
 import { OverrideTriggerFrame, TriggerFrame } from './engine/frames/trigger-frame';
+import { Instruction } from './engine/instruction';
 import { Juncture, ValueOf } from './juncture';
 import { jSymbols } from './symbols';
 import { OverloadParameters } from './tool/overload-types';
@@ -49,15 +48,14 @@ export interface CreateDescriptorForOverrideArgs {
 export class ProtectedForger<J extends Juncture> {
   constructor(protected readonly assembler: PropertyAssembler) { }
 
-  reducer<F extends (frame: ReducerFrame<J>) => (...args: any) => ValueOf<J>>(
+  reducer<F extends (frame: InternalFrame<J>) => (...args: any) => ValueOf<J>>(
     reducerFn: F): ProtectedReducer<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createReducer(reducerFn as any, AccessModifier.protected));
   }
 
-  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: F): ProtectedTrigger<(...args : OverloadParameters<ReturnType<F>>) => Action[]> {
-    const fn: any = reducerFn || (() => () => []);
-    return this.assembler.registerStaticProperty(createTrigger(fn, AccessModifier.protected));
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => Instruction | Instruction[]>(
+    triggerFn: F): ProtectedTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
+    return this.assembler.registerStaticProperty(createTrigger(triggerFn as any, AccessModifier.protected));
   }
 }
 // #endregion
@@ -66,24 +64,23 @@ export class ProtectedForger<J extends Juncture> {
 export class PrivateForger<J extends Juncture> {
   constructor(protected readonly assembler: PropertyAssembler) { }
 
-  selector<F extends (frame: SelectorFrame<J>) => any>(selectorFn: F): PrivateSelector<ReturnType<F>> {
+  selector<F extends (frame: InternalFrame<J>) => any>(selectorFn: F): PrivateSelector<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createSelector(selectorFn as any, AccessModifier.private));
   }
 
-  paramSelector<F extends (frame: SelectorFrame<J>) => (...args: any) => any>(
+  paramSelector<F extends (frame: InternalFrame<J>) => (...args: any) => any>(
     selectorFn: F): PrivateParamSelector<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any, AccessModifier.private));
   }
 
-  reducer<F extends (frame: ReducerFrame<J>) => (...args: any) => ValueOf<J>>(
+  reducer<F extends (frame: InternalFrame<J>) => (...args: any) => ValueOf<J>>(
     reducerFn: F): PrivateReducer<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createReducer(reducerFn as any, AccessModifier.private));
   }
 
-  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: F): PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Action[]> {
-    const fn: any = reducerFn || (() => () => []);
-    return this.assembler.registerStaticProperty(createTrigger(fn, AccessModifier.private));
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => Instruction | Instruction[]>(
+    triggerFn: F): PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
+    return this.assembler.registerStaticProperty(createTrigger(triggerFn as any, AccessModifier.private));
   }
 }
 // #endregion
@@ -177,18 +174,18 @@ export class Forger<J extends Juncture> {
   // eslint-disable-next-line class-methods-use-this
   readonly override: {
     <D extends GenericSelector<any, any>>(parent : D): {
-      selector<F extends (frame: OverrideSelectorFrame<J, BodyOfSelector<D>>) => any>
+      selector<F extends (frame: OverrideInternalFrame<J, BodyOfSelector<D>>) => any>
       (selectorFn: F): D extends Descriptor<any, any, AccessModifier.public> ? Selector<ReturnType<F>> : PrivateSelector<ReturnType<F>>;
     };
 
     <D extends GenericParamSelector<any, any>>(parent: D): {
-      paramSelector<F extends (frame: OverrideSelectorFrame<J, BodyOfParamSelector<D>>)
+      paramSelector<F extends (frame: OverrideInternalFrame<J, BodyOfParamSelector<D>>)
       => (...args: any) => any>(
         selectorFn: F): D extends Descriptor<any, any, AccessModifier.public> ? ParamSelector<ReturnType<F>> : PrivateParamSelector<ReturnType<F>>;
     };
 
     <D extends GenericReducer<any, any>>(parent: D): {
-      reducer<F extends (frame: OverrideReducerFrame<J, BodyOfReducer<D>>)
+      reducer<F extends (frame: OverrideInternalFrame<J, BodyOfReducer<D>>)
       => (...args: any) => ValueOf<J>>(
         reducerFn: F): D extends Descriptor<any, any, AccessModifier.public> ? Reducer<ReturnType<F>> :
         D extends Descriptor<any, any, AccessModifier.protected> ? ProtectedReducer<ReturnType<F>> :
@@ -197,10 +194,10 @@ export class Forger<J extends Juncture> {
 
     <D extends GenericTrigger<any, any>>(parent: D): {
       trigger<F extends (frame: OverrideTriggerFrame<J, BodyOfTrigger<D>>)
-      => (...args: any) => ReadonlyArray<Action>>(
-        reducerFn: F): D extends Descriptor<any, any, AccessModifier.public> ? Trigger<(...args : OverloadParameters<ReturnType<F>>) => Action[]> :
-        D extends Descriptor<any, any, AccessModifier.protected> ? ProtectedTrigger<(...args : OverloadParameters<ReturnType<F>>) => Action[]> :
-          PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Action[]>
+      => (...args: any) => Instruction | Instruction[]>(
+        triggerFn: F): D extends Descriptor<any, any, AccessModifier.public> ? Trigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> :
+        D extends Descriptor<any, any, AccessModifier.protected> ? ProtectedTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> :
+          PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]>
     };
 
     <D extends Reactor<any>>(parent : D): {
@@ -213,24 +210,23 @@ export class Forger<J extends Juncture> {
 
   readonly private = new PrivateForger<J>(this.assembler);
 
-  selector<F extends (frame: SelectorFrame<J>) => any>(selectorFn: F): Selector<ReturnType<F>> {
+  selector<F extends (frame: InternalFrame<J>) => any>(selectorFn: F): Selector<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createSelector(selectorFn as any));
   }
 
-  paramSelector<F extends (frame: SelectorFrame<J>) => (...args: any) => any>(
+  paramSelector<F extends (frame: InternalFrame<J>) => (...args: any) => any>(
     selectorFn: F): ParamSelector<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any));
   }
 
-  reducer<F extends (frame: ReducerFrame<J>) => (...args: any) => ValueOf<J>>(
+  reducer<F extends (frame: InternalFrame<J>) => (...args: any) => ValueOf<J>>(
     reducerFn: F): Reducer<ReturnType<F>> {
     return this.assembler.registerStaticProperty(createReducer(reducerFn as any));
   }
 
-  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => ReadonlyArray<Action>>(
-    reducerFn: F): Trigger<(...args : OverloadParameters<ReturnType<F>>) => Action[]> {
-    const fn: any = reducerFn || (() => () => []);
-    return this.assembler.registerStaticProperty(createTrigger(fn));
+  trigger<F extends (frame: TriggerFrame<J>) => (...args: any) => Instruction | Instruction[]>(
+    triggerFn: F): Trigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
+    return this.assembler.registerStaticProperty(createTrigger(triggerFn as any));
   }
 
   reactor<F extends (frame: ReactorFrame<J>) => (() => void) | void>(reactorFn: F):

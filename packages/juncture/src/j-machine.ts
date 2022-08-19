@@ -13,6 +13,7 @@ import {
 } from './engine/gear';
 import { getGear, isGearHost } from './engine/gear-host';
 import { GearManager } from './engine/gear-manager';
+import { TranactionManager } from './engine/transaction-manager';
 import { Juncture, JunctureType, ValueOfType } from './juncture';
 
 export enum JMachineStatus {
@@ -22,8 +23,17 @@ export enum JMachineStatus {
 }
 
 export interface JMachineGearMediator {
-  enrollGear(managedGear: ManagedGear): void
-  createControlledGear(Type: JunctureType, layout: GearLayout, gearMediator: GearMediator): ControlledGear;
+  readonly gear: {
+    enroll(managedGear: ManagedGear): void
+    createControlled(Type: JunctureType, layout: GearLayout, gearMediator: GearMediator): ControlledGear;
+  }
+
+  readonly transaction: {
+    begin(): void;
+    registerAlteredGear(gear: Gear): void;
+    commit(): void;
+  }
+
   dispatch(action: Action): void;
 }
 
@@ -35,7 +45,11 @@ export class JMachine<JT extends JunctureType> {
 
     this.gearManager = this.createGearManger();
 
+    this.transactionManager = this.createTranactionManager();
+
     this.gear = this.createGear();
+
+    this.gearManager.sync();
 
     this.frame = this.gear.frame as any;
   }
@@ -62,6 +76,13 @@ export class JMachine<JT extends JunctureType> {
     return new GearManager();
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  protected createTranactionManager(): TranactionManager {
+    return new TranactionManager(this.gearManager.sync);
+  }
+
+  protected readonly transactionManager: TranactionManager;
+
   protected readonly gear: Gear;
 
   protected createGear(): Gear {
@@ -74,26 +95,26 @@ export class JMachine<JT extends JunctureType> {
     const gearMediator: GearMediator = {
       getValue: () => this._value,
       setValue: newValue => {
-        // New Value check performed in Gear.executeAction method
         this._value = newValue;
-        this.gear.detectValueChange();
-        this.gearManager.sync();
       }
     };
     const machineMediator: JMachineGearMediator = {
-      enrollGear: this.gearManager.enrollGear,
-      createControlledGear: (
-        Type: JunctureType,
-        layout2: GearLayout,
-        gearMediator2: GearMediator
-      ): ControlledGear => {
-        const gear = Juncture.createGear(Type, layout2, gearMediator2, machineMediator);
-        return {
-          gear,
-          scheduleUnmount: () => {
-            this.gearManager.dismissGear(gear);
-          }
-        };
+      gear: {
+        enroll: this.gearManager.enroll,
+        createControlled: (Type, layout2, gearMediator2) => {
+          const gear = Juncture.createGear(Type, layout2, gearMediator2, machineMediator);
+          return {
+            gear,
+            scheduleUnmount: () => {
+              this.gearManager.dismiss(gear);
+            }
+          };
+        }
+      },
+      transaction: {
+        begin: this.transactionManager.begin,
+        registerAlteredGear: this.transactionManager.registerAlteredGear,
+        commit: this.transactionManager.commit
       },
       dispatch: this.dispatch
     };
@@ -117,13 +138,12 @@ export class JMachine<JT extends JunctureType> {
       throw Error('JMachine already stopped');
     }
 
-    this.gearManager.dismissGear(this.gear);
+    this.gearManager.dismiss(this.gear);
     this.gearManager.sync();
   }
   // #endregion
 
   // #region Frame stuff
-  // eslint-disable-next-line class-methods-use-this
   dispatch(action: Action) {
     let target: Gear;
     if (isGearHost(action.target)) {
@@ -132,7 +152,7 @@ export class JMachine<JT extends JunctureType> {
     } else {
       target = this.gear.resolve(action.target);
     }
-    target.executeAction(action.key, action.args);
+    target.executeAction(action.key, action.payload);
     if (action.callback) {
       action.callback();
     }

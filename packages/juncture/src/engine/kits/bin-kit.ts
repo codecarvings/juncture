@@ -10,14 +10,11 @@ import { Juncture } from '../../juncture';
 import { defineLazyProperty } from '../../tool/object';
 import { Dispatcher } from '../action';
 import {
+  ApplyBin, createApplyBin, createInternalApplyBin, InternalApplyBin
+} from '../bins/apply-bin';
+import {
   createDispatchBin, createInternalDispatchBin, DispatchBin, InternalDispatchBin
 } from '../bins/dispatch-bin';
-import {
-  createInternalPrepareBin, createPrepareBin, InternalPrepareBin, PrepareBin
-} from '../bins/prepare-bin';
-import {
-  createInternalReduceBin, createReduceBin, InternalReduceBin, ReduceBin
-} from '../bins/reduce-bin';
 import {
   createInternalSelectBin, createSelectBin, InternalSelectBin, SelectBin
 } from '../bins/select-bin';
@@ -27,15 +24,13 @@ import { InternalFrameKit } from './frame-kit';
 // #region BinKit
 export interface BinKit<J extends Juncture = Juncture> {
   readonly select: SelectBin<J>;
-  readonly reduce: ReduceBin<J>;
-  readonly prepare: PrepareBin<J>;
+  readonly apply: ApplyBin<J>;
   readonly dispatch: DispatchBin<J>;
 }
 
 export function equipBinKit(bins: any, gear: Gear, frames: InternalFrameKit, dispatcher: Dispatcher) {
   defineLazyProperty(bins, 'select', () => createSelectBin(gear, frames));
-  defineLazyProperty(bins, 'reduce', () => createReduceBin(gear, frames));
-  defineLazyProperty(bins, 'prepare', () => createPrepareBin(gear));
+  defineLazyProperty(bins, 'apply', () => createApplyBin(gear));
   defineLazyProperty(bins, 'dispatch', () => createDispatchBin(gear, dispatcher));
 }
 // #endregion
@@ -43,15 +38,13 @@ export function equipBinKit(bins: any, gear: Gear, frames: InternalFrameKit, dis
 // #region InternalBinKit
 export interface InternalBinKit<J extends Juncture = Juncture> {
   readonly select: InternalSelectBin<J>;
-  readonly reduce: InternalReduceBin<J>;
-  readonly prepare: InternalPrepareBin<J>;
+  readonly apply: InternalApplyBin<J>;
   readonly dispatch: InternalDispatchBin<J>;
 }
 
 export function equipInternalBinKit(internalBins: any, gear: Gear, frames: InternalFrameKit, dispatcher: Dispatcher) {
   defineLazyProperty(internalBins, 'select', () => createInternalSelectBin(gear, frames));
-  defineLazyProperty(internalBins, 'reduce', () => createInternalReduceBin(gear, frames));
-  defineLazyProperty(internalBins, 'prepare', () => createInternalPrepareBin(gear));
+  defineLazyProperty(internalBins, 'apply', () => createInternalApplyBin(gear));
   defineLazyProperty(internalBins, 'dispatch', () => createInternalDispatchBin(gear, dispatcher));
 }
 // #endregion

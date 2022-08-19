@@ -41,25 +41,12 @@ export class Singleton<T extends Constructable> {
     return result;
   }
 
-  static getAttachment(
-    cacheKey: symbol,
-    resolverFn: (instance: any) => any
-  ): (intance_or_Type: any) => any {
-    return (intance_or_Type: any) => {
-      let instance: any;
-      if (typeof intance_or_Type === 'function') {
-        instance = Singleton.get(intance_or_Type).instance;
-      } else {
-        instance = intance_or_Type;
-      }
-
-      if (instance[cacheKey]) {
-        return instance[cacheKey].val;
-      }
-
-      const val = resolverFn(instance);
-      instance[cacheKey] = { val };
-      return val;
-    };
+  static getInstance<T extends Constructable>(Type: T): InstanceType<T>;
+  static getInstance<T>(instance: T): T;
+  static getInstance(intance_or_Type: any) {
+    if (typeof intance_or_Type === 'function') {
+      return Singleton.get(intance_or_Type).instance;
+    }
+    return intance_or_Type;
   }
 }

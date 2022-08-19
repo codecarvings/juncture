@@ -7,6 +7,7 @@
  */
 
 const payload = Symbol('payload');
+const eventPicker = Symbol('eventPicker');
 const createPropertyAssembler = Symbol('createPropertyAssembler');
 const createForger = Symbol('createForger');
 const init = Symbol('init');
@@ -19,6 +20,7 @@ const bitDefault = Symbol('bitDefault');
 
 export interface JSymbols {
   readonly payload: typeof payload;
+  readonly eventPicker: typeof eventPicker;
   readonly createPropertyAssembler: typeof createPropertyAssembler;
   readonly createForger: typeof createForger;
   readonly init: typeof init;
@@ -32,6 +34,7 @@ export interface JSymbols {
 
 export const jSymbols: JSymbols = {
   payload,
+  eventPicker,
   createPropertyAssembler,
   createForger,
   init,

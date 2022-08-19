@@ -11,12 +11,12 @@ import { Path } from './path';
 export interface Action {
   readonly target: Path;
   readonly key: string;
-  readonly args: any;
+  readonly payload: any;
   readonly callback?: () => void;
 }
 
-export function createAction(target: Path, key: string, args: any): Action {
-  return { target, key, args };
+export function createAction(target: Path, key: string, payload: any): Action {
+  return { target, key, payload };
 }
 
 export interface Dispatcher {

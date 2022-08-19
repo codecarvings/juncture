@@ -7,13 +7,14 @@
  */
 
 import { AccessModifier } from '../../design/access-modifier';
-import { GenericParamSelector } from '../../design/descriptors/param-selector';
-import { GenericSelector } from '../../design/descriptors/selector';
+import { NotSuitableType } from '../../design/descriptor-type';
+import { DescriptorWithEvents } from '../../design/descriptor-with-events';
 import { Juncture } from '../../juncture';
 import { Gear } from '../gear';
 
 // #region Common
-type SourceBinItem<D> = D;
+type SourceBinItem<D> = D extends DescriptorWithEvents<any, any, infer E extends {}, any>
+  ? E : NotSuitableType;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function createSourceBinBase<J extends Juncture>(gear: Gear, internalUse: boolean) {
@@ -25,9 +26,8 @@ function createSourceBinBase<J extends Juncture>(gear: Gear, internalUse: boolea
 // #region SourceBin
 export type SourceBin<J> = {
   readonly [K in keyof J as
-  J[K] extends GenericSelector<any, AccessModifier.public> ? K
-    : J[K] extends GenericParamSelector<any, AccessModifier.public> ? K
-      : never
+  J[K] extends DescriptorWithEvents<any, any, infer E extends {}, AccessModifier.public>
+    ? K : never
   ]: SourceBinItem<J[K]>;
 };
 

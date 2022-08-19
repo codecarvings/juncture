@@ -7,11 +7,11 @@
  */
 
 import {
-  CursorOf, InternalCursorOf, Juncture
-} from '../juncture';
-import { JSymbols, jSymbols } from '../symbols';
-import { Gear } from './gear';
-import { addGearLink, GearHost } from './gear-host';
+  CursorOf, InternalCursorOf, Juncture, ValueOf
+} from '../../juncture';
+import { JSymbols, jSymbols } from '../../symbols';
+import { Gear } from '../gear';
+import { addGearLink, GearHost } from '../gear-host';
 
 export interface Cursor<J extends Juncture = Juncture> extends GearHost {
   readonly [jSymbols.juncture]: J; // Preserve type param
@@ -23,6 +23,7 @@ export function createCursor<J extends Juncture>(gear: Gear): Cursor<J> {
 
 // ---  Derivations
 export type JunctureOfCursor<C extends Cursor> = C[JSymbols['juncture']];
+export type ValueOfCursor<C extends Cursor> = ValueOf<C[JSymbols['juncture']]>;
 // #endregion
 
 export interface CursorHost<J extends Juncture = Juncture> {

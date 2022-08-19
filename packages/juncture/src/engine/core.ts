@@ -12,7 +12,8 @@ import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../tool/object';
 import { ReactorRunner } from './ reactor-runner';
 import { Dispatcher } from './action';
-import { Cursor } from './cursor';
+import { Cursor } from './equipment/cursor';
+import { createValueHandler, ValueHandler } from './equipment/value-handler';
 import { createFrame, Frame } from './frames/frame';
 import { Gear } from './gear';
 import {
@@ -25,6 +26,8 @@ import { equipInternalFrameKit, InternalFrameKit } from './kits/frame-kit';
 
 export class Core {
   readonly cursor!: Cursor;
+
+  readonly value!: ValueHandler;
 
   readonly frame!: Frame;
 
@@ -42,12 +45,13 @@ export class Core {
 
   constructor(protected readonly gear: Gear, dispatcher: Dispatcher) {
     defineLazyProperty(this, 'cursor', () => gear.juncture[jSymbols.createCursor](gear));
-    defineLazyProperty(this, 'frame', () => createFrame(this, this.accessors));
+    defineLazyProperty(this, 'value', () => createValueHandler(gear));
+    defineLazyProperty(this, 'frame', () => createFrame(this, this, this.accessors));
     equipBinKit(this.bins, gear, this.internalFrames, dispatcher);
     equipAccessorKit(this.accessors, gear);
 
     defineLazyProperty(this, 'internalCursor', () => gear.juncture[jSymbols.createInternalCursor](gear));
-    equipInternalFrameKit(this.internalFrames, this as any, this.internalAccessors);
+    equipInternalFrameKit(this.internalFrames, this, this, this.internalAccessors);
     equipInternalBinKit(this.internalBins, gear, this.internalFrames, dispatcher);
     equipInternalAccessorKit(this.internalAccessors, gear, this.internalBins);
 

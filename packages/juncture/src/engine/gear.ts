@@ -8,18 +8,23 @@
 
 /* eslint-disable max-len */
 
+import { Descriptor, getFilteredDescriptorKeys } from '../design/descriptor';
+import { applicableDescriptorTypes, DescriptorType } from '../design/descriptor-type';
 import { JunctureSchema } from '../design/schema';
 import { JMachineGearMediator } from '../j-machine';
 import { Juncture } from '../juncture';
+import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../tool/object';
 import { Core } from './core';
-import { Cursor } from './cursor';
+import { Cursor } from './equipment/cursor';
 import { Frame } from './frames/frame';
 import { createGearRef, GearRef } from './gear-ref';
+import { Instruction } from './instruction';
 import {
   BinKit
 } from './kits/bin-kit';
 import {
+  isSameOrDescendantPath,
   Path, PathFragment, pathFragmentToString, pathToString
 } from './path';
 
@@ -67,6 +72,8 @@ export class Gear {
 
   readonly ref!: GearRef;
 
+  protected readonly applicableKeys!: string;
+
   constructor(
     readonly juncture: Juncture,
     readonly layout: GearLayout,
@@ -76,6 +83,8 @@ export class Gear {
     this.schema = Juncture.getSchema(juncture);
 
     defineLazyProperty(this, 'ref', () => createGearRef(this));
+
+    defineLazyProperty(this, 'applicableKeys', () => getFilteredDescriptorKeys(juncture, applicableDescriptorTypes, true));
 
     this._value = gearMediator.getValue();
     Object.defineProperty(this, 'value', {
@@ -88,8 +97,7 @@ export class Gear {
     defineLazyProperty(this, 'frame', () => this.core.frame, revocablePropOptions);
     defineLazyProperty(this, 'bins', () => this.core.bins, revocablePropOptions);
 
-    this.ensureMountStatus = this.ensureMountStatus.bind(this);
-    machineMediator.enrollGear(this.createManagedGear());
+    machineMediator.gear.enroll(this.createManagedGear());
   }
 
   // #region Core stuff
@@ -107,40 +115,80 @@ export class Gear {
   // #endregion
 
   // #region Value stuff
+
   protected _value: any;
 
   readonly value!: any;
+
+  detectValueChange(): boolean {
+    const value = this.gearMediator.getValue();
+    if (value === this._value) {
+      return false;
+    }
+
+    this.machineMediator.transaction.registerAlteredGear(this);
+    this._value = value;
+    this.valueDidUpdate();
+    return true;
+  }
 
   // eslint-disable-next-line class-methods-use-this
   protected valueDidUpdate(): void { }
 
   // eslint-disable-next-line class-methods-use-this
-  getHarmonizedValue(value: any): any {
+  protected getHarmonizedValue(value: any): any {
     return value;
   }
 
-  executeAction(key: string, args: any) {
-    const reducerFn = (this.core.internalBins.reduce as any)[key];
-    if (!reducerFn) {
-      throw Error(`Unable to execute action "${key}": not a Reducer`);
-    }
-
-    const value = reducerFn(...args);
-
-    if (value !== this._value) {
+  protected excuteInstruction(key: string | undefined, payload: any) {
+    if (key === undefined) {
+      // Set instruction
+      const value = this.getHarmonizedValue(payload);
       this.gearMediator.setValue(value);
+      this.detectValueChange();
+    } else {
+      const desc: Descriptor<any, any, any> = (this.juncture as any)[key];
+      if (desc) {
+        if (desc.type === DescriptorType.reducer) {
+          const value = this.getHarmonizedValue(desc[jSymbols.payload](this.core.internalFrames.internal)(...payload));
+          this.gearMediator.setValue(value);
+          this.detectValueChange();
+        } else if (desc.type === DescriptorType.trigger) {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          const instruction_or_instructions = desc[jSymbols.payload](this.core.internalFrames.trigger)(...payload);
+          if (Array.isArray(instruction_or_instructions)) {
+            (instruction_or_instructions as Instruction[]).forEach(instruction => {
+              if (!isSameOrDescendantPath(this.layout.path, instruction.target.layout.path)) {
+                throw Error(`Gear ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope`);
+              }
+              instruction.target.excuteInstruction(instruction.key, instruction.payload);
+            });
+          } else {
+            const instruction = (instruction_or_instructions as Instruction);
+            if (!isSameOrDescendantPath(this.layout.path, instruction.target.layout.path)) {
+              throw Error(`Gear ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope`);
+            }
+            instruction.target.excuteInstruction(instruction.key, instruction.payload);
+          }
+        } else {
+          throw Error(`Unable to execute action "${key}": wrong type (${desc.type})`);
+        }
+      } else {
+        throw Error(`Unable to execute action "${key}": not a Reducer or a Trigger`);
+      }
     }
   }
 
-  detectValueChange() {
-    const value = this.gearMediator.getValue();
-    if (value === this._value) {
-      return;
+  executeAction(key: string, payload: any) {
+    if (typeof key !== 'string') {
+      throw Error(`Unable to execute action: invalid key "${key}"`);
     }
 
-    this._value = value;
-    this.valueDidUpdate();
+    this.machineMediator.transaction.begin();
+    this.excuteInstruction(key, payload);
+    this.machineMediator.transaction.commit();
   }
+
   // #endregion
 
   // #region Children stuff
@@ -160,22 +208,20 @@ export class Gear {
   // #endregion
 
   // #region Mount stuff
-  private ensureMountStatus(desc: string, expected: GearMountStatus) {
-    if (this._mountStatus !== expected) {
-      throw Error(`Cannot ${desc} Gear ${pathToString(this.layout.path)}: current mount status: ${this._mountStatus}`);
-    }
-  }
-
   protected createManagedGear(): ManagedGear {
     return {
       gear: this,
       mount: () => {
-        this.ensureMountStatus('mount', GearMountStatus.pending);
+        if (this._mountStatus !== GearMountStatus.pending) {
+          throw Error(`Cannot mount Gear ${pathToString(this.layout.path)}: current mount status: ${this._mountStatus}`);
+        }
         this._mountStatus = GearMountStatus.mounted;
         this.gearDidMount();
       },
       unmount: () => {
-        this.ensureMountStatus('unmount', GearMountStatus.mounted);
+        if (this._mountStatus !== GearMountStatus.mounted && this._mountStatus !== GearMountStatus.pending) {
+          throw Error(`Cannot unmount Gear ${pathToString(this.layout.path)}: current mount status: ${this._mountStatus}`);
+        }
         this.gearWillUnmount();
         this._mountStatus = GearMountStatus.unmounted;
       }
@@ -188,13 +234,14 @@ export class Gear {
     return this._mountStatus;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   protected gearDidMount(): void {
     this.core.reactors.start();
   }
 
   protected gearWillUnmount(): void {
-    this.core.reactors.stop();
+    if (this.core.reactors.started) {
+      this.core.reactors.stop();
+    }
 
     const getRevoked = (desc: string) => () => {
       throw Error(`Cannot access ${desc}: Gear ${pathToString(this.layout.path)} not mounted`);
