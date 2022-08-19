@@ -94,28 +94,28 @@ export abstract class Juncture implements PropertyAssemblerHost, Initializable {
   // #endregion
 
   // #region Static
-  static getInstance<JT extends JunctureType>(Type: JT): InstanceType<JT> {
-    return Singleton.get(Type).instance;
+  static getInstance<JT extends JunctureCtor>(Ctor: JT): InstanceType<JT> {
+    return Singleton.get(Ctor).instance;
   }
 
   static getPropertyAssembler(juncture: Juncture): PropertyAssembler {
     return PropertyAssembler.get(juncture);
   }
 
-  static getSchema<JT extends JunctureType>(Type: JT): SchemaOfType<JT>;
+  static getSchema<JT extends JunctureCtor>(Ctor: JT): SchemaOfCtor<JT>;
   static getSchema<J extends Juncture>(juncture: J): SchemaOf<J>;
-  static getSchema(juncture_or_Type: Juncture | JunctureType) {
-    const juncture = Singleton.getInstance(juncture_or_Type) as Juncture;
+  static getSchema(juncture_or_Ctor: Juncture | JunctureCtor) {
+    const juncture = Singleton.getInstance(juncture_or_Ctor) as Juncture;
     return getObjectAttachment(juncture, junctureSymbols.schemaCache, () => juncture.schema[jSymbols.payload]());
   }
 
   static createGear(
-    Type: JunctureType,
+    Ctor: JunctureCtor,
     layoyt: GearLayout,
     gearMediator: GearMediator,
     machineMediator: JMachineGearMediator
   ): Gear {
-    const juncture = Juncture.getInstance(Type);
+    const juncture = Juncture.getInstance(Ctor);
     return juncture[jSymbols.createGear](layoyt, gearMediator, machineMediator);
   }
   // #endregion
@@ -134,26 +134,26 @@ export type InternalCursorOf<J extends Juncture> = J extends {
 } ? C : never;
 // #endregion
 
-// #region JunctureType
-export interface JunctureType<J extends Juncture = Juncture> {
+// #region JunctureCtor
+export interface JunctureCtor<J extends Juncture = Juncture> {
   new(): J;
 }
 
 // ---  Derivations
-export type SchemaOfType<JT extends JunctureType> = SchemaOf<InstanceType<JT>>;
-export type ValueOfType<JT extends JunctureType> = ValueOf<InstanceType<JT>>;
+export type SchemaOfCtor<JT extends JunctureCtor> = SchemaOf<InstanceType<JT>>;
+export type ValueOfCtor<JT extends JunctureCtor> = ValueOf<InstanceType<JT>>;
 
-export type InternalCursorOfType<JT extends JunctureType> = InternalCursorOf<InstanceType<JT>>;
-export type CursorOfType<JT extends JunctureType> = CursorOf<InstanceType<JT>>;
+export type InternalCursorOfCtor<JT extends JunctureCtor> = InternalCursorOf<InstanceType<JT>>;
+export type CursorOfCtor<JT extends JunctureCtor> = CursorOf<InstanceType<JT>>;
 // #endregion
 
-// #region JunctureTypeMap
-export interface JunctureTypeMap {
-  readonly [key: string]: JunctureType;
+// #region JunctureCtorMap
+export interface JunctureCtorMap {
+  readonly [key: string]: JunctureCtor;
 }
 
 // ---  Derivations
-export type CursorMapOfJunctureTypeMap<JTM extends JunctureTypeMap> = {
-  readonly [K in keyof JTM]: CursorOfType<JTM[K]>;
+export type CursorMapOfCtorMap<JTM extends JunctureCtorMap> = {
+  readonly [K in keyof JTM]: CursorOfCtor<JTM[K]>;
 };
 // #endregion

@@ -9,30 +9,27 @@
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { createCursor, Cursor } from '../engine/equipment/cursor';
-import {
-  Gear, GearLayout, GearMediator
-} from '../engine/gear';
+import { Gear, GearLayout, GearMediator } from '../engine/gear';
 import { PathFragment } from '../engine/path';
 import { ForgeableJuncture } from '../forgeable-juncture';
 import { Forger } from '../forger';
 import { JMachineGearMediator } from '../j-machine';
 import {
-  CursorOfType,
-  Juncture, JunctureType, SchemaOf, ValueOfType
+  CursorOfCtor, Juncture, JunctureCtor, SchemaOf, ValueOfCtor
 } from '../juncture';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../tool/object';
 
 // #region Value & Schema
-export type FacadeValue<JT extends JunctureType> = ValueOfType<JT>;
+export type FacadeValue<JT extends JunctureCtor> = ValueOfCtor<JT>;
 
-export class FacadeSchema<JT extends JunctureType = any> extends JunctureSchema<FacadeValue<JT>> {
+export class FacadeSchema<JT extends JunctureCtor = any> extends JunctureSchema<FacadeValue<JT>> {
   protected constructor(readonly Child: JT, defaultValue?: FacadeValue<JT>) {
     super(defaultValue !== undefined ? defaultValue : Juncture.getSchema(Child).defaultValue);
   }
 }
 
-function createFacadeSchema <JT extends JunctureType>(Child: JT, defaultValue?: FacadeValue<JT>): FacadeSchema<JT> {
+function createFacadeSchema <JT extends JunctureCtor>(Child: JT, defaultValue?: FacadeValue<JT>): FacadeSchema<JT> {
   return new (FacadeSchema as any)(Child, defaultValue);
 }
 // #endregion
@@ -85,7 +82,7 @@ export class FacadeGear extends Gear {
 }
 
 export type InternalFacadeCursor<J extends FacadeJuncture> = Cursor<J> & {
-  readonly inner: CursorOfType<ChildOf<J>>;
+  readonly inner: CursorOfCtor<ChildOf<J>>;
 };
 
 // #endregion
@@ -122,29 +119,29 @@ export type ChildOf<J extends FacadeJuncture> = SchemaOf<J>['Child'];
 
 // #region Builder types
 // --- Inert
-interface Facade<JT extends JunctureType> extends FacadeJuncture {
+interface Facade<JT extends JunctureCtor> extends FacadeJuncture {
   schema: Schema<FacadeSchema<JT>>;
 }
-interface FacadeType<JT extends JunctureType> extends JunctureType<Facade<JT>> { }
+interface FacadeCtor<JT extends JunctureCtor> extends JunctureCtor<Facade<JT>> { }
 // #endregion
 
 // #region Builder
-function createFacadeType<JT extends abstract new(...args: any) => FacadeJuncture,
-  JT2 extends JunctureType>(BaseType: JT, Child: JT2, defaultValue?: FacadeValue<JT2>) {
-  abstract class Facade extends BaseType {
+function createFacadeCtor<JT extends abstract new(...args: any) => FacadeJuncture,
+  JT2 extends JunctureCtor>(BaseCtor: JT, Child: JT2, defaultValue?: FacadeValue<JT2>) {
+  abstract class Facade extends BaseCtor {
     schema = createSchema(() => createFacadeSchema(Child, defaultValue));
   }
   return Facade;
 }
 
 interface FacadeBuilder {
-  Of<JT extends JunctureType>(Child: JT, defaultValue?: FacadeValue<JT>): FacadeType<JT>;
+  Of<JT extends JunctureCtor>(Child: JT, defaultValue?: FacadeValue<JT>): FacadeCtor<JT>;
 }
 
 export const jFacade: FacadeBuilder = {
-  Of: <JT extends JunctureType>(
+  Of: <JT extends JunctureCtor>(
     Child: JT,
     defaultValue?: FacadeValue<JT>
-  ) => createFacadeType(FacadeJuncture, Child, defaultValue) as any
+  ) => createFacadeCtor(FacadeJuncture, Child, defaultValue) as any
 };
 // #endregion

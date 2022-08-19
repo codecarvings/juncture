@@ -17,21 +17,20 @@ import { ForgeableJuncture } from '../forgeable-juncture';
 import { Forger } from '../forger';
 import { JMachineGearMediator } from '../j-machine';
 import {
-  CursorOfType,
-  Juncture, JunctureType, SchemaOf, ValueOfType
+  CursorOfCtor, Juncture, JunctureCtor, SchemaOf, ValueOfCtor
 } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
-export type ListValue<JT extends JunctureType> = ReadonlyArray<ValueOfType<JT>>;
+export type ListValue<JT extends JunctureCtor> = ReadonlyArray<ValueOfCtor<JT>>;
 
-export class ListSchema<JT extends JunctureType = any> extends JunctureSchema<ListValue<JT>> {
+export class ListSchema<JT extends JunctureCtor = any> extends JunctureSchema<ListValue<JT>> {
   protected constructor(readonly Child: JT, defaultValue?: ListValue<JT>) {
     super(defaultValue !== undefined ? defaultValue : []);
   }
 }
 
-function createListSchema<JT extends JunctureType>(
+function createListSchema<JT extends JunctureCtor>(
   Child: JT,
   defaultValue?: ListValue<JT>
 ): ListSchema<JT> {
@@ -113,7 +112,7 @@ export class ListGear extends Gear {
 }
 
 export type ListCursor<J extends ListJuncture> = Cursor<J> & {
-  item(index: number): CursorOfType<ChildOf<J>>;
+  item(index: number): CursorOfCtor<ChildOf<J>>;
 };
 
 // #endregion
@@ -132,7 +131,7 @@ export abstract class ListJuncture extends ForgeableJuncture {
     return new ListGear(this, layout, gearMediator, machineMediator);
   }
 
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line class-methods-use-this
   [jSymbols.createCursor](gear: ListGear): ListCursor<this> {
     const _: any = createCursor(gear);
     _.item = (index: number) => gear.resolveFragment(index).cursor;
@@ -152,29 +151,29 @@ export type ChildOf<J extends ListJuncture> = SchemaOf<J>['Child'];
 
 // #region Builder types
 // --- Inert
-interface List<JT extends JunctureType> extends ListJuncture {
+interface List<JT extends JunctureCtor> extends ListJuncture {
   schema: Schema<ListSchema<JT>>;
 }
-interface ListType<JT extends JunctureType> extends JunctureType<List<JT>> { }
+interface ListCtor<JT extends JunctureCtor> extends JunctureCtor<List<JT>> { }
 // #endregion
 
 // #region Builder
-function createListType<JT extends abstract new(...args: any) => ListJuncture,
-   JT2 extends JunctureType>(BaseType: JT, Child: JT2, defaultValue?: ListValue<JT2>) {
-  abstract class List extends BaseType {
+function createListCtor<JT extends abstract new(...args: any) => ListJuncture,
+   JT2 extends JunctureCtor>(BaseCtor: JT, Child: JT2, defaultValue?: ListValue<JT2>) {
+  abstract class List extends BaseCtor {
     schema = createSchema(() => createListSchema(Child, defaultValue));
   }
   return List;
 }
 
 interface ListBuilder {
-  Of<JT extends JunctureType>(Child: JT, defaultValue?: ListValue<JT>): ListType<JT>;
+  Of<JT extends JunctureCtor>(Child: JT, defaultValue?: ListValue<JT>): ListCtor<JT>;
 }
 
 export const jList: ListBuilder = {
-  Of: <JT extends JunctureType>(
+  Of: <JT extends JunctureCtor>(
     Child: JT,
     defaultValue?: ListValue<JT>
-  ) => createListType(ListJuncture, Child, defaultValue) as any
+  ) => createListCtor(ListJuncture, Child, defaultValue) as any
 };
 // #endregion

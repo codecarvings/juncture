@@ -11,14 +11,14 @@
 import { JunctureSchema } from '../../design/schema';
 import { Gear } from '../../engine/gear';
 import { JMachine } from '../../j-machine';
-import { JunctureTypeMap } from '../../juncture';
+import { JunctureCtorMap } from '../../juncture';
 import { jBit } from '../../lib/bit';
 import {
-  jStruct, PartialStructValue, StructGear, StructSchema
+    jStruct, PartialStructValue, StructGear, StructSchema
 } from '../../lib/struct';
 
 // Exposes constructor as public
-export class TestStructSchema<JTM extends JunctureTypeMap> extends StructSchema<JTM> {
+export class TestStructSchema<JTM extends JunctureCtorMap> extends StructSchema<JTM> {
   constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
     super(Children, defaultValue);
   }

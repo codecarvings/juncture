@@ -9,7 +9,7 @@
 import { createSchema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { JMachine } from '../j-machine';
-import { Juncture, JunctureTypeMap, ValueOf } from '../juncture';
+import { Juncture, JunctureCtorMap, ValueOf } from '../juncture';
 import { jBit } from '../lib/bit';
 import { jStruct, PartialStructValue, StructSchema } from '../lib/struct';
 
@@ -19,12 +19,12 @@ class MyJuncture extends Juncture {
 }
 
 describe('JMachine', () => {
-  test('should be instantiable by passing only a Juncture Type', () => {
+  test('should be instantiable by passing only a Juncture Ctor', () => {
     const machine = new JMachine(MyJuncture);
     expect(typeof machine).toBe('object');
   });
 
-  test('should be instantiable by passing a Juncture Type and a custom initial value', () => {
+  test('should be instantiable by passing a Juncture Ctor and a custom initial value', () => {
     const initialValue = { myValue: 'custom' };
     const machine = new JMachine(MyJuncture, initialValue);
     expect(typeof machine).toBe('object');
@@ -36,8 +36,8 @@ describe('JMachine', () => {
       machine = new JMachine(MyJuncture);
     });
 
-    test('should contain a "Type" property that returns the type passed in the constructor', () => {
-      expect(machine.Type).toBe(MyJuncture);
+    test('should contain a "Ctor" property that returns the Ctor passed in the constructor', () => {
+      expect(machine.Ctor).toBe(MyJuncture);
     });
 
     describe('"value" property', () => {
@@ -92,18 +92,18 @@ test('experiment with frames 2', () => {
 
     privateSet = this.FORGE.private.reducer(() => () => undefined!);
 
-    r1 = this.FORGE.reactor(({ dispatch, _, source }) => {
+    r1 = this.FORGE.reactor(({ dispatch, _ }) => {
       const id = setInterval(() => {
         dispatch(_.age).inc();
       }, 1000);
 
-      const sub = source(_.age).value.change.subscribe(() => {
-        dispatch(_.ageChanges).inc();
-      });
+      // const sub = source(_.age).value.change.subscribe(() => {
+      //   dispatch(_.ageChanges).inc();
+      // });
 
       return () => {
         clearInterval(id);
-        sub.unsubscribe();
+        // sub.unsubscribe();
       };
     });
 
@@ -127,7 +127,8 @@ test('experiment with frames 2', () => {
   expect(select(_).displayName).toBe('Mirco 47');
   expect(select(_).value).toEqual({
     name: 'Mirco',
-    age: 47
+    age: 47,
+    ageChanges: 0
   });
   expect(select(_.name).value).toBe('Mirco');
   expect(select(_.age).value).toBe(47);
@@ -174,7 +175,7 @@ test('experiment with frames 2', () => {
     }));
   }
 
-  class StructSchema2<JTM extends JunctureTypeMap = any> extends StructSchema<JTM> {
+  class StructSchema2<JTM extends JunctureCtorMap = any> extends StructSchema<JTM> {
     constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
       super(Children, defaultValue);
     }

@@ -14,7 +14,7 @@ import {
 import { getGear, isGearHost } from './engine/gear-host';
 import { GearManager } from './engine/gear-manager';
 import { TranactionManager } from './engine/transaction-manager';
-import { Juncture, JunctureType, ValueOfType } from './juncture';
+import { Juncture, JunctureCtor, ValueOfCtor } from './juncture';
 
 export enum JMachineStatus {
   initializing = 'initializing',
@@ -25,7 +25,7 @@ export enum JMachineStatus {
 export interface JMachineGearMediator {
   readonly gear: {
     enroll(managedGear: ManagedGear): void
-    createControlled(Type: JunctureType, layout: GearLayout, gearMediator: GearMediator): ControlledGear;
+    createControlled(Ctor: JunctureCtor, layout: GearLayout, gearMediator: GearMediator): ControlledGear;
   }
 
   readonly transaction: {
@@ -37,8 +37,8 @@ export interface JMachineGearMediator {
   dispatch(action: Action): void;
 }
 
-export class JMachine<JT extends JunctureType> {
-  constructor(readonly Type: JT, value?: ValueOfType<JT>) {
+export class JMachine<JT extends JunctureCtor> {
+  constructor(readonly Ctor: JT, value?: ValueOfCtor<JT>) {
     this.dispatch = this.dispatch.bind(this);
 
     this._value = this.getInitialValue(value);
@@ -55,14 +55,14 @@ export class JMachine<JT extends JunctureType> {
   }
 
   // #region Value stuff
-  protected _value: ValueOfType<JT>;
+  protected _value: ValueOfCtor<JT>;
 
-  get value(): ValueOfType<JT> {
+  get value(): ValueOfCtor<JT> {
     return this._value;
   }
 
-  protected getInitialValue(value?: ValueOfType<JT>) {
-    const schema = Juncture.getSchema(this.Type);
+  protected getInitialValue(value?: ValueOfCtor<JT>) {
+    const schema = Juncture.getSchema(this.Ctor);
     return value === undefined ? schema.defaultValue : value;
   }
   // #endregion
@@ -101,8 +101,8 @@ export class JMachine<JT extends JunctureType> {
     const machineMediator: JMachineGearMediator = {
       gear: {
         enroll: this.gearManager.enroll,
-        createControlled: (Type, layout2, gearMediator2) => {
-          const gear = Juncture.createGear(Type, layout2, gearMediator2, machineMediator);
+        createControlled: (Ctor, layout2, gearMediator2) => {
+          const gear = Juncture.createGear(Ctor, layout2, gearMediator2, machineMediator);
           return {
             gear,
             scheduleUnmount: () => {
@@ -119,7 +119,7 @@ export class JMachine<JT extends JunctureType> {
       dispatch: this.dispatch
     };
 
-    return Juncture.createGear(this.Type, layout, gearMediator, machineMediator);
+    return Juncture.createGear(this.Ctor, layout, gearMediator, machineMediator);
   }
 
   get status(): JMachineStatus {

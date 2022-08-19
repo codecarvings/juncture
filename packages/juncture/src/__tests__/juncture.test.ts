@@ -311,8 +311,8 @@ describe('Juncture', () => {
         expect(typeof Juncture.getSchema).toBe('function');
       });
 
-      describe('when passing a Juncture Type', () => {
-        test('should return the schema for the provided Juncture Type', () => {
+      describe('when passing a Juncture Ctor', () => {
+        test('should return the schema for the provided Juncture Ctor', () => {
           const schema = Juncture.getSchema(MyJuncture);
           expect(schema).toBeInstanceOf(JunctureSchema);
           expect(schema.defaultValue).toBe('dv');

@@ -17,21 +17,19 @@ import { ForgeableJuncture } from '../forgeable-juncture';
 import { Forger } from '../forger';
 import { JMachineGearMediator } from '../j-machine';
 import {
-  CursorMapOfJunctureTypeMap, Juncture, JunctureType,
-  JunctureTypeMap,
-  SchemaOf, ValueOfType
+  CursorMapOfCtorMap, Juncture, JunctureCtor, JunctureCtorMap, SchemaOf, ValueOfCtor
 } from '../juncture';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty, mappedAssign } from '../tool/object';
 
 // #region Value & Schema
-export type StructValue<JTM extends JunctureTypeMap> = {
-  readonly [K in keyof JTM]: ValueOfType<JTM[K]>;
+export type StructValue<JTM extends JunctureCtorMap> = {
+  readonly [K in keyof JTM]: ValueOfCtor<JTM[K]>;
 };
-export type PartialStructValue<JTM extends JunctureTypeMap> = {
-  readonly [K in keyof JTM]?: ValueOfType<JTM[K]>;
+export type PartialStructValue<JTM extends JunctureCtorMap> = {
+  readonly [K in keyof JTM]?: ValueOfCtor<JTM[K]>;
 };
-export class StructSchema<JTM extends JunctureTypeMap = any> extends JunctureSchema<StructValue<JTM>> {
+export class StructSchema<JTM extends JunctureCtorMap = any> extends JunctureSchema<StructValue<JTM>> {
   protected constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
     const childKeys = Object.keys(Children);
     const childDefaultValue = mappedAssign(
@@ -50,7 +48,7 @@ export class StructSchema<JTM extends JunctureTypeMap = any> extends JunctureSch
   readonly childKeys: string[];
 }
 
-function createStructSchema<JTM extends JunctureTypeMap>(
+function createStructSchema<JTM extends JunctureCtorMap>(
   Children: JTM,
   defaultValue?: PartialStructValue<JTM>
 ): StructSchema<JTM> {
@@ -120,7 +118,7 @@ export class StructGear extends Gear {
   // #endregion
 }
 
-export type StructCursor<J extends StructJuncture> = Cursor<J> & CursorMapOfJunctureTypeMap<ChildrenOf<J>>;
+export type StructCursor<J extends StructJuncture> = Cursor<J> & CursorMapOfCtorMap<ChildrenOf<J>>;
 
 // #endregion
 
@@ -147,7 +145,7 @@ export abstract class StructJuncture extends ForgeableJuncture {
     return _;
   }
 
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line class-methods-use-this
   [jSymbols.createInternalCursor](gear: StructGear): StructCursor<this> {
     return gear.cursor as StructCursor<this>;
   }
@@ -163,29 +161,29 @@ export type ChildrenOf<J extends StructJuncture> = SchemaOf<J>['Children'];
 
 // #region Builder types
 // --- Inert
-interface Struct<JTM extends JunctureTypeMap> extends StructJuncture {
+interface Struct<JTM extends JunctureCtorMap> extends StructJuncture {
   schema: Schema<StructSchema<JTM>>;
 }
-interface StructType<JTM extends JunctureTypeMap> extends JunctureType<Struct<JTM>> { }
+interface StructCtor<JTM extends JunctureCtorMap> extends JunctureCtor<Struct<JTM>> { }
 // #endregion
 
 // #region Builder
-function createStructType<JT extends abstract new(...args: any) => StructJuncture,
-  JTM extends JunctureTypeMap>(BaseType: JT, Children: JTM, defaultValue?: PartialStructValue<JTM>) {
-  abstract class Struct extends BaseType {
+function createStructCtor<JT extends abstract new(...args: any) => StructJuncture,
+  JTM extends JunctureCtorMap>(BaseCtor: JT, Children: JTM, defaultValue?: PartialStructValue<JTM>) {
+  abstract class Struct extends BaseCtor {
     schema = createSchema(() => createStructSchema(Children, defaultValue));
   }
   return Struct;
 }
 
 interface StructBuilder {
-  Of<JTM extends JunctureTypeMap>(Children: JTM, defaultValue?: PartialStructValue<JTM>): StructType<JTM>;
+  Of<JTM extends JunctureCtorMap>(Children: JTM, defaultValue?: PartialStructValue<JTM>): StructCtor<JTM>;
 }
 
 export const jStruct: StructBuilder = {
-  Of: <JTM extends JunctureTypeMap>(
+  Of: <JTM extends JunctureCtorMap>(
     Children: JTM,
     defaultValue?: PartialStructValue<JTM>
-  ) => createStructType(StructJuncture, Children, defaultValue) as any
+  ) => createStructCtor(StructJuncture, Children, defaultValue) as any
 };
 // #endregion

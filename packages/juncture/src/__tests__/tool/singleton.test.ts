@@ -11,17 +11,17 @@
 import { jSymbols } from '../../symbols';
 import { Singleton } from '../../tool/singleton';
 
-class MyType {}
+class MyClass {}
 
 describe('Singleton', () => {
   describe('instance', () => {
-    test('should have a "Type" property', () => {
-      const singleton = Singleton.get(MyType);
-      expect(singleton.Type).toBe(MyType);
+    test('should have a "Ctor" property', () => {
+      const singleton = Singleton.get(MyClass);
+      expect(singleton.Ctor).toBe(MyClass);
     });
     test('should have a "instance" property', () => {
-      const singleton = Singleton.get(MyType);
-      expect(singleton.instance).toBeInstanceOf(MyType);
+      const singleton = Singleton.get(MyClass);
+      expect(singleton.instance).toBeInstanceOf(MyClass);
     });
   });
 
@@ -32,48 +32,48 @@ describe('Singleton', () => {
       });
 
       test('should return a Singleton object ', () => {
-        const singleton = Singleton.get(MyType);
+        const singleton = Singleton.get(MyClass);
         expect(singleton).toBeInstanceOf(Singleton);
-        expect(singleton.Type).toBe(MyType);
-        expect(singleton.instance).toBeInstanceOf(MyType);
+        expect(singleton.Ctor).toBe(MyClass);
+        expect(singleton.instance).toBeInstanceOf(MyClass);
       });
 
       test('should always return the same Singleton instance', () => {
-        const singleton1 = Singleton.get(MyType);
-        const singleton2 = Singleton.get(MyType);
+        const singleton1 = Singleton.get(MyClass);
+        const singleton2 = Singleton.get(MyClass);
         expect(singleton2).toBe(singleton1);
       });
 
       test('should return the singleton of a subclass', () => {
-        const singleton = Singleton.get(MyType);
+        const singleton = Singleton.get(MyClass);
 
-        class MyType2 extends MyType { }
+        class MyClass2 extends MyClass { }
 
-        const singleton2A = Singleton.get(MyType2);
+        const singleton2A = Singleton.get(MyClass2);
         expect(singleton2A).not.toBe(singleton);
-        expect(singleton2A.Type).not.toBe(singleton.Type);
+        expect(singleton2A.Ctor).not.toBe(singleton.Ctor);
         expect(singleton2A.instance).not.toBe(singleton.instance);
-        expect(singleton2A.Type).toBe(MyType2);
-        expect(singleton2A.instance).toBeInstanceOf(MyType2);
+        expect(singleton2A.Ctor).toBe(MyClass2);
+        expect(singleton2A.instance).toBeInstanceOf(MyClass2);
 
-        const singleton2B = Singleton.get(MyType2);
+        const singleton2B = Singleton.get(MyClass2);
         expect(singleton2A).toBe(singleton2B);
       });
 
-      describe('when passing an Initializable type', () => {
+      describe('when passing an Initializable Ctor', () => {
         test('should invoke the [jSymbols.init] method of the object when the Singleton is created', () => {
           let totCalls = 0;
-          class MyInitializableType {
+          class MyInitializableClass {
             // eslint-disable-next-line class-methods-use-this
             [jSymbols.init]() {
               totCalls += 1;
             }
           }
 
-          Singleton.get(MyInitializableType);
+          Singleton.get(MyInitializableClass);
           expect(totCalls).toBe(1);
 
-          Singleton.get(MyInitializableType);
+          Singleton.get(MyInitializableClass);
           expect(totCalls).toBe(1);
         });
       });

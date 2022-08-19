@@ -9,26 +9,26 @@
 import { createSchema, Schema } from '../../design/descriptors/schema';
 import { JunctureSchema } from '../../design/schema';
 import {
-    Gear, GearLayout, GearMediator, GearMountStatus
+  Gear, GearLayout, GearMediator, GearMountStatus
 } from '../../engine/gear';
 import { getGear, isGearHost } from '../../engine/gear-host';
 import { GearManager } from '../../engine/gear-manager';
 import { JMachineGearMediator } from '../../j-machine';
-import { Juncture, JunctureType } from '../../juncture';
+import { Juncture, JunctureCtor } from '../../juncture';
 import { jSymbols } from '../../symbols';
 
 describe('Gear', () => {
   interface MyJuncture extends Juncture {
     schema: Schema<JunctureSchema<string>>;
   }
-  let MyJunctureType: JunctureType<MyJuncture>;
+  let MyJunctureCtor: JunctureCtor<MyJuncture>;
   let juncture: MyJuncture;
 
   beforeEach(() => {
-    MyJunctureType = class extends Juncture {
+    MyJunctureCtor = class extends Juncture {
       schema = createSchema(() => new JunctureSchema(''));
     };
-    juncture = Juncture.getInstance(MyJunctureType);
+    juncture = Juncture.getInstance(MyJunctureCtor);
   });
 
   describe('constructor', () => {
@@ -95,7 +95,7 @@ describe('Gear', () => {
         dispatch: () => {}
       };
 
-      gear = Juncture.createGear(MyJunctureType, layout, gearMediator, machineMediator);
+      gear = Juncture.createGear(MyJunctureCtor, layout, gearMediator, machineMediator);
     });
 
     test('should have a "juncture" property containing a reference to the original Juncture', () => {
