@@ -79,7 +79,8 @@ test('experiment with frames', () => {
 test('experiment with frames 2', () => {
   class J1 extends jStruct.Of({
     name: jBit.Of('Sergio'),
-    age: jBit.settable.Of(46)
+    age: jBit.settable.Of(46),
+    ageChanges: jBit.settable.Number
   }) {
     displayName = this.FORGE.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
 
@@ -91,11 +92,19 @@ test('experiment with frames 2', () => {
 
     privateSet = this.FORGE.private.reducer(() => () => undefined!);
 
-    r1 = this.FORGE.reactor(({ dispatch, _ }) => {
+    r1 = this.FORGE.reactor(({ dispatch, _, source }) => {
       const id = setInterval(() => {
         dispatch(_.age).inc();
       }, 1000);
-      return () => clearInterval(id);
+
+      const sub = source(_.age).value.change.subscribe(() => {
+        dispatch(_.ageChanges).inc();
+      });
+
+      return () => {
+        clearInterval(id);
+        sub.unsubscribe();
+      };
     });
 
     abc = this.FORGE.private.selector(() => 21);
@@ -111,7 +120,8 @@ test('experiment with frames 2', () => {
   jest.useFakeTimers();
   const machine = new JMachine(J1, {
     name: 'Mirco',
-    age: 47
+    age: 47,
+    ageChanges: 0
   });
   const { _, select, dispatch } = machine.frame;
   expect(select(_).displayName).toBe('Mirco 47');
@@ -125,11 +135,13 @@ test('experiment with frames 2', () => {
   expect(select(_.age).value).toBe(1001);
   expect(machine.value).toEqual({
     name: 'Mirco',
-    age: 1001
+    age: 1001,
+    ageChanges: 0
   });
   dispatch(_).set({
     name: 'Mario',
-    age: 99
+    age: 99,
+    ageChanges: 0
   });
   expect(select(_.age).value).toBe(99);
 

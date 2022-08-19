@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Observable } from 'rxjs';
 import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
 import { AccessModifier } from '../access-modifier';
 import {
@@ -18,7 +19,7 @@ type SelectorAccess = AccessModifier.public | AccessModifier.private;
 
 export interface GenericSelector<B, A extends SelectorAccess>
   extends DescriptorWithEvents<DescriptorType.selector, InternalFrameConsumer<B>, {
-    change: Promise<Event>
+    change: Observable<B>
   }, A> { }
 
 export interface Selector<B> extends GenericSelector<B, AccessModifier.public> { }

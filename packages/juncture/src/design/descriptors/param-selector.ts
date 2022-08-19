@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Observable } from 'rxjs';
 import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
 import { AccessModifier } from '../access-modifier';
 import {
@@ -18,8 +19,8 @@ export type ParamSelectorAccess = AccessModifier.public | AccessModifier.private
 
 export interface GenericParamSelector<B extends (...args: any) => any, A extends ParamSelectorAccess>
   extends DescriptorWithEvents<DescriptorType.paramSelector, InternalFrameConsumer<B>, {
-    // change(...args: OverloadParameters<B>): Promise<OverloadReturnType<B>>
-    change(...args: Parameters<B>): Promise<ReturnType<B>>
+    // change(...args: OverloadParameters<B>): Observable<OverloadReturnType<B>>
+    change(...args: Parameters<B>): Observable<ReturnType<B>>
   }, A> { }
 
 export interface ParamSelector<B extends (...args: any) => any>
