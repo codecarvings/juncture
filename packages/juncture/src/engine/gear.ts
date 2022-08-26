@@ -11,18 +11,17 @@
 import { Descriptor, getFilteredDescriptorKeys } from '../design/descriptor';
 import { applicableDescriptorTypes, DescriptorType } from '../design/descriptor-type';
 import { JunctureSchema } from '../design/schema';
+import { Driver } from '../driver';
 import { JMachineGearMediator } from '../j-machine';
 import { Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../tool/object';
 import { Core } from './core';
-import { Cursor } from './equipment/cursor';
-import { Frame } from './frames/frame';
+import { Cursor } from './frame-equipment/cursor';
+import { OuterFrame } from './frames/outer-frame';
 import { createGearRef, GearRef } from './gear-ref';
 import { Instruction } from './instruction';
-import {
-  BinKit
-} from './kits/bin-kit';
+import { OuterBinKit } from './kits/bin-kit';
 import {
   isSameOrDescendantPath,
   Path, PathFragment, pathFragmentToString, pathToString
@@ -75,16 +74,16 @@ export class Gear {
   protected readonly applicableKeys!: string;
 
   constructor(
-    readonly juncture: Juncture,
+    readonly driver: Driver,
     readonly layout: GearLayout,
     protected readonly gearMediator: GearMediator,
     protected readonly machineMediator: JMachineGearMediator
   ) {
-    this.schema = Juncture.getSchema(juncture);
+    this.schema = Juncture.getSchema(driver);
 
     defineLazyProperty(this, 'ref', () => createGearRef(this));
 
-    defineLazyProperty(this, 'applicableKeys', () => getFilteredDescriptorKeys(juncture, applicableDescriptorTypes, true));
+    defineLazyProperty(this, 'applicableKeys', () => getFilteredDescriptorKeys(driver, applicableDescriptorTypes, true));
 
     this._value = gearMediator.getValue();
     Object.defineProperty(this, 'value', {
@@ -93,9 +92,9 @@ export class Gear {
     });
 
     this.core = this.createCore();
-    defineLazyProperty(this, 'cursor', () => this.core.cursor, revocablePropOptions);
-    defineLazyProperty(this, 'frame', () => this.core.frame, revocablePropOptions);
-    defineLazyProperty(this, 'bins', () => this.core.bins, revocablePropOptions);
+    defineLazyProperty(this, 'outerCursor', () => this.core.outerCursor, revocablePropOptions);
+    defineLazyProperty(this, 'outerFrame', () => this.core.outerFrame, revocablePropOptions);
+    defineLazyProperty(this, 'outerBins', () => this.core.outerBins, revocablePropOptions);
 
     machineMediator.gear.enroll(this.createManagedGear());
   }
@@ -107,11 +106,11 @@ export class Gear {
     return new Core(this, this.machineMediator);
   }
 
-  readonly cursor!: Cursor;
+  readonly outerCursor!: Cursor;
 
-  readonly frame!: Frame;
+  readonly outerFrame!: OuterFrame;
 
-  readonly bins!: BinKit;
+  readonly outerBins!: OuterBinKit;
   // #endregion
 
   // #region Value stuff
@@ -147,15 +146,15 @@ export class Gear {
       this.gearMediator.setValue(value);
       this.detectValueChange();
     } else {
-      const desc: Descriptor<any, any, any> = (this.juncture as any)[key];
+      const desc: Descriptor<any, any, any> = (this.driver as any)[key];
       if (desc) {
         if (desc.type === DescriptorType.reducer) {
-          const value = this.getHarmonizedValue(desc[jSymbols.payload](this.core.internalFrames.internal)(...payload));
+          const value = this.getHarmonizedValue(desc[jSymbols.payload](this.core.frames.default)(...payload));
           this.gearMediator.setValue(value);
           this.detectValueChange();
         } else if (desc.type === DescriptorType.trigger) {
           // eslint-disable-next-line @typescript-eslint/naming-convention
-          const instruction_or_instructions = desc[jSymbols.payload](this.core.internalFrames.trigger)(...payload);
+          const instruction_or_instructions = desc[jSymbols.payload](this.core.frames.trigger)(...payload);
           if (Array.isArray(instruction_or_instructions)) {
             (instruction_or_instructions as Instruction[]).forEach(instruction => {
               if (!isSameOrDescendantPath(this.layout.path, instruction.target.layout.path)) {
@@ -253,9 +252,9 @@ export class Gear {
     });
 
     defineLazyProperty(this, 'value', getRevoked('value'));
-    defineLazyProperty(this, 'cursor', getRevoked('cursor'));
-    defineLazyProperty(this, 'frame', getRevoked('frame'));
-    defineLazyProperty(this, 'bins', getRevoked('bins'));
+    defineLazyProperty(this, 'outerCursor', getRevoked('outerCursor'));
+    defineLazyProperty(this, 'outerFrame', getRevoked('outerFrame'));
+    defineLazyProperty(this, 'outerBins', getRevoked('outerBins'));
   }
   // #endregion
 }

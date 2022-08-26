@@ -6,30 +6,26 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../design/access-modifier';
+import { AccessModifier } from '../../access';
 import { getFilteredDescriptorKeys } from '../../design/descriptor';
 import { applicableDescriptorTypes, NotSuitableType } from '../../design/descriptor-type';
 import { GenericReducer } from '../../design/descriptors/reducer';
 import { GenericTrigger } from '../../design/descriptors/trigger';
-import { Juncture } from '../../juncture';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../tool/object';
 import { OverloadParameters } from '../../tool/overload-types';
 import { createAction, Dispatcher } from '../action';
 import { Gear } from '../gear';
 
 // #region Common
-type DispatchBinItem<D> =
-  D extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => void
-    : D extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => void
+type DispatchBinItem<L> =
+  L extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => void
+    : L extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => void
       : NotSuitableType;
 
-function createDispatchBinBase(
-  gear: Gear,
-  dispatcher: Dispatcher,
-  internalUse: boolean
-) {
-  const { juncture } = gear;
-  const keys = getFilteredDescriptorKeys(juncture, applicableDescriptorTypes, internalUse);
+function createDispatchBinBase(gear: Gear, dispatcher: Dispatcher, outerFilter: boolean) {
+  const { driver } = gear;
+  const keys = getFilteredDescriptorKeys(driver, applicableDescriptorTypes, outerFilter);
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(
@@ -45,36 +41,36 @@ function createDispatchBinBase(
 // #endregion
 
 // #region DispatchBin
-export type DispatchBin<J> = {
-  readonly [K in keyof J as
-  J[K] extends GenericReducer<any, AccessModifier.public> ? K
-    : J[K] extends GenericTrigger<any, AccessModifier.public> ? K
-      : never
-  ]: DispatchBinItem<J[K]>;
-};
+// Conditional type required as a workoaround for problems with key remapping
+export type DispatchBin<D> = D extends any ? {
+  readonly [K in keyof D as K extends string ? K : never]: DispatchBinItem<D[K]>;
+} : never;
 
-export function createDispatchBin<J extends Juncture>(
+export interface DispatchBinHost<D> {
+  readonly dispatch: DispatchBin<D>;
+}
+
+export function createDispatchBin<D extends Driver>(
   gear: Gear,
   dispatcher: Dispatcher
-): DispatchBin<J> {
+): DispatchBin<D> {
   return createDispatchBinBase(gear, dispatcher, false);
 }
 // #endregion
 
-// #region InternalDispatchBin
-// Conditional type required as a workoaround for problems with key remapping
-export type InternalDispatchBin<J> = J extends any ? {
-  readonly [K in keyof J as K extends string ? K : never]: DispatchBinItem<J[K]>;
-} : never;
+// #region OuterDispatchBin
+export type OuterDispatchBin<D> = {
+  readonly [K in keyof D as
+  D[K] extends GenericReducer<any, AccessModifier.public> ? K
+    : D[K] extends GenericTrigger<any, AccessModifier.public> ? K
+      : never
+  ]: DispatchBinItem<D[K]>;
+};
 
-export interface InternalDispatchBinHost<J> {
-  readonly dispatch: InternalDispatchBin<J>;
-}
-
-export function createInternalDispatchBin<J extends Juncture>(
+export function createOuterDispatchBin<D extends Driver>(
   gear: Gear,
   dispatcher: Dispatcher
-): InternalDispatchBin<J> {
+): OuterDispatchBin<D> {
   return createDispatchBinBase(gear, dispatcher, true);
 }
 // #endregion

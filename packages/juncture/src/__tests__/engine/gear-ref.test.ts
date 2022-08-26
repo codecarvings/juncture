@@ -8,16 +8,17 @@
 
 import { createSchema } from '../../design/descriptors/schema';
 import { JunctureSchema } from '../../design/schema';
+import { Driver } from '../../driver';
 import { Gear, GearLayout, GearMediator } from '../../engine/gear';
 import { getGear, isGearHost } from '../../engine/gear-host';
 import { createGearRef } from '../../engine/gear-ref';
 import { JMachineGearMediator } from '../../j-machine';
 import { Juncture } from '../../juncture';
 
-class MyJuncture extends Juncture {
+class MyDriver extends Driver {
   schema = createSchema(() => new JunctureSchema(''));
 }
-const juncture = Juncture.getInstance(MyJuncture);
+const driver = Juncture.getDriver(MyDriver);
 const layout: GearLayout = {
   parent: null,
   path: [],
@@ -41,8 +42,8 @@ const machineMediator: JMachineGearMediator = {
   dispatch: () => {}
 };
 
-const gear1 = new Gear(juncture, layout, gearMediator, machineMediator);
-const gear2 = new Gear(juncture, layout, gearMediator, machineMediator);
+const gear1 = new Gear(driver, layout, gearMediator, machineMediator);
+const gear2 = new Gear(driver, layout, gearMediator, machineMediator);
 
 describe('createGearRef', () => {
   test('should create a GearRef by passing a Gear', () => {

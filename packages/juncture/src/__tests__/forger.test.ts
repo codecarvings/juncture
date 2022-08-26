@@ -9,22 +9,22 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-assign */
 
-import { AccessModifier } from '../design/access-modifier';
+import { AccessModifier } from '../access';
 import { isDescriptor } from '../design/descriptor';
 import { DescriptorType } from '../design/descriptor-type';
 import { ParamSelector, PrivateParamSelector } from '../design/descriptors/param-selector';
-import { PrivateReducer, ProtectedReducer, Reducer } from '../design/descriptors/reducer';
+import { PrivateReducer, Reducer } from '../design/descriptors/reducer';
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { PrivateSelector, Selector } from '../design/descriptors/selector';
-import { PrivateTrigger, ProtectedTrigger, Trigger } from '../design/descriptors/trigger';
+import { PrivateTrigger, Trigger } from '../design/descriptors/trigger';
 import { JunctureSchema } from '../design/schema';
+import { Driver } from '../driver';
 import { Instruction } from '../engine/instruction';
-import { Forger, PrivateForger, ProtectedForger } from '../forger';
-import { Juncture } from '../juncture';
+import { Forger, PrivateForger } from '../forger';
 import { jSymbols } from '../symbols';
 import { PropertyAssembler } from '../tool/property-assembler';
 
-interface MyJuncture extends Juncture {
+interface MyDriver extends Driver {
   schema: Schema<JunctureSchema<string>>;
 }
 
@@ -35,48 +35,6 @@ beforeEach(() => {
   assembler = new PropertyAssembler(container);
 });
 
-describe('ProtectedForger', () => {
-  test('should be a class instantiable by passing a property assembler', () => {
-    const forger = new ProtectedForger(assembler);
-    expect(forger).toBeInstanceOf(ProtectedForger);
-  });
-
-  describe('instance', () => {
-    let forger: ProtectedForger<MyJuncture>;
-    beforeEach(() => {
-      forger = new ProtectedForger<MyJuncture>(assembler);
-    });
-
-    describe('reducer', () => {
-      test('should be a method', () => {
-        expect(typeof forger.reducer).toBe('function');
-      });
-
-      test('should create, after property wiring, a ProtectedReducer, by passing a reducer function', () => {
-        container.myDesc = forger.reducer(({ value }) => () => value());
-        assembler.wire();
-        expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.reducer);
-        expect(container.myDesc.access).toBe(AccessModifier.protected);
-      });
-    });
-
-    describe('trigger', () => {
-      test('should be a method', () => {
-        expect(typeof forger.trigger).toBe('function');
-      });
-
-      test('should create, after property wiring, a ProtectedTrigger, by passing a trigger function', () => {
-        container.myDesc = forger.trigger(() => () => []);
-        assembler.wire();
-        expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.trigger);
-        expect(container.myDesc.access).toBe(AccessModifier.protected);
-      });
-    });
-  });
-});
-
 describe('PrivateForger', () => {
   test('should be a class instantiable by passing a property assembler', () => {
     const forger = new PrivateForger(assembler);
@@ -84,9 +42,9 @@ describe('PrivateForger', () => {
   });
 
   describe('instance', () => {
-    let forger: PrivateForger<MyJuncture>;
+    let forger: PrivateForger<MyDriver>;
     beforeEach(() => {
-      forger = new PrivateForger<MyJuncture>(assembler);
+      forger = new PrivateForger<MyDriver>(assembler);
     });
 
     describe('selector', () => {
@@ -153,16 +111,21 @@ describe('Forger', () => {
       const forger = new Forger(assembler);
       expect(forger).toBeInstanceOf(Forger);
     });
+
+    test('should accept a driver', () => {
+      class MyDriver2 extends Driver {
+        schema = createSchema(() => new JunctureSchema(''));
+      }
+      const driver = new MyDriver2();
+      const forger = new Forger(driver);
+      expect(forger).toBeInstanceOf(Forger);
+    });
   });
 
   describe('instance', () => {
-    let forger: Forger<MyJuncture>;
+    let forger: Forger<MyDriver>;
     beforeEach(() => {
-      forger = new Forger<MyJuncture>(assembler);
-    });
-
-    test('"protected" property should return a ProtectedForger instance', () => {
-      expect(forger.protected).toBeInstanceOf(ProtectedForger);
+      forger = new Forger<MyDriver>(assembler);
     });
 
     test('"private" property should return a PrivateForger instance', () => {
@@ -426,21 +389,6 @@ describe('Forger', () => {
             expect(myNewDesc.access).toBe(AccessModifier.public);
           });
 
-          test('should return a ProtectedReducer if the parent is protected', () => {
-            let myOriginalProtectedDesc: ProtectedReducer<(value: string) => string> = container.myProtectedDesc = forger
-              .protected.reducer(() => (value: string) => value.toUpperCase());
-            assembler.wire();
-            myOriginalProtectedDesc = container.myProtectedDesc;
-
-            const proxy = forger.override(myOriginalProtectedDesc);
-            let myNewProtectedDesc: ProtectedReducer<(value: string) => string> = container.myProtectedDesc = proxy
-              .reducer(() => (value: string) => value);
-            assembler.wire();
-            myNewProtectedDesc = container.myProtectedDesc;
-            expect(myOriginalProtectedDesc.access).toBe(AccessModifier.protected);
-            expect(myNewProtectedDesc.access).toBe(AccessModifier.protected);
-          });
-
           test('should return a PrivateReducer if the parent is private', () => {
             let myOriginalPrivateDesc: PrivateReducer<(value: string) => string> = container.myPrivateReducer = forger
               .private.reducer(() => (value: string) => value.toUpperCase());
@@ -515,25 +463,6 @@ describe('Forger', () => {
             myNewDesc = container.myDesc;
             expect(myOriginalDesc.access).toBe(AccessModifier.public);
             expect(myNewDesc.access).toBe(AccessModifier.public);
-          });
-
-          test('should return a ProtectedTrigger if the parent is protected', () => {
-            let myOriginalProtectedDesc: ProtectedTrigger<(value: string) => Instruction[]> = container.myProtectedDesc = forger
-              .protected.trigger(() => (value: string) => [{
-                target: null!,
-                key: 'dummy',
-                payload: [value]
-              }]);
-            assembler.wire();
-            myOriginalProtectedDesc = container.myProtectedDesc;
-
-            const proxy = forger.override(myOriginalProtectedDesc);
-            let myNewProtectedDesc: ProtectedTrigger<(value: string) => Instruction[]> = container.myProtectedDesc = proxy
-              .trigger(() => () => []);
-            assembler.wire();
-            myNewProtectedDesc = container.myProtectedDesc;
-            expect(myOriginalProtectedDesc.access).toBe(AccessModifier.protected);
-            expect(myNewProtectedDesc.access).toBe(AccessModifier.protected);
           });
 
           test('should return a PrivateTrigger if the parent is private', () => {

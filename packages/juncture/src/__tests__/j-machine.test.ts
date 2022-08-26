@@ -8,36 +8,37 @@
 
 import { createSchema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
+import { Driver, ValueOf } from '../driver';
 import { JMachine } from '../j-machine';
-import { Juncture, JunctureCtorMap, ValueOf } from '../juncture';
-import { jBit } from '../lib/bit';
-import { jStruct, PartialStructValue, StructSchema } from '../lib/struct';
+import { JunctureMap } from '../juncture';
+import { $Bit } from '../lib/bit';
+import { $Struct, PartialStructValue, StructSchema } from '../lib/struct';
 
 const myDefaultValue = { myValue: '' };
-class MyJuncture extends Juncture {
+class MyDriver extends Driver {
   schema = createSchema(() => new JunctureSchema(myDefaultValue));
 }
 
 describe('JMachine', () => {
-  test('should be instantiable by passing only a Juncture Ctor', () => {
-    const machine = new JMachine(MyJuncture);
+  test('should be instantiable by passing only a Juncture', () => {
+    const machine = new JMachine(MyDriver);
     expect(typeof machine).toBe('object');
   });
 
-  test('should be instantiable by passing a Juncture Ctor and a custom initial value', () => {
+  test('should be instantiable by passing a Juncture and a custom initial value', () => {
     const initialValue = { myValue: 'custom' };
-    const machine = new JMachine(MyJuncture, initialValue);
+    const machine = new JMachine(MyDriver, initialValue);
     expect(typeof machine).toBe('object');
   });
 
   describe('instance', () => {
-    let machine: JMachine<typeof MyJuncture>;
+    let machine: JMachine<typeof MyDriver>;
     beforeEach(() => {
-      machine = new JMachine(MyJuncture);
+      machine = new JMachine(MyDriver);
     });
 
-    test('should contain a "Ctor" property that returns the Ctor passed in the constructor', () => {
-      expect(machine.Ctor).toBe(MyJuncture);
+    test('should contain a "Juncture" property that returns the Juncture passed in the constructor', () => {
+      expect(machine.Juncture).toBe(MyDriver);
     });
 
     describe('"value" property', () => {
@@ -47,7 +48,7 @@ describe('JMachine', () => {
         });
         test('should contain the value passed in the constructor', () => {
           const initialValue = { myValue: 'custom' };
-          const app2 = new JMachine(MyJuncture, initialValue);
+          const app2 = new JMachine(MyDriver, initialValue);
           expect(app2.value).toBe(initialValue);
         });
       });
@@ -56,9 +57,9 @@ describe('JMachine', () => {
 });
 
 test('experiment with frames', () => {
-  class J1 extends jStruct.Of({
-    name: jBit.Of('Sergio'),
-    age: jBit.settable.Of(46)
+  class J1 extends $Struct.Of({
+    name: $Bit.Of('Sergio'),
+    age: $Bit.settable.Of(46)
   }) {
     displayName = this.FORGE.selector(({ select, _ }) => {
       const result = `${select(_.name).value} ${select(_.age).value.toString()}`;
@@ -77,10 +78,10 @@ test('experiment with frames', () => {
 });
 
 test('experiment with frames 2', () => {
-  class J1 extends jStruct.Of({
-    name: jBit.Of('Sergio'),
-    age: jBit.settable.Of(46),
-    ageChanges: jBit.settable.Number
+  class J1 extends $Struct.Of({
+    name: $Bit.Of('Sergio'),
+    age: $Bit.settable.Of(46),
+    ageChanges: $Bit.settable.Number
   }) {
     displayName = this.FORGE.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
 
@@ -88,14 +89,16 @@ test('experiment with frames 2', () => {
 
     set = this.FORGE.reducer(() => (value: ValueOf<this>) => value);
 
-    protectedSet = this.FORGE.protected.reducer(() => () => undefined!);
-
     privateSet = this.FORGE.private.reducer(() => () => undefined!);
 
-    r1 = this.FORGE.reactor(({ dispatch, _ }) => {
+    r1 = this.FORGE.reactor(({ dispatch, _, source }) => {
       const id = setInterval(() => {
         dispatch(_.age).inc();
       }, 1000);
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const x = source(_.age).value;
+      // console.log(x);
 
       return () => {
         clearInterval(id);
@@ -141,6 +144,7 @@ test('experiment with frames 2', () => {
     ageChanges: 0
   });
   expect(select(_.age).value).toBe(99);
+  expect(select(_).Juncture).toBe(J1);
 
   jest.advanceTimersByTime(1200);
   expect(select(_.age).value).toBe(100);
@@ -153,9 +157,9 @@ test('experiment with frames 2', () => {
 });
 
 test('experiment with frames 2', () => {
-  class J1 extends jStruct.Of({
-    name: jBit.Of('Sergio'),
-    age: jBit.settable.Of(46)
+  class J1 extends $Struct.Of({
+    name: $Bit.Of('Sergio'),
+    age: $Bit.settable.Of(46)
   }) {
     displayName = this.FORGE.selector(({ select, _ }) => `${select(_.name).value} ${select(_.age).value.toString()}`);
 
@@ -171,16 +175,16 @@ test('experiment with frames 2', () => {
     }));
   }
 
-  class StructSchema2<JTM extends JunctureCtorMap = any> extends StructSchema<JTM> {
-    constructor(readonly Children: JTM, defaultValue?: PartialStructValue<JTM>) {
+  class StructSchema2<JM extends JunctureMap = any> extends StructSchema<JM> {
+    constructor(readonly Children: JM, defaultValue?: PartialStructValue<JM>) {
       super(Children, defaultValue);
     }
   }
   class J2 extends J1 {
     schema = createSchema(() => new StructSchema2({
-      name: jBit.Of('Sergio'),
-      age: jBit.settable.Of(46),
-      height: jBit.settable.Of(183)
+      name: $Bit.Of('Sergio'),
+      age: $Bit.settable.Of(46),
+      height: $Bit.settable.Of(183)
     }));
   }
 
@@ -190,6 +194,8 @@ test('experiment with frames 2', () => {
   dispatch().set('Mario', 7);
   expect(select(_.age).value).toBe(7);
   expect(select(_.height).value).toBe(183);
+  // const gear = getGear(_);
+  // gear.outerCursor;
 
   machine.stop();
 });

@@ -33,16 +33,16 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createCursor).toBe('symbol');
   });
 
-  test('should contain the createInternalCursor symbol', () => {
-    expect(typeof jSymbols.createInternalCursor).toBe('symbol');
+  test('should contain the createOuterCursor symbol', () => {
+    expect(typeof jSymbols.createOuterCursor).toBe('symbol');
   });
 
   test('should contain the gear symbol', () => {
     expect(typeof jSymbols.gear).toBe('symbol');
   });
 
-  test('should contain the juncture symbol', () => {
-    expect(typeof jSymbols.juncture).toBe('symbol');
+  test('should contain the driver symbol', () => {
+    expect(typeof jSymbols.driver).toBe('symbol');
   });
 
   test('should contain the bitDefault symbol', () => {

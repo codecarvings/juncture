@@ -12,9 +12,9 @@ const createForger = Symbol('createForger');
 const init = Symbol('init');
 const createGear = Symbol('createGear');
 const createCursor = Symbol('createCursor');
-const createInternalCursor = Symbol('createInternalCursor');
+const createOuterCursor = Symbol('createOuterCursor');
 const gear = Symbol('gear');
-const juncture = Symbol('juncture');
+const driver = Symbol('driver');
 const bitDefault = Symbol('bitDefault');
 
 export interface JSymbols {
@@ -24,9 +24,9 @@ export interface JSymbols {
   readonly init: typeof init;
   readonly createGear: typeof createGear;
   readonly createCursor: typeof createCursor;
-  readonly createInternalCursor: typeof createInternalCursor;
+  readonly createOuterCursor: typeof createOuterCursor;
   readonly gear: typeof gear;
-  readonly juncture: typeof juncture;
+  readonly driver: typeof driver;
   readonly bitDefault: typeof bitDefault;
 }
 
@@ -37,8 +37,8 @@ export const jSymbols: JSymbols = {
   init,
   createGear,
   createCursor,
-  createInternalCursor,
+  createOuterCursor,
   gear,
-  juncture,
+  driver,
   bitDefault
 };

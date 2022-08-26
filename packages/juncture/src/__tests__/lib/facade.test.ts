@@ -7,21 +7,21 @@
  */
 
 import { JMachine } from '../../j-machine';
-import { jBit } from '../../lib/bit';
-import { jFacade } from '../../lib/facade';
-import { jStruct } from '../../lib/struct';
+import { $Bit } from '../../lib/bit';
+import { $Facade } from '../../lib/facade';
+import { $Struct } from '../../lib/struct';
 
 test('tmp test', () => {
-  class Person extends jStruct.Of({
-    name: jBit.settable.String,
-    age: jBit.settable.Number
+  class Person extends $Struct.Of({
+    name: $Bit.settable.String,
+    age: $Bit.settable.Number
   }) { }
 
-  class SecretPerson extends jFacade.Of(Person) {
+  class SecretPerson extends $Facade.Of(Person) {
     data = this.FORGE.selector(({ select, _ }) => `${select(_.inner.name).value} ${select(_.inner).value.age}`);
   }
 
-  class Group extends jStruct.Of({
+  class Group extends $Struct.Of({
     p1: Person,
     p2: SecretPerson
   }) { }

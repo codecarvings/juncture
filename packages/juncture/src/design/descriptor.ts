@@ -6,34 +6,34 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { AccessModifier } from '../access';
 import { jSymbols } from '../symbols';
 import { getObjectAttachment, isObject } from '../tool/object';
-import { AccessModifier } from './access-modifier';
 import { DescriptorType } from './descriptor-type';
 
 // #region Symbols
-const intDescriptorCacheSymbol = Symbol('intDescriptorCache');
-const extDescriptorCacheSymbol = Symbol('extDescriptorCache');
+const descriptorCacheSymbol = Symbol('descriptorCache');
+const outerDescriptorCacheSymbol = Symbol('outerDescriptorCacheSymbol');
 interface DescriptorSymbols {
-  readonly intDescriptorCache: typeof intDescriptorCacheSymbol;
-  readonly extDescriptorCache: typeof extDescriptorCacheSymbol;
+  readonly descriptorCache: typeof descriptorCacheSymbol;
+  readonly outerDescriptorCache: typeof outerDescriptorCacheSymbol;
 }
 const descriptorSymbols: DescriptorSymbols = {
-  intDescriptorCache: intDescriptorCacheSymbol,
-  extDescriptorCache: extDescriptorCacheSymbol
+  descriptorCache: descriptorCacheSymbol,
+  outerDescriptorCache: outerDescriptorCacheSymbol
 };
 // #endregion
 
 // Not a class because of AccessModifier implementation (and because so can be easily expanded...)
-export interface Descriptor<T extends DescriptorType, P, A extends AccessModifier> {
+export interface Descriptor<T extends DescriptorType, V, A extends AccessModifier> {
   readonly type: T;
-  readonly [jSymbols.payload]: P;
+  readonly [jSymbols.payload]: V;
   readonly access: A;
 }
 
 // eslint-disable-next-line max-len
-export function createDescriptor<T extends DescriptorType, P, A extends AccessModifier>(type: T, payload: P, access: A): Descriptor<T, P, A> {
-  const result: Descriptor<T, P, A> = {
+export function createDescriptor<T extends DescriptorType, V, A extends AccessModifier>(type: T, payload: V, access: A): Descriptor<T, V, A> {
+  const result: Descriptor<T, V, A> = {
     type,
     [jSymbols.payload]: payload,
     access
@@ -58,8 +58,8 @@ export function isDescriptor(obj: any): obj is Descriptor<any, any, any> {
   return true;
 }
 
-export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], internalUse: boolean): string[] {
-  const cacheSymbol = internalUse ? descriptorSymbols.intDescriptorCache : descriptorSymbols.extDescriptorCache;
+export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], outerFilter: boolean): string[] {
+  const cacheSymbol = outerFilter ? descriptorSymbols.outerDescriptorCache : descriptorSymbols.descriptorCache;
   const keyCache = getObjectAttachment(obj, cacheSymbol, () => new Map<DescriptorType[], string[]>());
   if (keyCache.has(types)) {
     return keyCache.get(types)!;
@@ -74,7 +74,7 @@ export function getFilteredDescriptorKeys(obj: object, types: DescriptorType[], 
       return false;
     }
 
-    if (!internalUse && prop.access !== AccessModifier.public) {
+    if (outerFilter && prop.access !== AccessModifier.public) {
       return false;
     }
     return true;

@@ -6,42 +6,38 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../design/access-modifier';
+import { AccessModifier } from '../../access';
 import { Descriptor, getFilteredDescriptorKeys } from '../../design/descriptor';
 import { DescriptorType, NotSuitableType, selectableDescriptorTypes } from '../../design/descriptor-type';
 import { GenericParamSelector } from '../../design/descriptors/param-selector';
 import { GenericSelector } from '../../design/descriptors/selector';
-import { Juncture } from '../../juncture';
+import { Driver } from '../../driver';
 import { jSymbols } from '../../symbols';
 import { defineLazyProperty } from '../../tool/object';
-import { InternalFrameHost } from '../frames/internal-frame';
+import { DefaultFrameHost } from '../frames/frame';
 import { Gear } from '../gear';
 
 // #region Common
-type SelectBinItem<D> =
-  D extends GenericSelector<infer B, any> ? B
-    : D extends GenericParamSelector<infer B, any> ? B
+type SelectBinItem<L> =
+  L extends GenericSelector<infer B, any> ? B
+    : L extends GenericParamSelector<infer B, any> ? B
       : NotSuitableType;
 
-function createSelectBinBase<J extends Juncture>(
-  gear: Gear,
-  internalFrameHost: InternalFrameHost<J>,
-  internalUse: boolean
-) {
-  const { juncture } = gear;
-  const keys = getFilteredDescriptorKeys(juncture, selectableDescriptorTypes, internalUse);
+function createSelectBinBase<D extends Driver>(gear: Gear, frameHost: DefaultFrameHost<D>, outerFilter: boolean) {
+  const { driver } = gear;
+  const keys = getFilteredDescriptorKeys(driver, selectableDescriptorTypes, outerFilter);
   const bin: any = {};
   keys.forEach(key => {
-    const desc: Descriptor<any, any, any> = (juncture as any)[key];
+    const desc: Descriptor<any, any, any> = (driver as any)[key];
     if (desc.type === DescriptorType.selector) {
       Object.defineProperty(bin, key, {
-        get: () => desc[jSymbols.payload](internalFrameHost.internal)
+        get: () => desc[jSymbols.payload](frameHost.default)
       });
     } else {
       defineLazyProperty(
         bin,
         key,
-        () => (...args: any) => desc[jSymbols.payload](internalFrameHost.internal)(...args)
+        () => (...args: any) => desc[jSymbols.payload](frameHost.default)(...args)
       );
     }
   });
@@ -50,37 +46,37 @@ function createSelectBinBase<J extends Juncture>(
 // #endregion
 
 // #region SelectBin
-export type SelectBin<J> = {
-  readonly [K in keyof J as
-  J[K] extends GenericSelector<any, AccessModifier.public> ? K
-    : J[K] extends GenericParamSelector<any, AccessModifier.public> ? K
-      : never
-  ]: SelectBinItem<J[K]>;
-};
+// Conditional type required as a workoaround for problems with key remapping
+export type SelectBin<D> = D extends any ? {
+  // readonly [K in keyof D as D[K] extends Selector<any, any> ? K : never]: SelectBinItem<D[K]>;
+  readonly [K in keyof D as K extends string ? K : never]: SelectBinItem<D[K]>;
+} : never;
 
-export function createSelectBin<J extends Juncture>(
+export interface SelectBinHost<D> {
+  readonly select: SelectBin<D>;
+}
+
+export function createSelectBin<D extends Driver>(
   gear: Gear,
-  internalFrameHost: InternalFrameHost<J>
-): SelectBin<J> {
-  return createSelectBinBase(gear, internalFrameHost, false);
+  frameHost: DefaultFrameHost<D>
+): SelectBin<D> {
+  return createSelectBinBase(gear, frameHost, false);
 }
 // #endregion
 
-// #region InternalSelectBin
-// Conditional type required as a workoaround for problems with key remapping
-export type InternalSelectBin<J> = J extends any ? {
-  // readonly [K in keyof J as J[K] extends Selector<any, any> ? K : never]: SelectBinItem<J[K]>;
-  readonly [K in keyof J as K extends string ? K : never]: SelectBinItem<J[K]>;
-} : never;
+// #region OuterSelectBin
+export type OuterSelectBin<D> = {
+  readonly [K in keyof D as
+  D[K] extends GenericSelector<any, AccessModifier.public> ? K
+    : D[K] extends GenericParamSelector<any, AccessModifier.public> ? K
+      : never
+  ]: SelectBinItem<D[K]>;
+};
 
-export interface InternalSelectBinHost<J> {
-  readonly select: InternalSelectBin<J>;
-}
-
-export function createInternalSelectBin<J extends Juncture>(
+export function createOuterSelectBin<D extends Driver>(
   gear: Gear,
-  internalFrameHost: InternalFrameHost<J>
-): InternalSelectBin<J> {
-  return createSelectBinBase(gear, internalFrameHost, true);
+  frameHost: DefaultFrameHost<D>
+): OuterSelectBin<D> {
+  return createSelectBinBase(gear, frameHost, true);
 }
 // #endregion

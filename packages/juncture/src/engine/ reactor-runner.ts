@@ -11,7 +11,7 @@
 import { getFilteredDescriptorKeys } from '../design/descriptor';
 import { DescriptorType } from '../design/descriptor-type';
 import { Reactor } from '../design/descriptors/reactor';
-import { Juncture } from '../juncture';
+import { Driver } from '../driver';
 import { jSymbols } from '../symbols';
 import { mappedAssign } from '../tool/object';
 import { ReactorFrameHost } from './frames/reactor-frame';
@@ -25,8 +25,8 @@ interface TeardownMap {
 const descriptorTypes = [DescriptorType.reactor];
 
 export class ReactorRunner {
-  constructor(protected readonly gear: Gear, protected readonly reactorFrameHost: ReactorFrameHost<Juncture>) {
-    this.keys = getFilteredDescriptorKeys(gear.juncture, descriptorTypes, true);
+  constructor(protected readonly gear: Gear, protected readonly reactorFrameHost: ReactorFrameHost<Driver>) {
+    this.keys = getFilteredDescriptorKeys(gear.driver, descriptorTypes, true);
   }
 
   protected readonly keys: string[];
@@ -46,7 +46,7 @@ export class ReactorRunner {
       throw Error(`Cannot start reactors of ${pathToString(this.gear.layout.path)}: gear not mouted`);
     }
 
-    this.teardowns = mappedAssign({}, this.keys, key => ((this.gear.juncture as any)[key] as Reactor)[jSymbols.payload](this.reactorFrameHost.reactor));
+    this.teardowns = mappedAssign({}, this.keys, key => ((this.gear.driver as any)[key] as Reactor)[jSymbols.payload](this.reactorFrameHost.reactor));
   }
 
   stop() {

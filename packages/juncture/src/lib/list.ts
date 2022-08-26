@@ -6,40 +6,40 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { AccessModifier, PrivateJunctureAnnex } from '../access';
 import { createSchema, Schema } from '../design/descriptors/schema';
-import { JunctureSchema } from '../design/schema';
-import { createCursor, Cursor } from '../engine/equipment/cursor';
+import { SingleChildSchema } from '../design/schema';
+import { SchemaOf } from '../driver';
+import { createCursor, Cursor } from '../engine/frame-equipment/cursor';
 import {
   ControlledGear, Gear, GearLayout, GearMediator
 } from '../engine/gear';
 import { PathFragment } from '../engine/path';
-import { ForgeableJuncture } from '../forgeable-juncture';
+import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
 import { JMachineGearMediator } from '../j-machine';
-import {
-  CursorOfCtor, Juncture, JunctureCtor, SchemaOf, ValueOfCtor
-} from '../juncture';
+import { AlterablePartialJuncture, Juncture, OuterCursorOfJuncture, ValueOfJuncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
-export type ListValue<JT extends JunctureCtor> = ReadonlyArray<ValueOfCtor<JT>>;
+export type ListValue<J extends Juncture> = ReadonlyArray<ValueOfJuncture<J>>;
 
-export class ListSchema<JT extends JunctureCtor = any> extends JunctureSchema<ListValue<JT>> {
-  protected constructor(readonly Child: JT, defaultValue?: ListValue<JT>) {
-    super(defaultValue !== undefined ? defaultValue : []);
+export class ListSchema<J extends Juncture = any> extends SingleChildSchema<J, ListValue<J>> {
+  protected constructor(Child: J, defaultValue?: ListValue<J>) {
+    super(Child, defaultValue !== undefined ? defaultValue : []);
   }
 }
 
-function createListSchema<JT extends JunctureCtor>(
-  Child: JT,
-  defaultValue?: ListValue<JT>
-): ListSchema<JT> {
+function createListSchema<J extends Juncture>(
+  Child: J,
+  defaultValue?: ListValue<J>
+): ListSchema<J> {
   return new (ListSchema as any)(Child, defaultValue);
 }
 // #endregion
 
 // #region Forger
-export class ListForger<J extends ListJuncture> extends Forger<J> {
+export class ListForger<D extends ListDriver> extends Forger<D> {
 }
 // #endregion
 
@@ -102,7 +102,7 @@ export class ListGear extends Gear {
 
   resolveFragment(fragment: PathFragment): Gear {
     if (typeof fragment === 'number') {
-      if (fragment >= 0 && fragment <= this.children.length) {
+      if (fragment >= 0 && fragment < this.children.length) {
         return this.children[fragment].gear;
       }
     }
@@ -111,16 +111,21 @@ export class ListGear extends Gear {
   // #endregion
 }
 
-export type ListCursor<J extends ListJuncture> = Cursor<J> & {
-  item(index: number): CursorOfCtor<ChildOf<J>>;
+export type ListCursor<D extends ListDriver> = Cursor<D> & {
+  item(index: number): OuterCursorOfJuncture<ChildOf<D>>;
 };
+
+export type OuterListCursor<D extends ListDriver> = Cursor<D> &
+(ChildOf<D> extends PrivateJunctureAnnex ? { } : {
+  item(index: number): OuterCursorOfJuncture<ChildOf<D>>;
+});
 
 // #endregion
 
-// #region Juncture
-export abstract class ListJuncture extends ForgeableJuncture {
+// #region Driver
+export abstract class ListDriver extends ForgeableDriver {
   protected [jSymbols.createForger](): ListForger<this> {
-    return new ListForger<this>(Juncture.getPropertyAssembler(this));
+    return new ListForger(this);
   }
 
   [jSymbols.createGear](
@@ -134,7 +139,16 @@ export abstract class ListJuncture extends ForgeableJuncture {
   // eslint-disable-next-line class-methods-use-this
   [jSymbols.createCursor](gear: ListGear): ListCursor<this> {
     const _: any = createCursor(gear);
-    _.item = (index: number) => gear.resolveFragment(index).cursor;
+    _.item = (index: number) => gear.resolveFragment(index).outerCursor;
+    return _;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  [jSymbols.createOuterCursor](gear: ListGear): OuterListCursor<this> {
+    const _: any = createCursor(gear);
+    if (gear.schema.childAccess === AccessModifier.public) {
+      _.item = (index: number) => gear.resolveFragment(index).outerCursor;
+    }
     return _;
   }
 
@@ -146,34 +160,34 @@ export abstract class ListJuncture extends ForgeableJuncture {
 }
 
 // ---  Derivations
-export type ChildOf<J extends ListJuncture> = SchemaOf<J>['Child'];
+export type ChildOf<D extends ListDriver> = SchemaOf<D>['Child'];
 // #endregion
 
-// #region Builder types
+// #region Juncture
 // --- Inert
-interface List<JT extends JunctureCtor> extends ListJuncture {
-  schema: Schema<ListSchema<JT>>;
+interface List<J extends Juncture> extends ListDriver {
+  schema: Schema<ListSchema<J>>;
 }
-interface ListCtor<JT extends JunctureCtor> extends JunctureCtor<List<JT>> { }
+interface ListJuncture<J extends Juncture> extends Juncture<List<J>> { }
 // #endregion
 
 // #region Builder
-function createListCtor<JT extends abstract new(...args: any) => ListJuncture,
-   JT2 extends JunctureCtor>(BaseCtor: JT, Child: JT2, defaultValue?: ListValue<JT2>) {
-  abstract class List extends BaseCtor {
+function createListJuncture<J extends AlterablePartialJuncture<ListDriver>,
+   J2 extends Juncture>(BaseJuncture: J, Child: J2, defaultValue?: ListValue<J2>) {
+  abstract class List extends BaseJuncture {
     schema = createSchema(() => createListSchema(Child, defaultValue));
   }
   return List;
 }
 
-interface ListBuilder {
-  Of<JT extends JunctureCtor>(Child: JT, defaultValue?: ListValue<JT>): ListCtor<JT>;
+interface ListJunctureBuilder {
+  Of<J extends Juncture>(Child: J, defaultValue?: ListValue<J>): ListJuncture<J>;
 }
 
-export const jList: ListBuilder = {
-  Of: <JT extends JunctureCtor>(
-    Child: JT,
-    defaultValue?: ListValue<JT>
-  ) => createListCtor(ListJuncture, Child, defaultValue) as any
+export const $List: ListJunctureBuilder = {
+  Of: <J extends Juncture>(
+    Child: J,
+    defaultValue?: ListValue<J>
+  ) => createListJuncture(ListDriver, Child, defaultValue) as any
 };
 // #endregion

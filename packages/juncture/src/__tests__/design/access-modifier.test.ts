@@ -6,15 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../design/access-modifier';
+import { AccessModifier } from '../../access';
 
 describe('AccessModifier', () => {
   test('should contain the public access type', () => {
     expect(AccessModifier.public).toBe('public');
-  });
-
-  test('should contain the protected access type', () => {
-    expect(AccessModifier.protected).toBe('protected');
   });
 
   test('should contain the private access type', () => {

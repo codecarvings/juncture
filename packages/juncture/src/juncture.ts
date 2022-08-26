@@ -6,20 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { BodyOfSchema, Schema } from './design/descriptors/schema';
-import { createSelector, Selector } from './design/descriptors/selector';
-import { JunctureSchema } from './design/schema';
-import { createCursor, Cursor } from './engine/equipment/cursor';
+import { AccessModifier } from './access';
 import {
-  Gear, GearLayout, GearMediator, GearMountStatus
-} from './engine/gear';
-import { getGear } from './engine/gear-host';
-import { Path } from './engine/path';
+  CursorOf, Driver, OuterCursorOf, SchemaOf, ValueOf
+} from './driver';
+import { Gear, GearLayout, GearMediator } from './engine/gear';
 import { JMachineGearMediator } from './j-machine';
 import { jSymbols } from './symbols';
-import { Initializable } from './tool/initializable';
 import { getObjectAttachment } from './tool/object';
-import { PropertyAssembler, PropertyAssemblerHost } from './tool/property-assembler';
 import { Singleton } from './tool/singleton';
 
 // #region Symbols
@@ -32,128 +26,75 @@ const junctureSymbols: JunctureSymbols = {
 };
 // #endregion
 
-export abstract class Juncture implements PropertyAssemblerHost, Initializable {
-  // #region Engine methods
-  [jSymbols.createPropertyAssembler](): PropertyAssembler {
-    return new PropertyAssembler(this);
-  }
+// #region Juncture
+export interface Juncture<D extends Driver = Driver> {
+  new(): D;
 
-  [jSymbols.init]() {
-    PropertyAssembler.get(this).wire();
-  }
+  access?: AccessModifier;
+}
 
-  [jSymbols.createGear](layout: GearLayout, gearMediator: GearMediator, machineMediator: JMachineGearMediator): Gear {
-    return new Gear(this, layout, gearMediator, machineMediator);
-  }
+// ---  Derivations
+export type SchemaOfJuncture<J extends Juncture> = SchemaOf<InstanceType<J>>;
+export type ValueOfJuncture<J extends Juncture> = ValueOf<InstanceType<J>>;
 
-  // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](gear: Gear): Cursor<this> {
-    return createCursor(gear) as Cursor<this>;
-  }
+export type CursorOfJuncture<J extends Juncture> = CursorOf<InstanceType<J>>;
+export type OuterCursorOfJuncture<J extends Juncture> = OuterCursorOf<InstanceType<J>>;
+// #endregion
 
-  // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createInternalCursor](gear: Gear): Cursor<this> {
-    return gear.cursor as Cursor<this>;
-  }
-  // #endregion
+// #region Additional juncture types
 
-  constructor() {
-    const assembler = Juncture.getPropertyAssembler(this);
+export type AlterableJuncture<D extends Driver = Driver> = new (...args: any) => D;
 
-    this.defaultValue = assembler
-      .registerStaticProperty(createSelector((
-        frame: any
-      ) => getGear(frame._).schema.defaultValue));
+export type PartialJuncture<D extends Driver = Driver> = abstract new () => D;
+export type AlterablePartialJuncture<D extends Driver = Driver> = abstract new (...args: any) => D;
 
-    this.path = assembler
-      .registerStaticProperty(createSelector((
-        frame: any
-      ) => getGear(frame._).layout.path));
+// #endregion
 
-    this.isMounted = assembler
-      .registerStaticProperty(createSelector((
-        frame: any
-      ) => getGear(frame._).mountStatus === GearMountStatus.mounted));
+// #region JunctureMap
+export interface JunctureMap {
+  readonly [key: string]: Juncture;
+}
 
-    this.value = assembler
-      .registerStaticProperty(createSelector((
-        frame: any
-      ) => getGear(frame._).value));
-  }
+// ---  Derivations
+export type CursorMapOfJunctureMap<JM extends JunctureMap> = {
+  readonly [K in keyof JM]: OuterCursorOfJuncture<JM[K]>;
+};
+// #endregion
 
-  // #region Descriptors
-  abstract readonly schema: Schema<JunctureSchema>;
+// #region JunctureSupplier
+interface JunctureSupplier {
+  getDriver<J extends Juncture>(Juncture: J): InstanceType<J>;
 
-  readonly defaultValue: Selector<ValueOf<this>>;
+  getSchema<J extends Juncture>(Juncture: J): SchemaOfJuncture<J>;
+  getSchema<D extends Driver>(driver: D): SchemaOf<D>;
 
-  readonly path: Selector<Path>;
+  createGear(
+    Juncture: Juncture,
+    layoyt: GearLayout,
+    gearMediator: GearMediator,
+    machineMediator: JMachineGearMediator
+  ): Gear;
+}
 
-  readonly isMounted: Selector<boolean>;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const Juncture: JunctureSupplier = {
+  getDriver<J extends Juncture>(Juncture: J): InstanceType<J> {
+    return Singleton.get(Juncture).instance;
+  },
 
-  readonly value: Selector<ValueOf<this>>;
-  // #endregion
+  getSchema(driver_or_Juncture: Driver | Juncture) {
+    const driver = Singleton.getInstance(driver_or_Juncture) as Driver;
+    return getObjectAttachment(driver, junctureSymbols.schemaCache, () => driver.schema[jSymbols.payload]());
+  },
 
-  // #region Static
-  static getInstance<JT extends JunctureCtor>(Ctor: JT): InstanceType<JT> {
-    return Singleton.get(Ctor).instance;
-  }
-
-  static getPropertyAssembler(juncture: Juncture): PropertyAssembler {
-    return PropertyAssembler.get(juncture);
-  }
-
-  static getSchema<JT extends JunctureCtor>(Ctor: JT): SchemaOfCtor<JT>;
-  static getSchema<J extends Juncture>(juncture: J): SchemaOf<J>;
-  static getSchema(juncture_or_Ctor: Juncture | JunctureCtor) {
-    const juncture = Singleton.getInstance(juncture_or_Ctor) as Juncture;
-    return getObjectAttachment(juncture, junctureSymbols.schemaCache, () => juncture.schema[jSymbols.payload]());
-  }
-
-  static createGear(
-    Ctor: JunctureCtor,
+  createGear(
+    Juncture: Juncture,
     layoyt: GearLayout,
     gearMediator: GearMediator,
     machineMediator: JMachineGearMediator
   ): Gear {
-    const juncture = Juncture.getInstance(Ctor);
-    return juncture[jSymbols.createGear](layoyt, gearMediator, machineMediator);
+    const driver = Singleton.get(Juncture).instance;
+    return driver[jSymbols.createGear](layoyt, gearMediator, machineMediator);
   }
-  // #endregion
-}
-
-// ---  Derivations
-export type SchemaOf<J extends Juncture> = BodyOfSchema<J['schema']>;
-export type ValueOf<J extends Juncture> = BodyOfSchema<J['schema']>['defaultValue'];
-
-// Use inference to keep type name
-export type CursorOf<J extends Juncture> = J extends {
-  [jSymbols.createCursor](...args : any) : infer C
-} ? C : never;
-export type InternalCursorOf<J extends Juncture> = J extends {
-  [jSymbols.createInternalCursor](...args : any) : infer C
-} ? C : never;
-// #endregion
-
-// #region JunctureCtor
-export interface JunctureCtor<J extends Juncture = Juncture> {
-  new(): J;
-}
-
-// ---  Derivations
-export type SchemaOfCtor<JT extends JunctureCtor> = SchemaOf<InstanceType<JT>>;
-export type ValueOfCtor<JT extends JunctureCtor> = ValueOf<InstanceType<JT>>;
-
-export type InternalCursorOfCtor<JT extends JunctureCtor> = InternalCursorOf<InstanceType<JT>>;
-export type CursorOfCtor<JT extends JunctureCtor> = CursorOf<InstanceType<JT>>;
-// #endregion
-
-// #region JunctureCtorMap
-export interface JunctureCtorMap {
-  readonly [key: string]: JunctureCtor;
-}
-
-// ---  Derivations
-export type CursorMapOfCtorMap<JTM extends JunctureCtorMap> = {
-  readonly [K in keyof JTM]: CursorOfCtor<JTM[K]>;
 };
 // #endregion

@@ -7,14 +7,14 @@
  */
 
 import { Action } from './engine/action';
-import { Frame } from './engine/frames/frame';
+import { OuterFrame } from './engine/frames/outer-frame';
 import {
   ControlledGear, Gear, GearLayout, GearMediator, GearMountStatus, ManagedGear
 } from './engine/gear';
 import { getGear, isGearHost } from './engine/gear-host';
 import { GearManager } from './engine/gear-manager';
 import { TranactionManager } from './engine/transaction-manager';
-import { Juncture, JunctureCtor, ValueOfCtor } from './juncture';
+import { Juncture, ValueOfJuncture } from './juncture';
 
 export enum JMachineStatus {
   initializing = 'initializing',
@@ -25,7 +25,7 @@ export enum JMachineStatus {
 export interface JMachineGearMediator {
   readonly gear: {
     enroll(managedGear: ManagedGear): void
-    createControlled(Ctor: JunctureCtor, layout: GearLayout, gearMediator: GearMediator): ControlledGear;
+    createControlled(Juncture: Juncture, layout: GearLayout, gearMediator: GearMediator): ControlledGear;
   }
 
   readonly transaction: {
@@ -37,8 +37,8 @@ export interface JMachineGearMediator {
   dispatch(action: Action): void;
 }
 
-export class JMachine<JT extends JunctureCtor> {
-  constructor(readonly Ctor: JT, value?: ValueOfCtor<JT>) {
+export class JMachine<J extends Juncture> {
+  constructor(readonly Juncture: J, value?: ValueOfJuncture<J>) {
     this.dispatch = this.dispatch.bind(this);
 
     this._value = this.getInitialValue(value);
@@ -51,18 +51,18 @@ export class JMachine<JT extends JunctureCtor> {
 
     this.gearManager.sync();
 
-    this.frame = this.gear.frame as any;
+    this.frame = this.gear.outerFrame as any;
   }
 
   // #region Value stuff
-  protected _value: ValueOfCtor<JT>;
+  protected _value: ValueOfJuncture<J>;
 
-  get value(): ValueOfCtor<JT> {
+  get value(): ValueOfJuncture<J> {
     return this._value;
   }
 
-  protected getInitialValue(value?: ValueOfCtor<JT>) {
-    const schema = Juncture.getSchema(this.Ctor);
+  protected getInitialValue(value?: ValueOfJuncture<J>) {
+    const schema = Juncture.getSchema(this.Juncture);
     return value === undefined ? schema.defaultValue : value;
   }
   // #endregion
@@ -101,8 +101,8 @@ export class JMachine<JT extends JunctureCtor> {
     const machineMediator: JMachineGearMediator = {
       gear: {
         enroll: this.gearManager.enroll,
-        createControlled: (Ctor, layout2, gearMediator2) => {
-          const gear = Juncture.createGear(Ctor, layout2, gearMediator2, machineMediator);
+        createControlled: (Juncture2, layout2, gearMediator2) => {
+          const gear = Juncture.createGear(Juncture2, layout2, gearMediator2, machineMediator);
           return {
             gear,
             scheduleUnmount: () => {
@@ -119,7 +119,7 @@ export class JMachine<JT extends JunctureCtor> {
       dispatch: this.dispatch
     };
 
-    return Juncture.createGear(this.Ctor, layout, gearMediator, machineMediator);
+    return Juncture.createGear(this.Juncture, layout, gearMediator, machineMediator);
   }
 
   get status(): JMachineStatus {
@@ -159,6 +159,6 @@ export class JMachine<JT extends JunctureCtor> {
   }
 
   // TODO: Implement getFrame and remove static frame...
-  readonly frame: Frame<InstanceType<JT>>;
+  readonly frame: OuterFrame<InstanceType<J>>;
   // #endregion
 }

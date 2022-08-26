@@ -9,10 +9,11 @@
 import { DescriptorType } from '../design/descriptor-type';
 import { BodyOfSchema, createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema, ValueOfSchema } from '../design/schema';
+import { ValueOf } from '../driver';
 import { OverrideSchemaFrame } from '../engine/frames/schema-frame';
-import { ForgeableJuncture } from '../forgeable-juncture';
+import { ForgeableDriver } from '../forgeable-driver';
 import { CreateDescriptorForOverrideArgs, Forger } from '../forger';
-import { Juncture, JunctureCtor, ValueOf } from '../juncture';
+import { AlterablePartialJuncture, Juncture } from '../juncture';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
@@ -33,7 +34,7 @@ function createBitSchema<V>(defaultValue: V): BitSchema<V> {
 // #endregion
 
 // #region Forger
-export class BitForger<J extends BitJuncture> extends Forger<J> {
+export class BitForger<D extends BitDriver> extends Forger<D> {
   protected createDescriptorForOverride(args: CreateDescriptorForOverrideArgs) {
     if (args.parent.type === DescriptorType.schema) {
       if (args.fnName === 'setDefaultValue') {
@@ -49,22 +50,22 @@ export class BitForger<J extends BitJuncture> extends Forger<J> {
     return super.createDescriptorForOverride(args);
   }
 
-  readonly override!: Forger<J>['override'] & {
-    <D extends Schema<BitSchema<any>>>(parent: D): {
-      setDefaultValue<F extends (frame: OverrideSchemaFrame<BodyOfSchema<D>>)
-      => ValueOfSchema<BodyOfSchema<D>>>
-      (selectorFn: F): D;
+  readonly override!: Forger<D>['override'] & {
+    <L extends Schema<BitSchema<any>>>(parent: L): {
+      setDefaultValue<F extends (frame: OverrideSchemaFrame<BodyOfSchema<L>>)
+      => ValueOfSchema<BodyOfSchema<L>>>
+      (selectorFn: F): L;
     };
   };
 }
 // #endregion
 
-// #region Juncture
-export abstract class BitJuncture extends ForgeableJuncture {
+// #region Driver
+export abstract class BitDriver extends ForgeableDriver {
   abstract readonly schema: Schema<BitSchema>;
 
   protected [jSymbols.createForger](): BitForger<this> {
-    return new BitForger<this>(Juncture.getPropertyAssembler(this));
+    return new BitForger(this);
   }
 
   protected readonly FORGE!: BitForger<this>;
@@ -72,17 +73,17 @@ export abstract class BitJuncture extends ForgeableJuncture {
 // #endregion
 
 // #region Specializations
-export abstract class SettableBitJuncture extends BitJuncture {
+export abstract class SettableBitDriver extends BitDriver {
   reset = this.FORGE.reducer(({ select }) => () => select().defaultValue);
 
   set = this.FORGE.reducer(() => (value: ValueOf<this>) => value);
 }
 
-export abstract class SettableStringBitJuncture extends SettableBitJuncture {
+export abstract class SettableStringBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<string>>;
 }
 
-export abstract class SettableNumberBitJuncture extends SettableBitJuncture {
+export abstract class SettableNumberBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<number>>;
 
   add = this.FORGE.reducer(({ value }) => (num: number) => value() + num);
@@ -92,66 +93,66 @@ export abstract class SettableNumberBitJuncture extends SettableBitJuncture {
   dec = this.FORGE.reducer(({ value }) => () => value() - 1);
 }
 
-export abstract class SettableBooleanBitJuncture extends SettableBitJuncture {
+export abstract class SettableBooleanBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<boolean>>;
 
   switch = this.FORGE.reducer(({ value }) => () => !value());
 }
 
-export abstract class SettableSymbolBitJuncture extends SettableBitJuncture {
+export abstract class SettableSymbolBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<symbol>>;
 }
 // #endregion
 
-// #region Builder types
+// #region Juncture
 // --- Inert
-interface Bit<V> extends BitJuncture {
+interface Bit<V> extends BitDriver {
   schema: Schema<BitSchema<V>>;
 }
-interface BitCtor<V> extends JunctureCtor<Bit<V>> { }
+interface BitJuncture<V> extends Juncture<Bit<V>> { }
 
 interface StringBit extends Bit<string> { }
-interface StringBitCtor extends JunctureCtor<StringBit> { }
+interface StringBitJuncture extends Juncture<StringBit> { }
 
 interface NumberBit extends Bit<number> { }
-interface NumberBitCtor extends JunctureCtor<NumberBit> { }
+interface NumberBitJuncture extends Juncture<NumberBit> { }
 
 interface BooleanBit extends Bit<boolean> { }
-interface BooleanBitCtor extends JunctureCtor<BooleanBit> { }
+interface BooleanBitJuncture extends Juncture<BooleanBit> { }
 
 interface SymbolBit extends Bit<symbol> { }
-interface SymbolBitCtor extends JunctureCtor<SymbolBit> { }
+interface SymbolBitJuncture extends Juncture<SymbolBit> { }
 
 // --- Settable
-interface SettableBit<V> extends SettableBitJuncture {
+interface SettableBit<V> extends SettableBitDriver {
   schema: Schema<BitSchema<V>>;
 }
-interface SettableBitCtor<V> extends JunctureCtor<SettableBit<V>> { }
+interface SettableBitJuncture<V> extends Juncture<SettableBit<V>> { }
 
-interface SettableStringBit extends SettableStringBitJuncture {
+interface SettableStringBit extends SettableStringBitDriver {
   schema: Schema<BitSchema<string>>;
 }
-interface SettableStringBitCtor extends JunctureCtor<SettableStringBit> { }
+interface SettableStringBitJuncture extends Juncture<SettableStringBit> { }
 
-interface SettableNumberBit extends SettableNumberBitJuncture {
+interface SettableNumberBit extends SettableNumberBitDriver {
   schema: Schema<BitSchema<number>>;
 }
-interface SettableNumberBitCtor extends JunctureCtor<SettableNumberBit> { }
+interface SettableNumberBitJuncture extends Juncture<SettableNumberBit> { }
 
-interface SettableBooleanBit extends SettableBooleanBitJuncture {
+interface SettableBooleanBit extends SettableBooleanBitDriver {
   schema: Schema<BitSchema<boolean>>;
 }
-interface SettableBooleanBitCtor extends JunctureCtor<SettableBooleanBit> { }
+interface SettableBooleanBitJuncture extends Juncture<SettableBooleanBit> { }
 
-interface SettableSymbolBit extends SettableSymbolBitJuncture {
+interface SettableSymbolBit extends SettableSymbolBitDriver {
   schema: Schema<BitSchema<symbol>>;
 }
-interface SettableSymbolBitCtor extends JunctureCtor<SettableSymbolBit> { }
+interface SettableSymbolBitJuncture extends Juncture<SettableSymbolBit> { }
 // #endregion
 
 // #region Builder
-function createBitCtor<JT extends abstract new(...args: any) => BitJuncture>(BaseCtor: JT, defaultValue: any) {
-  abstract class Bit extends BaseCtor {
+function createBitJuncture<J extends AlterablePartialJuncture<BitDriver>>(BaseJuncture: J, defaultValue: any) {
+  abstract class Bit extends BaseJuncture {
     schema = createSchema(() => createBitSchema(defaultValue));
   }
   return Bit;
@@ -162,45 +163,45 @@ const defaultNumberValue = 0;
 const defaultBooleanValue = false;
 const defaultSymbolValue = jSymbols.bitDefault;
 
-class DefaultStringBit extends createBitCtor(BitJuncture, defaultStringValue) { }
-class DefaultNumberBit extends createBitCtor(BitJuncture, defaultNumberValue) { }
-class DefaultBooleanBit extends createBitCtor(BitJuncture, defaultBooleanValue) { }
-class DefaultSymbolBit extends createBitCtor(BitJuncture, defaultSymbolValue) { }
+class DefaultStringBit extends createBitJuncture(BitDriver, defaultStringValue) { }
+class DefaultNumberBit extends createBitJuncture(BitDriver, defaultNumberValue) { }
+class DefaultBooleanBit extends createBitJuncture(BitDriver, defaultBooleanValue) { }
+class DefaultSymbolBit extends createBitJuncture(BitDriver, defaultSymbolValue) { }
 
-class DefaultSettableStringBit extends createBitCtor(SettableStringBitJuncture, defaultStringValue) { }
-class DefaultSettableNumberBit extends createBitCtor(SettableNumberBitJuncture, defaultNumberValue) { }
-class DefaultSettableBooleanBit extends createBitCtor(SettableBooleanBitJuncture, defaultBooleanValue) { }
-class DefaultSettableSymbolBit extends createBitCtor(SettableSymbolBitJuncture, defaultSymbolValue) { }
+class DefaultSettableStringBit extends createBitJuncture(SettableStringBitDriver, defaultStringValue) { }
+class DefaultSettableNumberBit extends createBitJuncture(SettableNumberBitDriver, defaultNumberValue) { }
+class DefaultSettableBooleanBit extends createBitJuncture(SettableBooleanBitDriver, defaultBooleanValue) { }
+class DefaultSettableSymbolBit extends createBitJuncture(SettableSymbolBitDriver, defaultSymbolValue) { }
 
-interface BitBuilder {
-  readonly String: StringBitCtor;
-  readonly Number: NumberBitCtor;
-  readonly Boolean: BooleanBitCtor;
-  readonly Symbol: SymbolBitCtor;
+interface BitJunctureBuilder {
+  readonly String: StringBitJuncture;
+  readonly Number: NumberBitJuncture;
+  readonly Boolean: BooleanBitJuncture;
+  readonly Symbol: SymbolBitJuncture;
   readonly Of: {
-    (defaultValue: string): StringBitCtor;
-    (defaultValue: number): NumberBitCtor;
-    (defaultValue: boolean): BooleanBitCtor;
-    (defaultValue: symbol): SymbolBitCtor;
-    <V>(defaultValue: V): BitCtor<V>;
+    (defaultValue: string): StringBitJuncture;
+    (defaultValue: number): NumberBitJuncture;
+    (defaultValue: boolean): BooleanBitJuncture;
+    (defaultValue: symbol): SymbolBitJuncture;
+    <V>(defaultValue: V): BitJuncture<V>;
   };
 
   readonly settable: {
-    readonly String: SettableStringBitCtor;
-    readonly Number: SettableNumberBitCtor;
-    readonly Boolean: SettableBooleanBitCtor;
-    readonly Symbol: SettableSymbolBitCtor;
+    readonly String: SettableStringBitJuncture;
+    readonly Number: SettableNumberBitJuncture;
+    readonly Boolean: SettableBooleanBitJuncture;
+    readonly Symbol: SettableSymbolBitJuncture;
     readonly Of: {
-      (defaultValue: string): SettableStringBitCtor;
-      (defaultValue: number): SettableNumberBitCtor;
-      (defaultValue: boolean): SettableBooleanBitCtor;
-      (defaultValue: symbol): SettableSymbolBitCtor;
-      <V>(defaultValue: V): SettableBitCtor<V>;
+      (defaultValue: string): SettableStringBitJuncture;
+      (defaultValue: number): SettableNumberBitJuncture;
+      (defaultValue: boolean): SettableBooleanBitJuncture;
+      (defaultValue: symbol): SettableSymbolBitJuncture;
+      <V>(defaultValue: V): SettableBitJuncture<V>;
     }
   }
 }
 
-export const jBit: BitBuilder = {
+export const $Bit: BitJunctureBuilder = {
   String: DefaultStringBit,
   Number: DefaultNumberBit,
   Boolean: DefaultBooleanBit,
@@ -219,7 +220,7 @@ export const jBit: BitBuilder = {
       return DefaultSymbolBit;
     }
 
-    return createBitCtor(BitJuncture, defaultValue) as any;
+    return createBitJuncture(BitDriver, defaultValue) as any;
   },
 
   settable: {
@@ -242,25 +243,25 @@ export const jBit: BitBuilder = {
       }
 
       const type = typeof defaultValue;
-      let Ctor: any;
+      let Juncture: any;
       switch (type) {
         case 'string':
-          Ctor = SettableStringBitJuncture;
+          Juncture = SettableStringBitDriver;
           break;
         case 'number':
-          Ctor = SettableNumberBitJuncture;
+          Juncture = SettableNumberBitDriver;
           break;
         case 'boolean':
-          Ctor = SettableBooleanBitJuncture;
+          Juncture = SettableBooleanBitDriver;
           break;
         case 'symbol':
-          Ctor = SettableSymbolBitJuncture;
+          Juncture = SettableSymbolBitDriver;
           break;
         default:
-          Ctor = SettableBitJuncture;
+          Juncture = SettableBitDriver;
           break;
       }
-      return createBitCtor(Ctor, defaultValue);
+      return createBitJuncture(Juncture, defaultValue);
     }
   }
 };

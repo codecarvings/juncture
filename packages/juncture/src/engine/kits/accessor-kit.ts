@@ -6,51 +6,51 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../../juncture';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../tool/object';
 import {
-  ApplyAccessor, createApplyAccessor, createInternalApplyAccessor, InternalApplyAccessor
-} from '../equipment/accessors/apply-accessor';
+  ApplyAccessor, createApplyAccessor, createOuterApplyAccessor, OuterApplyAccessor
+} from '../frame-equipment/accessors/apply-accessor';
 import {
-  createDispatchAccessor, createInternalDispatchAccessor, DispatchAccessor, InternalDispatchAccessor
-} from '../equipment/accessors/dispatch-accessor';
+  createDispatchAccessor, createOuterDispatchAccessor, DispatchAccessor, OuterDispatchAccessor
+} from '../frame-equipment/accessors/dispatch-accessor';
 import {
-  createInternalSelectAccessor, createSelectAccessor, InternalSelectAccessor, SelectAccessor
-} from '../equipment/accessors/select-accessor';
+  createOuterSelectAccessor, createSelectAccessor, OuterSelectAccessor, SelectAccessor
+} from '../frame-equipment/accessors/select-accessor';
 import {
-  createInternalSourceAccessor, createSourceAccessor, InternalSourceAccessor, SourceAccessor
-} from '../equipment/accessors/source-accessor';
+  createOuterSourceAccessor, createSourceAccessor, OuterSourceAccessor, SourceAccessor
+} from '../frame-equipment/accessors/source-accessor';
 import { Gear } from '../gear';
-import { InternalBinKit } from './bin-kit';
+import { BinKit } from './bin-kit';
 
 // #region AccessorKit
-export interface AccessorKit<J extends Juncture = Juncture> {
-  readonly select: SelectAccessor<J>;
-  readonly apply: ApplyAccessor<J>;
-  readonly dispatch: DispatchAccessor<J>;
-  readonly source: SourceAccessor<J>;
+export interface AccessorKit<D extends Driver = Driver> {
+  readonly select: SelectAccessor<D>;
+  readonly apply: ApplyAccessor<D>;
+  readonly dispatch: DispatchAccessor<D>;
+  readonly source: SourceAccessor<D>;
 }
 
-export function equipAccessorKit(accessors: any, gear: Gear) {
-  defineLazyProperty(accessors, 'select', () => createSelectAccessor(gear));
-  defineLazyProperty(accessors, 'apply', () => createApplyAccessor(gear));
-  defineLazyProperty(accessors, 'dispatch', () => createDispatchAccessor(gear));
+export function prepareAccessorKit(accessors: any, gear: Gear, bins: BinKit) {
+  defineLazyProperty(accessors, 'select', () => createSelectAccessor(gear, bins));
+  defineLazyProperty(accessors, 'apply', () => createApplyAccessor(gear, bins));
+  defineLazyProperty(accessors, 'dispatch', () => createDispatchAccessor(gear, bins));
   defineLazyProperty(accessors, 'source', () => createSourceAccessor(gear));
 }
 // #endregion
 
-// #region InternalAccessorKit
-export interface InternalAccessorKit<J extends Juncture = Juncture> {
-  readonly select: InternalSelectAccessor<J>;
-  readonly apply: InternalApplyAccessor<J>;
-  readonly dispatch: InternalDispatchAccessor<J>;
-  readonly source: InternalSourceAccessor<J>;
+// #region OuterAccessorKit
+export interface OuterAccessorKit<D extends Driver = Driver> {
+  readonly select: OuterSelectAccessor<D>;
+  readonly apply: OuterApplyAccessor<D>;
+  readonly dispatch: OuterDispatchAccessor<D>;
+  readonly source: OuterSourceAccessor<D>;
 }
 
-export function equipInternalAccessorKit(accessors: any, gear: Gear, internalBins: InternalBinKit) {
-  defineLazyProperty(accessors, 'select', () => createInternalSelectAccessor(gear, internalBins));
-  defineLazyProperty(accessors, 'apply', () => createInternalApplyAccessor(gear, internalBins));
-  defineLazyProperty(accessors, 'dispatch', () => createInternalDispatchAccessor(gear, internalBins));
-  defineLazyProperty(accessors, 'source', () => createInternalSourceAccessor(gear));
+export function prepareOuterAccessorKit(accessors: any, gear: Gear) {
+  defineLazyProperty(accessors, 'select', () => createOuterSelectAccessor(gear));
+  defineLazyProperty(accessors, 'apply', () => createOuterApplyAccessor(gear));
+  defineLazyProperty(accessors, 'dispatch', () => createOuterDispatchAccessor(gear));
+  defineLazyProperty(accessors, 'source', () => createOuterSourceAccessor(gear));
 }
 // #endregion

@@ -6,23 +6,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
-import { AccessModifier } from '../access-modifier';
+import { AccessModifier } from '../../access';
+import { FrameConsumer } from '../../engine/frames/frame';
 import {
   createDescriptor, Descriptor
 } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
 export type Reactor<B extends (() => void) | void = (() => void) | void>
-  = Descriptor<DescriptorType.reactor, InternalFrameConsumer<B>, AccessModifier.public>;
+  = Descriptor<DescriptorType.reactor, FrameConsumer<B>, AccessModifier.public>;
 
 export type SafeReactor = Reactor<void>;
 export type DisposableReactor = Reactor<() => void>;
 
 export function createReactor<B extends (() => void) | void>(
-  reactorFn: InternalFrameConsumer<B>): B extends void ? SafeReactor : DisposableReactor {
+  reactorFn: FrameConsumer<B>): B extends void ? SafeReactor : DisposableReactor {
   return createDescriptor(DescriptorType.reactor, reactorFn, AccessModifier.public) as any;
 }
 
 // ---  Derivations
-export type BodyOfReactor<D extends Reactor<any>> = D extends Reactor<infer B> ? B : never;
+export type BodyOfReactor<L extends Reactor<any>> = L extends Reactor<infer B> ? B : never;

@@ -10,12 +10,13 @@
 
 import { createSchema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
-import { ForgeableJuncture } from '../forgeable-juncture';
+import { Driver } from '../driver';
+import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
 import { Juncture } from '../juncture';
 
-describe('ForgeableJuncture', () => {
-  class MyJuncture extends ForgeableJuncture {
+describe('ForgeableDriver', () => {
+  class MyDriver extends ForgeableDriver {
     schema = createSchema(() => new JunctureSchema(''));
 
     test = 21;
@@ -23,24 +24,24 @@ describe('ForgeableJuncture', () => {
     len = this.FORGE.selector(({ select }) => select().value);
   }
 
-  test('should be a subclass of Juncture', () => {
-    expect(ForgeableJuncture.prototype).toBeInstanceOf(Juncture);
+  test('should be a subclass of Driver', () => {
+    expect(ForgeableDriver.prototype).toBeInstanceOf(Driver);
   });
 
   test('should be a class instantiable without arguments', () => {
-    const juncture = new MyJuncture();
-    expect(juncture).toBeInstanceOf(ForgeableJuncture);
+    const driver = new MyDriver();
+    expect(driver).toBeInstanceOf(ForgeableDriver);
   });
 
   describe('instance', () => {
-    let juncture: MyJuncture;
+    let driver: MyDriver;
 
     beforeEach(() => {
-      juncture = Juncture.getInstance(MyJuncture);
+      driver = Juncture.getDriver(MyDriver);
     });
 
     test('should contain the FORGE propterty that give access to the forger', () => {
-      expect((juncture as any).FORGE).toBeInstanceOf(Forger);
+      expect((driver as any).FORGE).toBeInstanceOf(Forger);
     });
   });
 });

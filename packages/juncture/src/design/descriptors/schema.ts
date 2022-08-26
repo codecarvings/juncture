@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../access-modifier';
+import { AccessModifier } from '../../access';
 import {
   createDescriptor, Descriptor
 } from '../descriptor';
@@ -21,5 +21,5 @@ export function createSchema<B extends JunctureSchema>(schemaFactory: () => B): 
 }
 
 // ---  Derivations
-export type BodyOfSchema<D extends Schema<JunctureSchema>> =
-  D extends Schema<infer B> ? B : never;
+export type BodyOfSchema<L extends Schema<JunctureSchema>> =
+  L extends Schema<infer B> ? B : never;

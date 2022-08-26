@@ -20,33 +20,33 @@ const singletonSymbols: SingletonSymbols = {
 // #endregion
 
 export class Singleton<T extends Constructable> {
-  protected constructor(readonly Ctor: T, readonly instance: InstanceType<T>) { }
+  protected constructor(readonly Constructor: T, readonly instance: InstanceType<T>) { }
 
-  static get<T extends Constructable>(Ctor: T): Singleton<T> {
-    if ((Ctor as any)[singletonSymbols.singletonCache]) {
-      const singleton = (Ctor as any)[singletonSymbols.singletonCache] as Singleton<T>;
-      // When subclassng a Ctor that already has the singleton...
-      if (singleton.Ctor === Ctor) {
+  static get<T extends Constructable>(Constructor: T): Singleton<T> {
+    if ((Constructor as any)[singletonSymbols.singletonCache]) {
+      const singleton = (Constructor as any)[singletonSymbols.singletonCache] as Singleton<T>;
+      // When subclassng a Constructor that already has the singleton...
+      if (singleton.Constructor === Constructor) {
         return singleton;
       }
     }
 
-    const instance = new Ctor();
+    const instance = new Constructor();
     if (isInitializable(instance)) {
       initialize(instance);
     }
-    const result = new Singleton(Ctor, instance);
+    const result = new Singleton(Constructor, instance);
     // eslint-disable-next-line no-param-reassign
-    (Ctor as any)[singletonSymbols.singletonCache] = result;
+    (Constructor as any)[singletonSymbols.singletonCache] = result;
     return result;
   }
 
-  static getInstance<T extends Constructable>(Ctor: T): InstanceType<T>;
+  static getInstance<T extends Constructable>(Constructor: T): InstanceType<T>;
   static getInstance<T>(instance: T): T;
-  static getInstance(intance_or_Ctor: any) {
-    if (typeof intance_or_Ctor === 'function') {
-      return Singleton.get(intance_or_Ctor).instance;
+  static getInstance(intance_or_Constructor: any) {
+    if (typeof intance_or_Constructor === 'function') {
+      return Singleton.get(intance_or_Constructor).instance;
     }
-    return intance_or_Ctor;
+    return intance_or_Constructor;
   }
 }

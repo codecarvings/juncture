@@ -6,39 +6,34 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
+import { AccessModifier } from '../../access';
+import { FrameConsumer } from '../../engine/frames/frame';
 import { Instruction } from '../../engine/instruction';
-import { AccessModifier } from '../access-modifier';
 import {
   createDescriptor, Descriptor
 } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
 export interface GenericTrigger<B extends (...args: any) => Instruction[], A extends AccessModifier>
-  extends Descriptor<DescriptorType.trigger, InternalFrameConsumer<B>, A> { }
+  extends Descriptor<DescriptorType.trigger, FrameConsumer<B>, A> { }
 
 export interface Trigger<B extends (...args: any) => Instruction[]>
   extends GenericTrigger<B, AccessModifier.public> { }
-
-export interface ProtectedTrigger<B extends (...args: any) => Instruction[]>
-  extends GenericTrigger<B, AccessModifier.protected> { }
 
 export interface PrivateTrigger<B extends (...args: any) => Instruction[]>
   extends GenericTrigger<B, AccessModifier.private> { }
 
 export function createTrigger<B extends (...args: any) => Instruction[]>(
-  triggerFn: InternalFrameConsumer<B>): Trigger<B>;
+  triggerFn: FrameConsumer<B>): Trigger<B>;
 export function createTrigger<B extends (...args: any) => Instruction[]>(
-  triggerFn: InternalFrameConsumer<B>, access: AccessModifier.public): Trigger<B>;
+  triggerFn: FrameConsumer<B>, access: AccessModifier.public): Trigger<B>;
 export function createTrigger<B extends (...args: any) => Instruction[]>(
-  triggerFn: InternalFrameConsumer<B>, access: AccessModifier.protected): ProtectedTrigger<B>;
+  triggerFn: FrameConsumer<B>, access: AccessModifier.private): PrivateTrigger<B>;
 export function createTrigger<B extends (...args: any) => Instruction[]>(
-  triggerFn: InternalFrameConsumer<B>, access: AccessModifier.private): PrivateTrigger<B>;
-export function createTrigger<B extends (...args: any) => Instruction[]>(
-  triggerFn: InternalFrameConsumer<B>, access: AccessModifier = AccessModifier.public) {
+  triggerFn: FrameConsumer<B>, access: AccessModifier = AccessModifier.public) {
   return createDescriptor(DescriptorType.trigger, triggerFn, access);
 }
 
 // ---  Derivations
-export type BodyOfTrigger<D extends GenericTrigger<any, any>>
-  = D extends GenericTrigger<infer B, any> ? B : never;
+export type BodyOfTrigger<L extends GenericTrigger<any, any>>
+  = L extends GenericTrigger<infer B, any> ? B : never;

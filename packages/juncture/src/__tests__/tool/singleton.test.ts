@@ -15,9 +15,9 @@ class MyClass {}
 
 describe('Singleton', () => {
   describe('instance', () => {
-    test('should have a "Ctor" property', () => {
+    test('should have a "Constructor" property', () => {
       const singleton = Singleton.get(MyClass);
-      expect(singleton.Ctor).toBe(MyClass);
+      expect(singleton.Constructor).toBe(MyClass);
     });
     test('should have a "instance" property', () => {
       const singleton = Singleton.get(MyClass);
@@ -34,7 +34,7 @@ describe('Singleton', () => {
       test('should return a Singleton object ', () => {
         const singleton = Singleton.get(MyClass);
         expect(singleton).toBeInstanceOf(Singleton);
-        expect(singleton.Ctor).toBe(MyClass);
+        expect(singleton.Constructor).toBe(MyClass);
         expect(singleton.instance).toBeInstanceOf(MyClass);
       });
 
@@ -51,16 +51,16 @@ describe('Singleton', () => {
 
         const singleton2A = Singleton.get(MyClass2);
         expect(singleton2A).not.toBe(singleton);
-        expect(singleton2A.Ctor).not.toBe(singleton.Ctor);
+        expect(singleton2A.Constructor).not.toBe(singleton.Constructor);
         expect(singleton2A.instance).not.toBe(singleton.instance);
-        expect(singleton2A.Ctor).toBe(MyClass2);
+        expect(singleton2A.Constructor).toBe(MyClass2);
         expect(singleton2A.instance).toBeInstanceOf(MyClass2);
 
         const singleton2B = Singleton.get(MyClass2);
         expect(singleton2A).toBe(singleton2B);
       });
 
-      describe('when passing an Initializable Ctor', () => {
+      describe('when passing an Initializable constructor', () => {
         test('should invoke the [jSymbols.init] method of the object when the Singleton is created', () => {
           let totCalls = 0;
           class MyInitializableClass {

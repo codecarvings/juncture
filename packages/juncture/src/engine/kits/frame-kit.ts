@@ -6,31 +6,30 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../../juncture';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../tool/object';
-import { InternalCursorHost } from '../equipment/cursor';
-import { ValueHandlerHost } from '../equipment/value-handler';
-import { createInternalFrame, InternalFrame } from '../frames/internal-frame';
+import { CursorHost } from '../frame-equipment/cursor';
+import { ValueHandlerHost } from '../frame-equipment/value-handler';
+import { createFrame, Frame } from '../frames/frame';
 import { createReactorFrame, ReactorFrame } from '../frames/reactor-frame';
 import { createTriggerFrame, TriggerFrame } from '../frames/trigger-frame';
-import { InternalAccessorKit } from './accessor-kit';
+import { AccessorKit } from './accessor-kit';
 
-// #region InternalFrameKit
-export interface InternalFrameKit<J extends Juncture = Juncture> {
-  readonly internal: InternalFrame<J>;
-  readonly trigger: TriggerFrame<J>;
-  readonly reactor: ReactorFrame<J>;
+// #region FrameKit
+export interface FrameKit<D extends Driver = Driver> {
+  readonly default: Frame<D>;
+  readonly trigger: TriggerFrame<D>;
+  readonly reactor: ReactorFrame<D>;
 }
 
-export function equipInternalFrameKit<J extends Juncture>(
+export function prepareFrameKit<D extends Driver>(
   frames: any,
-  internalCursorHost: InternalCursorHost<J>,
-  valueHandlerHost: ValueHandlerHost<J>,
-  accessors: InternalAccessorKit<J>
+  cursorHost: CursorHost<D>,
+  valueHandlerHost: ValueHandlerHost<D>,
+  accessors: AccessorKit<D>
 ) {
-  defineLazyProperty(frames, 'internal', () => createInternalFrame(internalCursorHost, valueHandlerHost, accessors));
-  // eslint-disable-next-line max-len
-  defineLazyProperty(frames, 'trigger', () => createTriggerFrame(internalCursorHost, valueHandlerHost, accessors));
-  defineLazyProperty(frames, 'reactor', () => createReactorFrame(internalCursorHost, valueHandlerHost, accessors));
+  defineLazyProperty(frames, 'default', () => createFrame(cursorHost, valueHandlerHost, accessors));
+  defineLazyProperty(frames, 'trigger', () => createTriggerFrame(cursorHost, valueHandlerHost, accessors));
+  defineLazyProperty(frames, 'reactor', () => createReactorFrame(cursorHost, valueHandlerHost, accessors));
 }
 // #endregion

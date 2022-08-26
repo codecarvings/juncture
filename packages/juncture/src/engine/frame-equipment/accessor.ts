@@ -8,22 +8,22 @@
 
 import { Gear } from '../gear';
 import { getGear } from '../gear-host';
-import { BinKit } from '../kits/bin-kit';
+import { OuterBinKit } from '../kits/bin-kit';
 import { Cursor } from './cursor';
 
-export function createAccessorFactory(binKey: keyof BinKit): any {
-  return (defaultGear: Gear) => (_?: Cursor) => {
+export function createAccessorFactory(binKey: keyof OuterBinKit): any {
+  return (defaultGear: Gear, bins: any) => (_?: Cursor) => {
     const gear = typeof _ !== 'undefined' ? getGear(_) : defaultGear;
-    return gear.bins[binKey];
+    if (gear === defaultGear) {
+      return bins[binKey];
+    }
+    return gear.outerBins[binKey];
   };
 }
 
-export function createInternalAccessorFactory(binKey: keyof BinKit): any {
-  return (defaultGear: Gear, internalBinHost: any) => (_?: Cursor) => {
+export function createOuterAccessorFactory(binKey: keyof OuterBinKit): any {
+  return (defaultGear: Gear) => (_?: Cursor) => {
     const gear = typeof _ !== 'undefined' ? getGear(_) : defaultGear;
-    if (gear === defaultGear) {
-      return internalBinHost[binKey];
-    }
-    return gear.bins[binKey];
+    return gear.outerBins[binKey];
   };
 }

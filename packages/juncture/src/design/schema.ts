@@ -6,9 +6,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { AccessModifier } from '../access';
+import { Juncture } from '../juncture';
+
 export class JunctureSchema<V = any> {
   constructor(readonly defaultValue: V) { }
 }
 
 // ---  Derivations
 export type ValueOfSchema<X extends JunctureSchema> = X['defaultValue'];
+
+export class SingleChildSchema<J extends Juncture, V> extends JunctureSchema<V> {
+  constructor(readonly Child: J, defaultValue: V) {
+    super(defaultValue);
+    switch ((Child as any).access) {
+      case AccessModifier.private:
+        this.childAccess = AccessModifier.private;
+        break;
+      default:
+        this.childAccess = AccessModifier.public;
+        break;
+    }
+  }
+
+  readonly childAccess: AccessModifier;
+}

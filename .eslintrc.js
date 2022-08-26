@@ -43,6 +43,7 @@ module.exports = {
         'allowAfterThis': true
       }
     ],
+    'no-shadow': 'off',
     '@typescript-eslint/comma-dangle': [
       'error',
       {
@@ -60,6 +61,12 @@ module.exports = {
         ],
         leadingUnderscore: 'allow'
       }
-    ]
+    ],
+    '@typescript-eslint/no-shadow': [
+      'off',
+      {
+        ignoreTypeValueShadow: true
+      }
+    ],
   }
 }

@@ -6,36 +6,41 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {
+  AccessModifier, Private, PrivateJuncture
+} from '../access';
 import { createSchema, Schema } from '../design/descriptors/schema';
-import { JunctureSchema } from '../design/schema';
-import { createCursor, Cursor } from '../engine/equipment/cursor';
+import { SingleChildSchema } from '../design/schema';
+import { SchemaOf } from '../driver';
+import { createCursor, Cursor } from '../engine/frame-equipment/cursor';
 import { Gear, GearLayout, GearMediator } from '../engine/gear';
 import { PathFragment } from '../engine/path';
-import { ForgeableJuncture } from '../forgeable-juncture';
+import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
 import { JMachineGearMediator } from '../j-machine';
-import {
-  CursorOfCtor, Juncture, JunctureCtor, SchemaOf, ValueOfCtor
-} from '../juncture';
+import { AlterablePartialJuncture, Juncture, OuterCursorOfJuncture, ValueOfJuncture } from '../juncture';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../tool/object';
 
 // #region Value & Schema
-export type FacadeValue<JT extends JunctureCtor> = ValueOfCtor<JT>;
+export type FacadeValue<J extends PrivateJuncture> = ValueOfJuncture<J>;
 
-export class FacadeSchema<JT extends JunctureCtor = any> extends JunctureSchema<FacadeValue<JT>> {
-  protected constructor(readonly Child: JT, defaultValue?: FacadeValue<JT>) {
-    super(defaultValue !== undefined ? defaultValue : Juncture.getSchema(Child).defaultValue);
+export class FacadeSchema<J extends PrivateJuncture = any> extends SingleChildSchema<J, FacadeValue<J>> {
+  protected constructor(Child: J, defaultValue?: FacadeValue<J>) {
+    super(Child, defaultValue !== undefined ? defaultValue : Juncture.getSchema(Child).defaultValue);
   }
 }
 
-function createFacadeSchema <JT extends JunctureCtor>(Child: JT, defaultValue?: FacadeValue<JT>): FacadeSchema<JT> {
+function createFacadeSchema<J extends PrivateJuncture>(
+  Child: J,
+  defaultValue?: FacadeValue<J>
+): FacadeSchema<J> {
   return new (FacadeSchema as any)(Child, defaultValue);
 }
 // #endregion
 
 // #region Forger
-export class FacadeForger<J extends FacadeJuncture> extends Forger<J> {
+export class FacadeForger<D extends FacadeDriver> extends Forger<D> {
 }
 // #endregion
 
@@ -81,16 +86,16 @@ export class FacadeGear extends Gear {
   // #endregion
 }
 
-export type InternalFacadeCursor<J extends FacadeJuncture> = Cursor<J> & {
-  readonly inner: CursorOfCtor<ChildOf<J>>;
+export type FacadeCursor<D extends FacadeDriver> = Cursor<D> & {
+  readonly inner: OuterCursorOfJuncture<ChildOf<D>>;
 };
 
 // #endregion
 
-// #region Juncture
-export abstract class FacadeJuncture extends ForgeableJuncture {
+// #region Driver
+export abstract class FacadeDriver extends ForgeableDriver {
   protected [jSymbols.createForger](): FacadeForger<this> {
-    return new FacadeForger<this>(Juncture.getPropertyAssembler(this));
+    return new FacadeForger(this);
   }
 
   [jSymbols.createGear](
@@ -102,9 +107,9 @@ export abstract class FacadeJuncture extends ForgeableJuncture {
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createInternalCursor](gear: FacadeGear): InternalFacadeCursor<this> {
+  [jSymbols.createCursor](gear: FacadeGear): FacadeCursor<this> {
     const _: any = createCursor(gear);
-    defineLazyProperty(_, childKey, () => gear.resolveFragment(childKey).cursor, { enumerable: true });
+    defineLazyProperty(_, childKey, () => gear.resolveFragment(childKey).outerCursor, { enumerable: true });
     return _;
   }
 
@@ -114,34 +119,46 @@ export abstract class FacadeJuncture extends ForgeableJuncture {
 }
 
 // ---  Derivations
-export type ChildOf<J extends FacadeJuncture> = SchemaOf<J>['Child'];
+export type ChildOf<D extends FacadeDriver> = SchemaOf<D>['Child'];
 // #endregion
 
-// #region Builder types
+// #region Juncture
 // --- Inert
-interface Facade<JT extends JunctureCtor> extends FacadeJuncture {
-  schema: Schema<FacadeSchema<JT>>;
+interface Facade<J extends PrivateJuncture> extends FacadeDriver {
+  schema: Schema<FacadeSchema<J>>;
 }
-interface FacadeCtor<JT extends JunctureCtor> extends JunctureCtor<Facade<JT>> { }
+interface FacadeJuncture<J extends PrivateJuncture> extends Juncture<Facade<J>> { }
 // #endregion
 
 // #region Builder
-function createFacadeCtor<JT extends abstract new(...args: any) => FacadeJuncture,
-  JT2 extends JunctureCtor>(BaseCtor: JT, Child: JT2, defaultValue?: FacadeValue<JT2>) {
-  abstract class Facade extends BaseCtor {
+function createFacadeJuncture<J extends AlterablePartialJuncture<FacadeDriver>,
+  J2 extends PrivateJuncture>(BaseJuncture: J, Child: J2, defaultValue?: FacadeValue<J2>) {
+  abstract class Facade extends BaseJuncture {
     schema = createSchema(() => createFacadeSchema(Child, defaultValue));
   }
   return Facade;
 }
 
-interface FacadeBuilder {
-  Of<JT extends JunctureCtor>(Child: JT, defaultValue?: FacadeValue<JT>): FacadeCtor<JT>;
+interface FacadeJunctureBuilder {
+  Of<J extends PrivateJuncture>(Child: J, defaultValue?: FacadeValue<J>): FacadeJuncture<J>;
+  Of<J extends Juncture>(Child: J, defaultValue?: FacadeValue<Private<J>>): FacadeJuncture<Private<J>>;
 }
 
-export const jFacade: FacadeBuilder = {
-  Of: <JT extends JunctureCtor>(
-    Child: JT,
-    defaultValue?: FacadeValue<JT>
-  ) => createFacadeCtor(FacadeJuncture, Child, defaultValue) as any
+export const $Facade: FacadeJunctureBuilder = {
+  Of: <J extends PrivateJuncture>(
+    Child: J,
+    defaultValue?: FacadeValue<J>
+  ) => {
+    let ChildJuncture: PrivateJuncture;
+    switch ((Child as any).access) {
+      case AccessModifier.private:
+        ChildJuncture = Child;
+        break;
+      default:
+        ChildJuncture = Private(Child);
+        break;
+    }
+    return createFacadeJuncture(FacadeDriver, ChildJuncture, defaultValue) as any;
+  }
 };
 // #endregion

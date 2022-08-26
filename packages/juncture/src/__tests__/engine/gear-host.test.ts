@@ -8,16 +8,17 @@
 
 import { createSchema } from '../../design/descriptors/schema';
 import { JunctureSchema } from '../../design/schema';
+import { Driver } from '../../driver';
 import { Gear, GearLayout, GearMediator } from '../../engine/gear';
 import { addGearLink, getGear, isGearHost } from '../../engine/gear-host';
 import { JMachineGearMediator } from '../../j-machine';
 import { Juncture } from '../../juncture';
 import { jSymbols } from '../../symbols';
 
-class MyJuncture extends Juncture {
+class MyDriver extends Driver {
   schema = createSchema(() => new JunctureSchema(''));
 }
-const juncture = Juncture.getInstance(MyJuncture);
+const driver = Juncture.getDriver(MyDriver);
 const layout: GearLayout = {
   parent: null,
   path: [],
@@ -41,8 +42,8 @@ const machineMediator: JMachineGearMediator = {
   dispatch: () => {}
 };
 
-const gear1 = new Gear(juncture, layout, gearMediator, machineMediator);
-const gear2 = new Gear(juncture, layout, gearMediator, machineMediator);
+const gear1 = new Gear(driver, layout, gearMediator, machineMediator);
+const gear2 = new Gear(driver, layout, gearMediator, machineMediator);
 
 describe('addGearLink', () => {
   test('should add a property [jSymbols.gear] containing a refernce to the provided Gear', () => {

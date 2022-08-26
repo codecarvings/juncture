@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../design/access-modifier';
+import { AccessModifier } from '../../access';
 import { getFilteredDescriptorKeys } from '../../design/descriptor';
 import { applicableDescriptorTypes, NotSuitableType } from '../../design/descriptor-type';
 import { GenericReducer } from '../../design/descriptors/reducer';
 import { GenericTrigger } from '../../design/descriptors/trigger';
-import { Juncture } from '../../juncture';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../tool/object';
 import { OverloadParameters } from '../../tool/overload-types';
 import { createAction } from '../action';
@@ -19,17 +19,14 @@ import { Gear } from '../gear';
 import { Instruction } from '../instruction';
 
 // #region Common
-type ApplyBinItem<D> =
-  D extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
-    : D extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
+type ApplyBinItem<L> =
+  L extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
+    : L extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
       : NotSuitableType;
 
-function createApplyBinBase(
-  gear: Gear,
-  internalUse: boolean
-) {
-  const { juncture } = gear;
-  const keys = getFilteredDescriptorKeys(juncture, applicableDescriptorTypes, internalUse);
+function createApplyBinBase(gear: Gear, outerFilter: boolean) {
+  const { driver } = gear;
+  const keys = getFilteredDescriptorKeys(driver, applicableDescriptorTypes, outerFilter);
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(
@@ -43,34 +40,34 @@ function createApplyBinBase(
 // #endregion
 
 // #region ApplyBin
-export type ApplyBin<J> = {
-  readonly [K in keyof J as
-  J[K] extends GenericReducer<any, AccessModifier.public> ? K
-    : J[K] extends GenericTrigger<any, AccessModifier.public> ? K
-      : never
-  ]: ApplyBinItem<J[K]>;
-};
+// Conditional type required as a workoaround for problems with key remapping
+export type ApplyBin<D> = D extends any ? {
+  readonly [K in keyof D as K extends string ? K : never]: ApplyBinItem<D[K]>;
+} : never;
 
-export function createApplyBin<J extends Juncture>(
+export interface ApplyBinHost<D> {
+  readonly apply: ApplyBin<D>;
+}
+
+export function createApplyBin<D extends Driver>(
   gear: Gear
-): ApplyBin<J> {
+): ApplyBin<D> {
   return createApplyBinBase(gear, false);
 }
 // #endregion
 
-// #region InternalApplyBin
-// Conditional type required as a workoaround for problems with key remapping
-export type InternalApplyBin<J> = J extends any ? {
-  readonly [K in keyof J as K extends string ? K : never]: ApplyBinItem<J[K]>;
-} : never;
+// #region OuterApplyBin
+export type OuterApplyBin<D> = {
+  readonly [K in keyof D as
+  D[K] extends GenericReducer<any, AccessModifier.public> ? K
+    : D[K] extends GenericTrigger<any, AccessModifier.public> ? K
+      : never
+  ]: ApplyBinItem<D[K]>;
+};
 
-export interface InternalApplyBinHost<J> {
-  readonly apply: InternalApplyBin<J>;
-}
-
-export function createInternalApplyBin<J extends Juncture>(
+export function createOuterApplyBin<D extends Driver>(
   gear: Gear
-): InternalApplyBin<J> {
+): OuterApplyBin<D> {
   return createApplyBinBase(gear, true);
 }
 // #endregion

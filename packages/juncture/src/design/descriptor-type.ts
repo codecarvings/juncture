@@ -19,3 +19,4 @@ export type NotSuitableType = '\u26A0 ERROR: NOT SUITABLE TYPE';
 
 export const selectableDescriptorTypes = [DescriptorType.selector, DescriptorType.paramSelector];
 export const applicableDescriptorTypes = [DescriptorType.reducer, DescriptorType.trigger];
+export const observableDescriptorTypes = [DescriptorType.selector, DescriptorType.paramSelector];

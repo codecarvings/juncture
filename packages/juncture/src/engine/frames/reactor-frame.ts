@@ -6,40 +6,40 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../../juncture';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../tool/object';
-import { DispatchBin, InternalDispatchBin } from '../bins/dispatch-bin';
-import { InternalSourceBin, SourceBin } from '../bins/source-bin';
-import { Cursor, InternalCursorHost, JunctureOfCursor } from '../equipment/cursor';
-import { ValueHandlerHost } from '../equipment/value-handler';
-import { InternalAccessorKit } from '../kits/accessor-kit';
-import { createInternalFrame, InternalFrame } from './internal-frame';
+import { DispatchBin, OuterDispatchBin } from '../bins/dispatch-bin';
+import { OuterSourceBin, SourceBin } from '../bins/source-bin';
+import { Cursor, CursorHost, DriverOfCursor } from '../frame-equipment/cursor';
+import { ValueHandlerHost } from '../frame-equipment/value-handler';
+import { AccessorKit } from '../kits/accessor-kit';
+import { createFrame, Frame } from './frame';
 
-export interface ReactorFrame<J extends Juncture> extends InternalFrame<J> {
-  dispatch(): InternalDispatchBin<J>;
-  dispatch(_: this['_']): InternalDispatchBin<J>;
-  dispatch<C extends Cursor>(_: C): DispatchBin<JunctureOfCursor<C>>;
+export interface ReactorFrame<D extends Driver> extends Frame<D> {
+  dispatch(): DispatchBin<D>;
+  dispatch(_: this['_']): DispatchBin<D>;
+  dispatch<C extends Cursor>(_: C): OuterDispatchBin<DriverOfCursor<C>>;
 
-  source(): InternalSourceBin<J>;
-  source(_: this['_']): InternalSourceBin<J>;
-  source<C extends Cursor>(_: C): SourceBin<JunctureOfCursor<C>>;
+  source(): SourceBin<D>;
+  source(_: this['_']): SourceBin<D>;
+  source<C extends Cursor>(_: C): OuterSourceBin<DriverOfCursor<C>>;
 }
 
-export interface ReactorFrameHost<J extends Juncture> {
-  readonly reactor: ReactorFrame<J>;
+export interface ReactorFrameHost<D extends Driver> {
+  readonly reactor: ReactorFrame<D>;
 }
 
-export function createReactorFrame<J extends Juncture>(
-  internalCursorHost: InternalCursorHost<J>,
-  valueHandlerHost: ValueHandlerHost<J>,
-  accessors: InternalAccessorKit<J>
-): ReactorFrame<J> {
-  const frame: any = createInternalFrame(internalCursorHost, valueHandlerHost, accessors);
+export function createReactorFrame<D extends Driver>(
+  cursorHost: CursorHost<D>,
+  valueHandlerHost: ValueHandlerHost<D>,
+  accessors: AccessorKit<D>
+): ReactorFrame<D> {
+  const frame: any = createFrame(cursorHost, valueHandlerHost, accessors);
   defineLazyProperty(frame, 'dispatch', () => accessors.dispatch);
   defineLazyProperty(frame, 'source', () => accessors.source);
   return frame;
 }
 
-export interface OverrideReactorFrame<J extends Juncture, S> extends ReactorFrame<J> {
+export interface OverrideReactorFrame<D extends Driver, S> extends ReactorFrame<D> {
   readonly parent: S;
 }

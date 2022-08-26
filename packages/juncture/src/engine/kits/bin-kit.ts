@@ -6,45 +6,50 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Juncture } from '../../juncture';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../tool/object';
 import { Dispatcher } from '../action';
 import {
-  ApplyBin, createApplyBin, createInternalApplyBin, InternalApplyBin
+  ApplyBin, createApplyBin, createOuterApplyBin, OuterApplyBin
 } from '../bins/apply-bin';
 import {
-  createDispatchBin, createInternalDispatchBin, DispatchBin, InternalDispatchBin
+  createDispatchBin, createOuterDispatchBin, DispatchBin, OuterDispatchBin
 } from '../bins/dispatch-bin';
 import {
-  createInternalSelectBin, createSelectBin, InternalSelectBin, SelectBin
+  createOuterSelectBin, createSelectBin, OuterSelectBin, SelectBin
 } from '../bins/select-bin';
+import { createOuterSourceBin, OuterSourceBin, SourceBin } from '../bins/source-bin';
 import { Gear } from '../gear';
-import { InternalFrameKit } from './frame-kit';
+import { FrameKit } from './frame-kit';
 
 // #region BinKit
-export interface BinKit<J extends Juncture = Juncture> {
-  readonly select: SelectBin<J>;
-  readonly apply: ApplyBin<J>;
-  readonly dispatch: DispatchBin<J>;
+export interface BinKit<D extends Driver = Driver> {
+  readonly select: SelectBin<D>;
+  readonly apply: ApplyBin<D>;
+  readonly dispatch: DispatchBin<D>;
+  readonly source: SourceBin<D>;
 }
 
-export function equipBinKit(bins: any, gear: Gear, frames: InternalFrameKit, dispatcher: Dispatcher) {
+export function prepareBinKit(bins: any, gear: Gear, frames: FrameKit, dispatcher: Dispatcher) {
   defineLazyProperty(bins, 'select', () => createSelectBin(gear, frames));
   defineLazyProperty(bins, 'apply', () => createApplyBin(gear));
   defineLazyProperty(bins, 'dispatch', () => createDispatchBin(gear, dispatcher));
+  defineLazyProperty(bins, 'source', () => createOuterSourceBin(gear));
 }
 // #endregion
 
-// #region InternalBinKit
-export interface InternalBinKit<J extends Juncture = Juncture> {
-  readonly select: InternalSelectBin<J>;
-  readonly apply: InternalApplyBin<J>;
-  readonly dispatch: InternalDispatchBin<J>;
+// #region OuterBinKit
+export interface OuterBinKit<D extends Driver = Driver> {
+  readonly select: OuterSelectBin<D>;
+  readonly apply: OuterApplyBin<D>;
+  readonly dispatch: OuterDispatchBin<D>;
+  readonly source: OuterSourceBin<D>;
 }
 
-export function equipInternalBinKit(internalBins: any, gear: Gear, frames: InternalFrameKit, dispatcher: Dispatcher) {
-  defineLazyProperty(internalBins, 'select', () => createInternalSelectBin(gear, frames));
-  defineLazyProperty(internalBins, 'apply', () => createInternalApplyBin(gear));
-  defineLazyProperty(internalBins, 'dispatch', () => createInternalDispatchBin(gear, dispatcher));
+export function prepareOuterBinKit(bins: any, gear: Gear, frames: FrameKit, dispatcher: Dispatcher) {
+  defineLazyProperty(bins, 'select', () => createOuterSelectBin(gear, frames));
+  defineLazyProperty(bins, 'apply', () => createOuterApplyBin(gear));
+  defineLazyProperty(bins, 'dispatch', () => createOuterDispatchBin(gear, dispatcher));
+  defineLazyProperty(bins, 'source', () => createOuterSourceBin(gear));
 }
 // #endregion

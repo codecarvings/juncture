@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../design/access-modifier';
+import { AccessModifier } from '../../access';
 import {
   createDescriptor, isDescriptor
 } from '../../design/descriptor';

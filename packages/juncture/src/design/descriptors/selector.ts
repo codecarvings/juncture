@@ -7,8 +7,8 @@
  */
 
 import { Observable } from 'rxjs';
-import { InternalFrameConsumer } from '../../engine/frames/internal-frame';
-import { AccessModifier } from '../access-modifier';
+import { AccessModifier } from '../../access';
+import { FrameConsumer } from '../../engine/frames/frame';
 import {
   createDescriptor, Descriptor
 } from '../descriptor';
@@ -17,28 +17,28 @@ import { DescriptorType } from '../descriptor-type';
 type SelectorAccess = AccessModifier.public | AccessModifier.private;
 
 export interface GenericSelector<B, A extends SelectorAccess>
-  extends Descriptor<DescriptorType.selector, InternalFrameConsumer<B>, A> { }
+  extends Descriptor<DescriptorType.selector, FrameConsumer<B>, A> { }
 
 export interface Selector<B> extends GenericSelector<B, AccessModifier.public> { }
 
 export interface PrivateSelector<B> extends GenericSelector<B, AccessModifier.private> { }
 
 export function createSelector
-  <B>(selectorFn: InternalFrameConsumer<B>): Selector<B>;
+  <B>(selectorFn: FrameConsumer<B>): Selector<B>;
 export function createSelector
-  <B>(selectorFn: InternalFrameConsumer<B>, access: AccessModifier.public): Selector<B>;
+  <B>(selectorFn: FrameConsumer<B>, access: AccessModifier.public): Selector<B>;
 export function createSelector
-  <B>(selectorFn: InternalFrameConsumer<B>, access: AccessModifier.private): PrivateSelector<B>;
+  <B>(selectorFn: FrameConsumer<B>, access: AccessModifier.private): PrivateSelector<B>;
 export function createSelector<B>(
-  selectorFn: InternalFrameConsumer<B>,
+  selectorFn: FrameConsumer<B>,
   access: SelectorAccess = AccessModifier.public
 ) {
   return createDescriptor(DescriptorType.selector, selectorFn, access);
 }
 
 // ---  Derivations
-export type BodyOfSelector<D extends GenericSelector<any, any>>
-  = D extends GenericSelector<infer B, any> ? B : never;
+export type BodyOfSelector<L extends GenericSelector<any, any>>
+  = L extends GenericSelector<infer B, any> ? B : never;
 
 // #region Observables
 export interface SelectorObservables<B> {
