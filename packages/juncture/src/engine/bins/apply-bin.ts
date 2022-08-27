@@ -8,7 +8,7 @@
 
 import { AccessModifier } from '../../access';
 import { getFilteredDescriptorKeys } from '../../design/descriptor';
-import { applicableDescriptorTypes, NotSuitableType } from '../../design/descriptor-type';
+import { NotSuitableType, triggerableDescriptorTypes } from '../../design/descriptor-type';
 import { GenericReducer } from '../../design/descriptors/reducer';
 import { GenericTrigger } from '../../design/descriptors/trigger';
 import { Driver } from '../../driver';
@@ -20,13 +20,13 @@ import { Instruction } from '../instruction';
 
 // #region Common
 type ApplyBinItem<L> =
-  L extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
-    : L extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
+  L extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
+    : L extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => Instruction
       : NotSuitableType;
 
 function createApplyBinBase(gear: Gear, outerFilter: boolean) {
   const { driver } = gear;
-  const keys = getFilteredDescriptorKeys(driver, applicableDescriptorTypes, outerFilter);
+  const keys = getFilteredDescriptorKeys(driver, triggerableDescriptorTypes, outerFilter);
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(
@@ -59,8 +59,8 @@ export function createApplyBin<D extends Driver>(
 // #region OuterApplyBin
 export type OuterApplyBin<D> = {
   readonly [K in keyof D as
-  D[K] extends GenericReducer<any, AccessModifier.public> ? K
-    : D[K] extends GenericTrigger<any, AccessModifier.public> ? K
+  D[K] extends GenericTrigger<any, AccessModifier.public> ? K
+    : D[K] extends GenericReducer<any, AccessModifier.public> ? K
       : never
   ]: ApplyBinItem<D[K]>;
 };

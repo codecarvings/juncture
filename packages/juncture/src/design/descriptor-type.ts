@@ -10,13 +10,13 @@ export enum DescriptorType {
   schema = 'schema',
   selector = 'selector',
   paramSelector = 'paramSelector',
-  reducer = 'reducer',
   trigger = 'trigger',
+  reducer = 'reducer',
   reactor = 'reactor'
 }
 
 export type NotSuitableType = '\u26A0 ERROR: NOT SUITABLE TYPE';
 
 export const selectableDescriptorTypes = [DescriptorType.selector, DescriptorType.paramSelector];
-export const applicableDescriptorTypes = [DescriptorType.reducer, DescriptorType.trigger];
+export const triggerableDescriptorTypes = [DescriptorType.trigger, DescriptorType.reducer];
 export const observableDescriptorTypes = [DescriptorType.selector, DescriptorType.paramSelector];

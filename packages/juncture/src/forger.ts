@@ -57,14 +57,14 @@ export class PrivateForger<D extends Driver> {
     return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any, AccessModifier.private));
   }
 
-  reducer<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
-    reducerFn: F): PrivateReducer<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createReducer(reducerFn as any, AccessModifier.private));
-  }
-
   trigger<F extends (frame: TriggerFrame<D>) => (...args: any) => Instruction | Instruction[]>(
     triggerFn: F): PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
     return this.assembler.registerStaticProperty(createTrigger(triggerFn as any, AccessModifier.private));
+  }
+
+  reducer<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
+    reducerFn: F): PrivateReducer<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createReducer(reducerFn as any, AccessModifier.private));
   }
 }
 // #endregion
@@ -148,18 +148,18 @@ export class Forger<D extends Driver> {
           }, args.parent.access);
         }
         break;
-      case DescriptorType.reducer:
-        if (args.fnName === 'reducer') {
-          return createReducer(frame => {
+      case DescriptorType.trigger:
+        if (args.fnName === 'trigger') {
+          return createTrigger(frame => {
             const parent = args.parent[jSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
           }, args.parent.access);
         }
         break;
-      case DescriptorType.trigger:
-        if (args.fnName === 'trigger') {
-          return createTrigger(frame => {
+      case DescriptorType.reducer:
+        if (args.fnName === 'reducer') {
+          return createReducer(frame => {
             const parent = args.parent[jSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
@@ -186,18 +186,18 @@ export class Forger<D extends Driver> {
         selectorFn: F): L extends Descriptor<any, any, AccessModifier.public> ? ParamSelector<ReturnType<F>> : PrivateParamSelector<ReturnType<F>>;
     };
 
-    <L extends GenericReducer<any, any>>(parent: L): {
-      reducer<F extends (frame: OverrideFrame<D, BodyOfReducer<L>>)
-      => (...args: any) => ValueOf<D>>(
-        reducerFn: F): L extends Descriptor<any, any, AccessModifier.public> ? Reducer<ReturnType<F>> :
-        PrivateReducer<ReturnType<F>>
-    };
-
     <L extends GenericTrigger<any, any>>(parent: L): {
       trigger<F extends (frame: OverrideTriggerFrame<D, BodyOfTrigger<L>>)
       => (...args: any) => Instruction | Instruction[]>(
         triggerFn: F): L extends Descriptor<any, any, AccessModifier.public> ? Trigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> :
         PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]>
+    };
+
+    <L extends GenericReducer<any, any>>(parent: L): {
+      reducer<F extends (frame: OverrideFrame<D, BodyOfReducer<L>>)
+      => (...args: any) => ValueOf<D>>(
+        reducerFn: F): L extends Descriptor<any, any, AccessModifier.public> ? Reducer<ReturnType<F>> :
+        PrivateReducer<ReturnType<F>>
     };
 
     <L extends Reactor<any>>(parent : L): {
@@ -215,14 +215,14 @@ export class Forger<D extends Driver> {
     return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any));
   }
 
-  reducer<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
-    reducerFn: F): Reducer<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createReducer(reducerFn as any));
-  }
-
   trigger<F extends (frame: TriggerFrame<D>) => (...args: any) => Instruction | Instruction[]>(
     triggerFn: F): Trigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
     return this.assembler.registerStaticProperty(createTrigger(triggerFn as any));
+  }
+
+  reducer<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
+    reducerFn: F): Reducer<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createReducer(reducerFn as any));
   }
 
   reactor<F extends (frame: ReactorFrame<D>) => (() => void) | void>(reactorFn: F):

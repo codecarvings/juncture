@@ -8,8 +8,8 @@
 
 /* eslint-disable max-len */
 
-import { Descriptor, getFilteredDescriptorKeys } from '../design/descriptor';
-import { applicableDescriptorTypes, DescriptorType } from '../design/descriptor-type';
+import { Descriptor } from '../design/descriptor';
+import { DescriptorType } from '../design/descriptor-type';
 import { JunctureSchema } from '../design/schema';
 import { Driver } from '../driver';
 import { JMachineGearMediator } from '../j-machine';
@@ -71,8 +71,6 @@ export class Gear {
 
   readonly ref!: GearRef;
 
-  protected readonly applicableKeys!: string;
-
   constructor(
     readonly driver: Driver,
     readonly layout: GearLayout,
@@ -82,8 +80,6 @@ export class Gear {
     this.schema = Juncture.getSchema(driver);
 
     defineLazyProperty(this, 'ref', () => createGearRef(this));
-
-    defineLazyProperty(this, 'applicableKeys', () => getFilteredDescriptorKeys(driver, applicableDescriptorTypes, true));
 
     this._value = gearMediator.getValue();
     Object.defineProperty(this, 'value', {

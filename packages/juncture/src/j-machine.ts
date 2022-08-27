@@ -13,7 +13,7 @@ import {
 } from './engine/gear';
 import { getGear, isGearHost } from './engine/gear-host';
 import { GearManager } from './engine/gear-manager';
-import { TranactionManager } from './engine/transaction-manager';
+import { TransactionManager } from './engine/transaction-manager';
 import { Juncture, ValueOfJuncture } from './juncture';
 
 export enum JMachineStatus {
@@ -45,7 +45,7 @@ export class JMachine<J extends Juncture> {
 
     this.gearManager = this.createGearManger();
 
-    this.transactionManager = this.createTranactionManager();
+    this.transactionManager = this.createTransactionManager();
 
     this.gear = this.createGear();
 
@@ -77,11 +77,11 @@ export class JMachine<J extends Juncture> {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected createTranactionManager(): TranactionManager {
-    return new TranactionManager(this.gearManager.sync);
+  protected createTransactionManager(): TransactionManager {
+    return new TransactionManager(this.gearManager.sync);
   }
 
-  protected readonly transactionManager: TranactionManager;
+  protected readonly transactionManager: TransactionManager;
 
   protected readonly gear: Gear;
 

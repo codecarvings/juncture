@@ -8,7 +8,7 @@
 
 import { AccessModifier } from '../../access';
 import { getFilteredDescriptorKeys } from '../../design/descriptor';
-import { applicableDescriptorTypes, NotSuitableType } from '../../design/descriptor-type';
+import { NotSuitableType, triggerableDescriptorTypes } from '../../design/descriptor-type';
 import { GenericReducer } from '../../design/descriptors/reducer';
 import { GenericTrigger } from '../../design/descriptors/trigger';
 import { Driver } from '../../driver';
@@ -19,13 +19,13 @@ import { Gear } from '../gear';
 
 // #region Common
 type DispatchBinItem<L> =
-  L extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => void
-    : L extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => void
+  L extends GenericTrigger<infer B, any> ? (...args : OverloadParameters<B>) => void
+    : L extends GenericReducer<infer B, any> ? (...args : OverloadParameters<B>) => void
       : NotSuitableType;
 
 function createDispatchBinBase(gear: Gear, dispatcher: Dispatcher, outerFilter: boolean) {
   const { driver } = gear;
-  const keys = getFilteredDescriptorKeys(driver, applicableDescriptorTypes, outerFilter);
+  const keys = getFilteredDescriptorKeys(driver, triggerableDescriptorTypes, outerFilter);
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(
@@ -61,8 +61,8 @@ export function createDispatchBin<D extends Driver>(
 // #region OuterDispatchBin
 export type OuterDispatchBin<D> = {
   readonly [K in keyof D as
-  D[K] extends GenericReducer<any, AccessModifier.public> ? K
-    : D[K] extends GenericTrigger<any, AccessModifier.public> ? K
+  D[K] extends GenericTrigger<any, AccessModifier.public> ? K
+    : D[K] extends GenericReducer<any, AccessModifier.public> ? K
       : never
   ]: DispatchBinItem<D[K]>;
 };

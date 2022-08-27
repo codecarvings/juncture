@@ -21,12 +21,12 @@ describe('DescriptorType', () => {
     expect(DescriptorType.paramSelector).toBe('paramSelector');
   });
 
-  test('should contain the reducer type', () => {
-    expect(DescriptorType.reducer).toBe('reducer');
-  });
-
   test('should contain the trigger type', () => {
     expect(DescriptorType.trigger).toBe('trigger');
+  });
+
+  test('should contain the reducer type', () => {
+    expect(DescriptorType.reducer).toBe('reducer');
   });
 
   test('should contain the reactor type', () => {

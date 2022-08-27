@@ -9,7 +9,7 @@
 import { Gear } from './gear';
 import { pathToString } from './path';
 
-export class TranactionManager {
+export class TransactionManager {
   constructor(protected readonly syncGears: () => void) {
     this.begin = this.begin.bind(this);
     this.registerAlteredGear = this.registerAlteredGear.bind(this);

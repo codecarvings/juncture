@@ -75,20 +75,6 @@ describe('PrivateForger', () => {
       });
     });
 
-    describe('reducer', () => {
-      test('should be a method', () => {
-        expect(typeof forger.reducer).toBe('function');
-      });
-
-      test('should create, after property wiring, a PrivateReducer, by passing a reducer function', () => {
-        container.myDesc = forger.reducer(({ value }) => () => value());
-        assembler.wire();
-        expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.reducer);
-        expect(container.myDesc.access).toBe(AccessModifier.private);
-      });
-    });
-
     describe('trigger', () => {
       test('should be a method', () => {
         expect(typeof forger.trigger).toBe('function');
@@ -99,6 +85,20 @@ describe('PrivateForger', () => {
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
         expect(container.myDesc.type).toBe(DescriptorType.trigger);
+        expect(container.myDesc.access).toBe(AccessModifier.private);
+      });
+    });
+
+    describe('reducer', () => {
+      test('should be a method', () => {
+        expect(typeof forger.reducer).toBe('function');
+      });
+
+      test('should create, after property wiring, a PrivateReducer, by passing a reducer function', () => {
+        container.myDesc = forger.reducer(({ value }) => () => value());
+        assembler.wire();
+        expect(isDescriptor(container.myDesc)).toBe(true);
+        expect(container.myDesc.type).toBe(DescriptorType.reducer);
         expect(container.myDesc.access).toBe(AccessModifier.private);
       });
     });
@@ -160,20 +160,6 @@ describe('Forger', () => {
       });
     });
 
-    describe('reducer', () => {
-      test('should be a method', () => {
-        expect(typeof forger.reducer).toBe('function');
-      });
-
-      test('should create, after property wiring, a Reducer, by passing a reducer function', () => {
-        container.myDesc = forger.reducer(({ value }) => () => value());
-        assembler.wire();
-        expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.reducer);
-        expect(container.myDesc.access).toBe(AccessModifier.public);
-      });
-    });
-
     describe('trigger', () => {
       test('should be a method', () => {
         expect(typeof forger.trigger).toBe('function');
@@ -184,6 +170,20 @@ describe('Forger', () => {
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
         expect(container.myDesc.type).toBe(DescriptorType.trigger);
+        expect(container.myDesc.access).toBe(AccessModifier.public);
+      });
+    });
+
+    describe('reducer', () => {
+      test('should be a method', () => {
+        expect(typeof forger.reducer).toBe('function');
+      });
+
+      test('should create, after property wiring, a Reducer, by passing a reducer function', () => {
+        container.myDesc = forger.reducer(({ value }) => () => value());
+        assembler.wire();
+        expect(isDescriptor(container.myDesc)).toBe(true);
+        expect(container.myDesc.type).toBe(DescriptorType.reducer);
         expect(container.myDesc.access).toBe(AccessModifier.public);
       });
     });
@@ -347,74 +347,6 @@ describe('Forger', () => {
         });
       });
 
-      describe('when passing a Reducer as type argument, proxy should provide access to', () => {
-        let myOriginalDesc: Reducer<(value: string) => string>;
-        beforeEach(() => {
-          myOriginalDesc = container.myDesc = forger.reducer(() => (value: string) => value.toUpperCase());
-          assembler.wire();
-          myOriginalDesc = container.myDesc;
-        });
-
-        describe('a "reducer" property that', () => {
-          test('should be a method', () => {
-            const proxy = forger.override(myOriginalDesc);
-            expect(typeof proxy.reducer).toBe('function');
-          });
-
-          test('should create, after property wiring, a new Reducer assignable to the parent, by passing a reducer function', () => {
-            const proxy = forger.override(myOriginalDesc);
-            let myNewDesc: Reducer<(value: string) => string> = container.myDesc = proxy
-              .reducer(() => (value: string) => value);
-            assembler.wire();
-            myNewDesc = container.myDesc;
-            expect(isDescriptor(myNewDesc)).toBe(true);
-            expect(myNewDesc.type).toBe(DescriptorType.reducer);
-            expect(myNewDesc).not.toBe(myOriginalDesc);
-          });
-
-          test('should provide access to the parent reducer', () => {
-            const proxy = forger.override(myOriginalDesc);
-            container.myDesc = proxy.reducer(({ parent }) => (value: string) => parent(`${value}2`));
-            assembler.wire();
-            const result = container.myDesc[jSymbols.payload]()('abc');
-            expect(result).toBe('ABC2');
-          });
-
-          test('should return a Reducer if the parent is public', () => {
-            const proxy = forger.override(myOriginalDesc);
-            let myNewDesc = container.myDesc = proxy.reducer(() => (value: string) => value);
-            assembler.wire();
-            myNewDesc = container.myDesc;
-            expect(myOriginalDesc.access).toBe(AccessModifier.public);
-            expect(myNewDesc.access).toBe(AccessModifier.public);
-          });
-
-          test('should return a PrivateReducer if the parent is private', () => {
-            let myOriginalPrivateDesc: PrivateReducer<(value: string) => string> = container.myPrivateReducer = forger
-              .private.reducer(() => (value: string) => value.toUpperCase());
-            assembler.wire();
-            myOriginalPrivateDesc = container.myPrivateReducer;
-
-            const proxy = forger.override(myOriginalPrivateDesc);
-            let myNewPrivateDesc: PrivateReducer<(value: string) => string> = container.myPrivateReducer = proxy
-              .reducer(() => (value: string) => value);
-            assembler.wire();
-            myNewPrivateDesc = container.myPrivateReducer;
-            expect(myOriginalPrivateDesc.access).toBe(AccessModifier.private);
-            expect(myNewPrivateDesc.access).toBe(AccessModifier.private);
-          });
-
-          test('should throw error during wire if the parent is not a Reducer', () => {
-            container.myDesc = assembler.registerStaticProperty(createSchema(() => new JunctureSchema('')));
-            const proxy = forger.override(myOriginalDesc);
-            container.myDesc = proxy.reducer(() => () => '');
-            expect(() => {
-              assembler.wire();
-            }).toThrow();
-          });
-        });
-      });
-
       describe('when passing a Trigger as type argument, proxy should provide access to', () => {
         let myOriginalDesc: Trigger<(value: string) => Instruction[]>;
         beforeEach(() => {
@@ -488,6 +420,74 @@ describe('Forger', () => {
             container.myDesc = assembler.registerStaticProperty(createSchema(() => new JunctureSchema('')));
             const proxy = forger.override(myOriginalDesc);
             container.myDesc = proxy.trigger(() => () => []);
+            expect(() => {
+              assembler.wire();
+            }).toThrow();
+          });
+        });
+      });
+
+      describe('when passing a Reducer as type argument, proxy should provide access to', () => {
+        let myOriginalDesc: Reducer<(value: string) => string>;
+        beforeEach(() => {
+          myOriginalDesc = container.myDesc = forger.reducer(() => (value: string) => value.toUpperCase());
+          assembler.wire();
+          myOriginalDesc = container.myDesc;
+        });
+
+        describe('a "reducer" property that', () => {
+          test('should be a method', () => {
+            const proxy = forger.override(myOriginalDesc);
+            expect(typeof proxy.reducer).toBe('function');
+          });
+
+          test('should create, after property wiring, a new Reducer assignable to the parent, by passing a reducer function', () => {
+            const proxy = forger.override(myOriginalDesc);
+            let myNewDesc: Reducer<(value: string) => string> = container.myDesc = proxy
+              .reducer(() => (value: string) => value);
+            assembler.wire();
+            myNewDesc = container.myDesc;
+            expect(isDescriptor(myNewDesc)).toBe(true);
+            expect(myNewDesc.type).toBe(DescriptorType.reducer);
+            expect(myNewDesc).not.toBe(myOriginalDesc);
+          });
+
+          test('should provide access to the parent reducer', () => {
+            const proxy = forger.override(myOriginalDesc);
+            container.myDesc = proxy.reducer(({ parent }) => (value: string) => parent(`${value}2`));
+            assembler.wire();
+            const result = container.myDesc[jSymbols.payload]()('abc');
+            expect(result).toBe('ABC2');
+          });
+
+          test('should return a Reducer if the parent is public', () => {
+            const proxy = forger.override(myOriginalDesc);
+            let myNewDesc = container.myDesc = proxy.reducer(() => (value: string) => value);
+            assembler.wire();
+            myNewDesc = container.myDesc;
+            expect(myOriginalDesc.access).toBe(AccessModifier.public);
+            expect(myNewDesc.access).toBe(AccessModifier.public);
+          });
+
+          test('should return a PrivateReducer if the parent is private', () => {
+            let myOriginalPrivateDesc: PrivateReducer<(value: string) => string> = container.myPrivateReducer = forger
+              .private.reducer(() => (value: string) => value.toUpperCase());
+            assembler.wire();
+            myOriginalPrivateDesc = container.myPrivateReducer;
+
+            const proxy = forger.override(myOriginalPrivateDesc);
+            let myNewPrivateDesc: PrivateReducer<(value: string) => string> = container.myPrivateReducer = proxy
+              .reducer(() => (value: string) => value);
+            assembler.wire();
+            myNewPrivateDesc = container.myPrivateReducer;
+            expect(myOriginalPrivateDesc.access).toBe(AccessModifier.private);
+            expect(myNewPrivateDesc.access).toBe(AccessModifier.private);
+          });
+
+          test('should throw error during wire if the parent is not a Reducer', () => {
+            container.myDesc = assembler.registerStaticProperty(createSchema(() => new JunctureSchema('')));
+            const proxy = forger.override(myOriginalDesc);
+            container.myDesc = proxy.reducer(() => () => '');
             expect(() => {
               assembler.wire();
             }).toThrow();
