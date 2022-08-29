@@ -10,10 +10,10 @@ const payload = Symbol('payload');
 const createPropertyAssembler = Symbol('createPropertyAssembler');
 const createForger = Symbol('createForger');
 const init = Symbol('init');
-const createGear = Symbol('createGear');
+const createRealm = Symbol('createRealm');
 const createCursor = Symbol('createCursor');
 const createOuterCursor = Symbol('createOuterCursor');
-const gear = Symbol('gear');
+const realm = Symbol('realm');
 const driver = Symbol('driver');
 const bitDefault = Symbol('bitDefault');
 
@@ -22,10 +22,10 @@ export interface JSymbols {
   readonly createPropertyAssembler: typeof createPropertyAssembler;
   readonly createForger: typeof createForger;
   readonly init: typeof init;
-  readonly createGear: typeof createGear;
+  readonly createRealm: typeof createRealm;
   readonly createCursor: typeof createCursor;
   readonly createOuterCursor: typeof createOuterCursor;
-  readonly gear: typeof gear;
+  readonly realm: typeof realm;
   readonly driver: typeof driver;
   readonly bitDefault: typeof bitDefault;
 }
@@ -35,10 +35,10 @@ export const jSymbols: JSymbols = {
   createPropertyAssembler,
   createForger,
   init,
-  createGear,
+  createRealm,
   createCursor,
   createOuterCursor,
-  gear,
+  realm,
   driver,
   bitDefault
 };

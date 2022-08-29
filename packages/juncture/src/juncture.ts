@@ -10,8 +10,8 @@ import { AccessModifier } from './access';
 import {
   CursorOf, Driver, OuterCursorOf, SchemaOf, ValueOf
 } from './driver';
-import { Gear, GearLayout, GearMediator } from './engine/gear';
-import { JMachineGearMediator } from './j-machine';
+import { EngineRealmMediator } from './engine';
+import { Realm, RealmLayout, RealmMediator } from './operation/realm';
 import { jSymbols } from './symbols';
 import { getObjectAttachment } from './tool/object';
 import { Singleton } from './tool/singleton';
@@ -68,12 +68,12 @@ interface JunctureSupplier {
   getSchema<J extends Juncture>(Juncture: J): SchemaOfJuncture<J>;
   getSchema<D extends Driver>(driver: D): SchemaOf<D>;
 
-  createGear(
+  createRealm(
     Juncture: Juncture,
-    layoyt: GearLayout,
-    gearMediator: GearMediator,
-    machineMediator: JMachineGearMediator
-  ): Gear;
+    layoyt: RealmLayout,
+    realmMediator: RealmMediator,
+    engineMediator: EngineRealmMediator
+  ): Realm;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -87,14 +87,14 @@ export const Juncture: JunctureSupplier = {
     return getObjectAttachment(driver, junctureSymbols.schemaCache, () => driver.schema[jSymbols.payload]());
   },
 
-  createGear(
+  createRealm(
     Juncture: Juncture,
-    layoyt: GearLayout,
-    gearMediator: GearMediator,
-    machineMediator: JMachineGearMediator
-  ): Gear {
+    layoyt: RealmLayout,
+    realmMediator: RealmMediator,
+    engineMediator: EngineRealmMediator
+  ): Realm {
     const driver = Singleton.get(Juncture).instance;
-    return driver[jSymbols.createGear](layoyt, gearMediator, machineMediator);
+    return driver[jSymbols.createRealm](layoyt, realmMediator, engineMediator);
   }
 };
 // #endregion

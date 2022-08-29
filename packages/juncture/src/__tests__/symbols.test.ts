@@ -25,8 +25,8 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createForger).toBe('symbol');
   });
 
-  test('should contain the createGear symbol', () => {
-    expect(typeof jSymbols.createGear).toBe('symbol');
+  test('should contain the createRealm symbol', () => {
+    expect(typeof jSymbols.createRealm).toBe('symbol');
   });
 
   test('should contain the createCursor symbol', () => {
@@ -37,8 +37,8 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.createOuterCursor).toBe('symbol');
   });
 
-  test('should contain the gear symbol', () => {
-    expect(typeof jSymbols.gear).toBe('symbol');
+  test('should contain the realm symbol', () => {
+    expect(typeof jSymbols.realm).toBe('symbol');
   });
 
   test('should contain the driver symbol', () => {

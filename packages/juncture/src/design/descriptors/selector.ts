@@ -8,15 +8,13 @@
 
 import { Observable } from 'rxjs';
 import { AccessModifier } from '../../access';
-import { FrameConsumer } from '../../engine/frames/frame';
+import { FrameConsumer } from '../../operation/frames/frame';
 import {
   createDescriptor, Descriptor
 } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
-type SelectorAccess = AccessModifier.public | AccessModifier.private;
-
-export interface GenericSelector<B, A extends SelectorAccess>
+export interface GenericSelector<B, A extends AccessModifier>
   extends Descriptor<DescriptorType.selector, FrameConsumer<B>, A> { }
 
 export interface Selector<B> extends GenericSelector<B, AccessModifier.public> { }
@@ -29,10 +27,7 @@ export function createSelector
   <B>(selectorFn: FrameConsumer<B>, access: AccessModifier.public): Selector<B>;
 export function createSelector
   <B>(selectorFn: FrameConsumer<B>, access: AccessModifier.private): PrivateSelector<B>;
-export function createSelector<B>(
-  selectorFn: FrameConsumer<B>,
-  access: SelectorAccess = AccessModifier.public
-) {
+export function createSelector<B>(selectorFn: FrameConsumer<B>, access: AccessModifier = AccessModifier.public) {
   return createDescriptor(DescriptorType.selector, selectorFn, access);
 }
 

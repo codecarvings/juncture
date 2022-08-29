@@ -13,14 +13,14 @@ import { AccessModifier } from '../access';
 import { isDescriptor } from '../design/descriptor';
 import { DescriptorType } from '../design/descriptor-type';
 import { ParamSelector, PrivateParamSelector } from '../design/descriptors/param-selector';
-import { PrivateReducer, Reducer } from '../design/descriptors/reducer';
+import { PrivateReactor, Reactor } from '../design/descriptors/reactor';
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { PrivateSelector, Selector } from '../design/descriptors/selector';
-import { PrivateTrigger, Trigger } from '../design/descriptors/trigger';
+import { PrivateSynthReactor, SynthReactor } from '../design/descriptors/synth-reactor';
 import { JunctureSchema } from '../design/schema';
 import { Driver } from '../driver';
-import { Instruction } from '../engine/instruction';
 import { Forger, PrivateForger } from '../forger';
+import { Instruction } from '../operation/instruction';
 import { jSymbols } from '../symbols';
 import { PropertyAssembler } from '../tool/property-assembler';
 
@@ -75,30 +75,30 @@ describe('PrivateForger', () => {
       });
     });
 
-    describe('trigger', () => {
+    describe('synthReactor', () => {
       test('should be a method', () => {
-        expect(typeof forger.trigger).toBe('function');
+        expect(typeof forger.synthReactor).toBe('function');
       });
 
-      test('should create, after property wiring, a PrivateTrigger, by passing a trigger function', () => {
-        container.myDesc = forger.trigger(() => () => []);
+      test('should create, after property wiring, a PrivateSynthReactor, by passing a reactor function', () => {
+        container.myDesc = forger.synthReactor(() => () => []);
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.trigger);
+        expect(container.myDesc.type).toBe(DescriptorType.synthReactor);
         expect(container.myDesc.access).toBe(AccessModifier.private);
       });
     });
 
-    describe('reducer', () => {
+    describe('reactor', () => {
       test('should be a method', () => {
-        expect(typeof forger.reducer).toBe('function');
+        expect(typeof forger.reactor).toBe('function');
       });
 
-      test('should create, after property wiring, a PrivateReducer, by passing a reducer function', () => {
-        container.myDesc = forger.reducer(({ value }) => () => value());
+      test('should create, after property wiring, a PrivateReactor, by passing a reactor function', () => {
+        container.myDesc = forger.reactor(({ value }) => () => value());
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.reducer);
+        expect(container.myDesc.type).toBe(DescriptorType.reactor);
         expect(container.myDesc.access).toBe(AccessModifier.private);
       });
     });
@@ -160,30 +160,30 @@ describe('Forger', () => {
       });
     });
 
-    describe('trigger', () => {
+    describe('synthReactor', () => {
       test('should be a method', () => {
-        expect(typeof forger.trigger).toBe('function');
+        expect(typeof forger.synthReactor).toBe('function');
       });
 
-      test('should create, after property wiring, a Trigger, by passing a trigger function', () => {
-        container.myDesc = forger.trigger(() => () => []);
+      test('should create, after property wiring, a SynthReactor, by passing a reactor function', () => {
+        container.myDesc = forger.synthReactor(() => () => []);
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.trigger);
+        expect(container.myDesc.type).toBe(DescriptorType.synthReactor);
         expect(container.myDesc.access).toBe(AccessModifier.public);
       });
     });
 
-    describe('reducer', () => {
+    describe('reactor', () => {
       test('should be a method', () => {
-        expect(typeof forger.reducer).toBe('function');
+        expect(typeof forger.reactor).toBe('function');
       });
 
-      test('should create, after property wiring, a Reducer, by passing a reducer function', () => {
-        container.myDesc = forger.reducer(({ value }) => () => value());
+      test('should create, after property wiring, a Reactor, by passing a reactor function', () => {
+        container.myDesc = forger.reactor(({ value }) => () => value());
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
-        expect(container.myDesc.type).toBe(DescriptorType.reducer);
+        expect(container.myDesc.type).toBe(DescriptorType.reactor);
         expect(container.myDesc.access).toBe(AccessModifier.public);
       });
     });
@@ -347,10 +347,10 @@ describe('Forger', () => {
         });
       });
 
-      describe('when passing a Trigger as type argument, proxy should provide access to', () => {
-        let myOriginalDesc: Trigger<(value: string) => Instruction[]>;
+      describe('when passing a SynthReactor as type argument, proxy should provide access to', () => {
+        let myOriginalDesc: SynthReactor<(value: string) => Instruction[]>;
         beforeEach(() => {
-          myOriginalDesc = container.myDesc = forger.trigger(() => (value: string) => [{
+          myOriginalDesc = container.myDesc = forger.synthReactor(() => (value: string) => [{
             target: null!,
             key: 'dummy',
             payload: [value]
@@ -359,26 +359,26 @@ describe('Forger', () => {
           myOriginalDesc = container.myDesc;
         });
 
-        describe('a "trigger" property that', () => {
+        describe('a "synthReactor" property that', () => {
           test('should be a method', () => {
             const proxy = forger.override(myOriginalDesc);
-            expect(typeof proxy.trigger).toBe('function');
+            expect(typeof proxy.synthReactor).toBe('function');
           });
 
-          test('should create, after property wiring, a new Trigger assignable to the parent, by passing a trigger function', () => {
+          test('should create, after property wiring, a new SynthReactor assignable to the parent, by passing a reactor function', () => {
             const proxy = forger.override(myOriginalDesc);
-            let myNewDesc: Trigger<(value: string) => Instruction[]> = container.myDesc = proxy
-              .trigger(() => () => []);
+            let myNewDesc: SynthReactor<(value: string) => Instruction[]> = container.myDesc = proxy
+              .synthReactor(() => () => []);
             assembler.wire();
             myNewDesc = container.myDesc;
             expect(isDescriptor(myNewDesc)).toBe(true);
-            expect(myNewDesc.type).toBe(DescriptorType.trigger);
+            expect(myNewDesc.type).toBe(DescriptorType.synthReactor);
             expect(myNewDesc).not.toBe(myOriginalDesc);
           });
 
-          test('should provide access to the parent trigger', () => {
+          test('should provide access to the parent synthReactor', () => {
             const proxy = forger.override(myOriginalDesc);
-            container.myDesc = proxy.trigger(({ parent }) => (value: string) => parent(`${value}2`));
+            container.myDesc = proxy.synthReactor(({ parent }) => (value: string) => parent(`${value}2`));
             assembler.wire();
             const result = container.myDesc[jSymbols.payload]()('abc');
             expect(result).toEqual([{
@@ -388,18 +388,18 @@ describe('Forger', () => {
             }]);
           });
 
-          test('should return a Trigger if the parent is public', () => {
+          test('should return a SynthReactor if the parent is public', () => {
             const proxy = forger.override(myOriginalDesc);
-            let myNewDesc = container.myDesc = proxy.trigger(() => () => []);
+            let myNewDesc = container.myDesc = proxy.synthReactor(() => () => []);
             assembler.wire();
             myNewDesc = container.myDesc;
             expect(myOriginalDesc.access).toBe(AccessModifier.public);
             expect(myNewDesc.access).toBe(AccessModifier.public);
           });
 
-          test('should return a PrivateTrigger if the parent is private', () => {
-            let myOriginalPrivateDesc: PrivateTrigger<(value: string) => Instruction[]> = container.myPrivateDesc = forger
-              .private.trigger(() => (value: string) => [{
+          test('should return a PrivateReactor if the parent is private', () => {
+            let myOriginalPrivateDesc: PrivateSynthReactor<(value: string) => Instruction[]> = container.myPrivateDesc = forger
+              .private.synthReactor(() => (value: string) => [{
                 target: null!,
                 key: 'dummy',
                 payload: [value]
@@ -408,18 +408,18 @@ describe('Forger', () => {
             myOriginalPrivateDesc = container.myPrivateDesc;
 
             const proxy = forger.override(myOriginalPrivateDesc);
-            let myNewPrivateDesc: PrivateTrigger<(value: string) => Instruction[]> = container.myPrivateDesc = proxy
-              .trigger(() => () => []);
+            let myNewPrivateDesc: PrivateSynthReactor<(value: string) => Instruction[]> = container.myPrivateDesc = proxy
+              .synthReactor(() => () => []);
             assembler.wire();
             myNewPrivateDesc = container.myPrivateDesc;
             expect(myOriginalPrivateDesc.access).toBe(AccessModifier.private);
             expect(myNewPrivateDesc.access).toBe(AccessModifier.private);
           });
 
-          test('should throw error during wire if the parent is not a Trigger', () => {
+          test('should throw error during wire if the parent is not a SynthReactor', () => {
             container.myDesc = assembler.registerStaticProperty(createSchema(() => new JunctureSchema('')));
             const proxy = forger.override(myOriginalDesc);
-            container.myDesc = proxy.trigger(() => () => []);
+            container.myDesc = proxy.synthReactor(() => () => []);
             expect(() => {
               assembler.wire();
             }).toThrow();
@@ -427,67 +427,67 @@ describe('Forger', () => {
         });
       });
 
-      describe('when passing a Reducer as type argument, proxy should provide access to', () => {
-        let myOriginalDesc: Reducer<(value: string) => string>;
+      describe('when passing a Reactor as type argument, proxy should provide access to', () => {
+        let myOriginalDesc: Reactor<(value: string) => string>;
         beforeEach(() => {
-          myOriginalDesc = container.myDesc = forger.reducer(() => (value: string) => value.toUpperCase());
+          myOriginalDesc = container.myDesc = forger.reactor(() => (value: string) => value.toUpperCase());
           assembler.wire();
           myOriginalDesc = container.myDesc;
         });
 
-        describe('a "reducer" property that', () => {
+        describe('a "reactor" property that', () => {
           test('should be a method', () => {
             const proxy = forger.override(myOriginalDesc);
-            expect(typeof proxy.reducer).toBe('function');
+            expect(typeof proxy.reactor).toBe('function');
           });
 
-          test('should create, after property wiring, a new Reducer assignable to the parent, by passing a reducer function', () => {
+          test('should create, after property wiring, a new Reactor assignable to the parent, by passing a reactor function', () => {
             const proxy = forger.override(myOriginalDesc);
-            let myNewDesc: Reducer<(value: string) => string> = container.myDesc = proxy
-              .reducer(() => (value: string) => value);
+            let myNewDesc: Reactor<(value: string) => string> = container.myDesc = proxy
+              .reactor(() => (value: string) => value);
             assembler.wire();
             myNewDesc = container.myDesc;
             expect(isDescriptor(myNewDesc)).toBe(true);
-            expect(myNewDesc.type).toBe(DescriptorType.reducer);
+            expect(myNewDesc.type).toBe(DescriptorType.reactor);
             expect(myNewDesc).not.toBe(myOriginalDesc);
           });
 
-          test('should provide access to the parent reducer', () => {
+          test('should provide access to the parent reactor', () => {
             const proxy = forger.override(myOriginalDesc);
-            container.myDesc = proxy.reducer(({ parent }) => (value: string) => parent(`${value}2`));
+            container.myDesc = proxy.reactor(({ parent }) => (value: string) => parent(`${value}2`));
             assembler.wire();
             const result = container.myDesc[jSymbols.payload]()('abc');
             expect(result).toBe('ABC2');
           });
 
-          test('should return a Reducer if the parent is public', () => {
+          test('should return a Reactor if the parent is public', () => {
             const proxy = forger.override(myOriginalDesc);
-            let myNewDesc = container.myDesc = proxy.reducer(() => (value: string) => value);
+            let myNewDesc = container.myDesc = proxy.reactor(() => (value: string) => value);
             assembler.wire();
             myNewDesc = container.myDesc;
             expect(myOriginalDesc.access).toBe(AccessModifier.public);
             expect(myNewDesc.access).toBe(AccessModifier.public);
           });
 
-          test('should return a PrivateReducer if the parent is private', () => {
-            let myOriginalPrivateDesc: PrivateReducer<(value: string) => string> = container.myPrivateReducer = forger
-              .private.reducer(() => (value: string) => value.toUpperCase());
+          test('should return a PrivateReactor if the parent is private', () => {
+            let myOriginalPrivateDesc: PrivateReactor<(value: string) => string> = container.myPrivateReactor = forger
+              .private.reactor(() => (value: string) => value.toUpperCase());
             assembler.wire();
-            myOriginalPrivateDesc = container.myPrivateReducer;
+            myOriginalPrivateDesc = container.myPrivateReactor;
 
             const proxy = forger.override(myOriginalPrivateDesc);
-            let myNewPrivateDesc: PrivateReducer<(value: string) => string> = container.myPrivateReducer = proxy
-              .reducer(() => (value: string) => value);
+            let myNewPrivateDesc: PrivateReactor<(value: string) => string> = container.myPrivateReactor = proxy
+              .reactor(() => (value: string) => value);
             assembler.wire();
-            myNewPrivateDesc = container.myPrivateReducer;
+            myNewPrivateDesc = container.myPrivateReactor;
             expect(myOriginalPrivateDesc.access).toBe(AccessModifier.private);
             expect(myNewPrivateDesc.access).toBe(AccessModifier.private);
           });
 
-          test('should throw error during wire if the parent is not a Reducer', () => {
+          test('should throw error during wire if the parent is not a Reactor', () => {
             container.myDesc = assembler.registerStaticProperty(createSchema(() => new JunctureSchema('')));
             const proxy = forger.override(myOriginalDesc);
-            container.myDesc = proxy.reducer(() => () => '');
+            container.myDesc = proxy.reactor(() => () => '');
             expect(() => {
               assembler.wire();
             }).toThrow();

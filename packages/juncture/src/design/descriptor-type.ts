@@ -10,13 +10,29 @@ export enum DescriptorType {
   schema = 'schema',
   selector = 'selector',
   paramSelector = 'paramSelector',
-  trigger = 'trigger',
-  reducer = 'reducer',
-  reactor = 'reactor'
+  reactor = 'reactor',
+  synthReactor = 'synthReactor',
+  behavior = 'behavior',
+  channel = 'channel',
+  openChannel = 'openChannel'
 }
 
 export type NotSuitableType = '\u26A0 ERROR: NOT SUITABLE TYPE';
 
-export const selectableDescriptorTypes = [DescriptorType.selector, DescriptorType.paramSelector];
-export const triggerableDescriptorTypes = [DescriptorType.trigger, DescriptorType.reducer];
-export const observableDescriptorTypes = [DescriptorType.selector, DescriptorType.paramSelector];
+interface DescriptorTypeFamilies {
+  readonly selectable: [DescriptorType.selector, DescriptorType.paramSelector];
+  readonly reactable: [DescriptorType.reactor, DescriptorType.synthReactor];
+  readonly emittable: [DescriptorType.channel, DescriptorType.openChannel];
+  readonly outerEmittable: [DescriptorType.openChannel];
+  readonly observable: [DescriptorType.channel, DescriptorType.openChannel,
+    DescriptorType.selector, DescriptorType.paramSelector];
+}
+
+export const descriptorTypeFamilies: DescriptorTypeFamilies = {
+  selectable: [DescriptorType.selector, DescriptorType.paramSelector],
+  reactable: [DescriptorType.reactor, DescriptorType.synthReactor],
+  emittable: [DescriptorType.channel, DescriptorType.openChannel],
+  outerEmittable: [DescriptorType.openChannel],
+  observable: [DescriptorType.channel, DescriptorType.openChannel,
+    DescriptorType.selector, DescriptorType.paramSelector]
+};

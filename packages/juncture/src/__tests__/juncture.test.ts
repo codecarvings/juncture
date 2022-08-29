@@ -11,9 +11,9 @@
 import { createSchema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { Driver } from '../driver';
-import { Gear, GearLayout, GearMediator } from '../engine/gear';
-import { JMachineGearMediator } from '../j-machine';
+import { EngineRealmMediator } from '../engine';
 import { Juncture } from '../juncture';
+import { Realm, RealmLayout, RealmMediator } from '../operation/realm';
 import { jSymbols } from '../symbols';
 
 describe('Juncture', () => {
@@ -129,51 +129,51 @@ describe('Juncture', () => {
     });
   });
 
-  describe('createGear', () => {
-    const layout: GearLayout = {
+  describe('createRealm', () => {
+    const layout: RealmLayout = {
       parent: null,
       path: [],
       isDivergent: false,
       isUnivocal: true
     };
-    const gearMediator: GearMediator = {
+    const realmMediator: RealmMediator = {
       getValue: () => undefined,
       setValue: () => { }
     };
-    const machineMediator: JMachineGearMediator = {
-      gear: {
+    const engineMediator: EngineRealmMediator = {
+      realm: {
         enroll: () => { },
         createControlled: () => undefined!
       },
-      transaction: {
-        begin: () => { },
-        registerAlteredGear: () => { },
-        commit: () => { }
+      action: {
+        dispatch: () => { }
       },
-      dispatch: () => {}
+      transaction: {
+        registerAlteredRealm: () => { }
+      }
     };
 
     test('should be a method', () => {
-      expect(typeof Juncture.createGear).toBe('function');
+      expect(typeof Juncture.createRealm).toBe('function');
     });
 
-    test('should create a new Gear for the provided Juncture, layout and mediators', () => {
-      const gear = Juncture.createGear(MyDriver, layout, gearMediator, machineMediator);
-      expect(gear).toBeInstanceOf(Gear);
-      expect(gear.driver).toBe(Juncture.getDriver(MyDriver));
-      expect(gear.layout).toBe(layout);
+    test('should create a new Realm for the provided Juncture, layout and mediators', () => {
+      const realm = Juncture.createRealm(MyDriver, layout, realmMediator, engineMediator);
+      expect(realm).toBeInstanceOf(Realm);
+      expect(realm.driver).toBe(Juncture.getDriver(MyDriver));
+      expect(realm.layout).toBe(layout);
     });
 
-    test('should invoke the instance method [jSymbols.createGear]', () => {
+    test('should invoke the instance method [jSymbols.createRealm]', () => {
       const driver = Juncture.getDriver(MyDriver);
-      const originalFactory = driver[jSymbols.createGear].bind(driver);
+      const originalFactory = driver[jSymbols.createRealm].bind(driver);
       const factory = jest.fn(originalFactory);
-      (driver as any)[jSymbols.createGear] = factory;
+      (driver as any)[jSymbols.createRealm] = factory;
 
       expect(factory).toHaveBeenCalledTimes(0);
-      Juncture.createGear(MyDriver, layout, gearMediator, machineMediator);
+      Juncture.createRealm(MyDriver, layout, realmMediator, engineMediator);
       expect(factory).toHaveBeenCalledTimes(1);
-      Juncture.createGear(MyDriver, layout, gearMediator, machineMediator);
+      Juncture.createRealm(MyDriver, layout, realmMediator, engineMediator);
       expect(factory).toHaveBeenCalledTimes(2);
     });
   });

@@ -21,15 +21,23 @@ describe('DescriptorType', () => {
     expect(DescriptorType.paramSelector).toBe('paramSelector');
   });
 
-  test('should contain the trigger type', () => {
-    expect(DescriptorType.trigger).toBe('trigger');
-  });
-
-  test('should contain the reducer type', () => {
-    expect(DescriptorType.reducer).toBe('reducer');
+  test('should contain the synthReactor type', () => {
+    expect(DescriptorType.synthReactor).toBe('synthReactor');
   });
 
   test('should contain the reactor type', () => {
     expect(DescriptorType.reactor).toBe('reactor');
+  });
+
+  test('should contain the behavior type', () => {
+    expect(DescriptorType.behavior).toBe('behavior');
+  });
+
+  test('should contain the channel type', () => {
+    expect(DescriptorType.channel).toBe('channel');
+  });
+
+  test('should contain the openChannel type', () => {
+    expect(DescriptorType.openChannel).toBe('openChannel');
   });
 });

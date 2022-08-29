@@ -8,16 +8,14 @@
 
 import { Observable } from 'rxjs';
 import { AccessModifier } from '../../access';
-import { FrameConsumer } from '../../engine/frames/frame';
+import { FrameConsumer } from '../../operation/frames/frame';
 import { OverloadParameters, OverloadReturnType } from '../../tool/overload-types';
 import {
   createDescriptor, Descriptor
 } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
-export type ParamSelectorAccess = AccessModifier.public | AccessModifier.private;
-
-export interface GenericParamSelector<B extends (...args: any) => any, A extends ParamSelectorAccess>
+export interface GenericParamSelector<B extends (...args: any) => any, A extends AccessModifier>
   extends Descriptor<DescriptorType.paramSelector, FrameConsumer<B>, A> { }
 
 export interface ParamSelector<B extends (...args: any) => any>
@@ -33,7 +31,7 @@ export function createParamSelector<B extends (...args: any) => any>(
 export function createParamSelector<B extends (...args: any) => any>(
   selectorFn: FrameConsumer<B>, access: AccessModifier.private): PrivateParamSelector<B>;
 export function createParamSelector<B extends (...args: any) => any>(
-  selectorFn: FrameConsumer<B>, access: ParamSelectorAccess = AccessModifier.public) {
+  selectorFn: FrameConsumer<B>, access: AccessModifier = AccessModifier.public) {
   return createDescriptor(DescriptorType.paramSelector, selectorFn, access);
 }
 

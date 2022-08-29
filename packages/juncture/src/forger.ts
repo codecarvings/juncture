@@ -14,25 +14,27 @@ import {
 } from './design/descriptor';
 import { DescriptorType } from './design/descriptor-type';
 import {
+  Behavior, BodyOfBehavior, createBehavior, DisposableBehavior, SafeBehavior
+} from './design/descriptors/behavior';
+import { Channel, createChannel, PrivateChannel } from './design/descriptors/channel';
+import { createOpenChannel, OpenChannel } from './design/descriptors/open-channel';
+import {
   BodyOfParamSelector, createParamSelector, GenericParamSelector, ParamSelector, PrivateParamSelector
 } from './design/descriptors/param-selector';
 import {
-  BodyOfReactor, createReactor, DisposableReactor, Reactor, SafeReactor
+  BodyOfReactor, createReactor, GenericReactor, PrivateReactor, Reactor
 } from './design/descriptors/reactor';
-import {
-  BodyOfReducer, createReducer, GenericReducer, PrivateReducer, Reducer
-} from './design/descriptors/reducer';
 import {
   BodyOfSelector, createSelector, GenericSelector, PrivateSelector, Selector
 } from './design/descriptors/selector';
 import {
-  BodyOfTrigger, createTrigger, GenericTrigger, PrivateTrigger, Trigger
-} from './design/descriptors/trigger';
+  BodyOfSynthReactor, createSynthReactor, GenericSynthReactor, PrivateSynthReactor, SynthReactor
+} from './design/descriptors/synth-reactor';
 import { Driver, ValueOf } from './driver';
-import { Frame, OverrideFrame } from './engine/frames/frame';
-import { OverrideReactorFrame, ReactorFrame } from './engine/frames/reactor-frame';
-import { OverrideTriggerFrame, TriggerFrame } from './engine/frames/trigger-frame';
-import { Instruction } from './engine/instruction';
+import { BehaviorFrame, OverrideBehaviorFrame } from './operation/frames/behavior-frame';
+import { Frame, OverrideFrame } from './operation/frames/frame';
+import { OverrideSynthReactorFrame, SynthReactorFrame } from './operation/frames/synth-reactor-frame';
+import { Instruction } from './operation/instruction';
 import { jSymbols } from './symbols';
 import { OverloadParameters } from './tool/overload-types';
 import { PropertyAssembler } from './tool/property-assembler';
@@ -57,14 +59,20 @@ export class PrivateForger<D extends Driver> {
     return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any, AccessModifier.private));
   }
 
-  trigger<F extends (frame: TriggerFrame<D>) => (...args: any) => Instruction | Instruction[]>(
-    triggerFn: F): PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
-    return this.assembler.registerStaticProperty(createTrigger(triggerFn as any, AccessModifier.private));
+  reactor<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
+    reactorFn: F): PrivateReactor<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createReactor(reactorFn as any, AccessModifier.private));
   }
 
-  reducer<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
-    reducerFn: F): PrivateReducer<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createReducer(reducerFn as any, AccessModifier.private));
+  synthReactor<F extends (frame: SynthReactorFrame<D>) => (...args: any) => Instruction | Instruction[]>(
+    reactorFn: F): PrivateSynthReactor<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
+    return this.assembler.registerStaticProperty(createSynthReactor(reactorFn as any, AccessModifier.private));
+  }
+
+  channel(): PrivateChannel<void>;
+  channel<V>(): PrivateChannel<V>;
+  channel() {
+    return this.assembler.registerStaticProperty(createChannel(AccessModifier.private));
   }
 }
 // #endregion
@@ -87,6 +95,43 @@ export class Forger<D extends Driver> {
     this.private = this.createPrivateForger();
   }
 
+  selector<F extends (frame: Frame<D>) => any>(selectorFn: F): Selector<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createSelector(selectorFn as any));
+  }
+
+  paramSelector<F extends (frame: Frame<D>) => (...args: any) => any>(
+    selectorFn: F): ParamSelector<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any));
+  }
+
+  reactor<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
+    reactorFn: F): Reactor<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createReactor(reactorFn as any));
+  }
+
+  synthReactor<F extends (frame: SynthReactorFrame<D>) => (...args: any) => Instruction | Instruction[]>(
+    reactorFn: F): SynthReactor<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
+    return this.assembler.registerStaticProperty(createSynthReactor(reactorFn as any));
+  }
+
+  behavior<F extends (frame: BehaviorFrame<D>) => (() => void) | void>(behaviorFn: F):
+  ReturnType<F> extends void ? SafeBehavior : DisposableBehavior {
+    return this.assembler.registerStaticProperty(createBehavior(behaviorFn as any)) as any;
+  }
+
+  channel(): Channel<void>;
+  channel<V>(): Channel<V>;
+  channel() {
+    return this.assembler.registerStaticProperty(createChannel());
+  }
+
+  openChannel(): OpenChannel<void>;
+  openChannel<V>(): OpenChannel<V>;
+  openChannel() {
+    return this.assembler.registerStaticProperty(createOpenChannel());
+  }
+
+  // #region Override
   protected createPrivateForger() {
     return new PrivateForger(this.assembler);
   }
@@ -148,18 +193,18 @@ export class Forger<D extends Driver> {
           }, args.parent.access);
         }
         break;
-      case DescriptorType.trigger:
-        if (args.fnName === 'trigger') {
-          return createTrigger(frame => {
+      case DescriptorType.reactor:
+        if (args.fnName === 'reactor') {
+          return createReactor(frame => {
             const parent = args.parent[jSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
           }, args.parent.access);
         }
         break;
-      case DescriptorType.reducer:
-        if (args.fnName === 'reducer') {
-          return createReducer(frame => {
+      case DescriptorType.synthReactor:
+        if (args.fnName === 'synthReactor') {
+          return createSynthReactor(frame => {
             const parent = args.parent[jSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
@@ -186,48 +231,25 @@ export class Forger<D extends Driver> {
         selectorFn: F): L extends Descriptor<any, any, AccessModifier.public> ? ParamSelector<ReturnType<F>> : PrivateParamSelector<ReturnType<F>>;
     };
 
-    <L extends GenericTrigger<any, any>>(parent: L): {
-      trigger<F extends (frame: OverrideTriggerFrame<D, BodyOfTrigger<L>>)
-      => (...args: any) => Instruction | Instruction[]>(
-        triggerFn: F): L extends Descriptor<any, any, AccessModifier.public> ? Trigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> :
-        PrivateTrigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]>
-    };
-
-    <L extends GenericReducer<any, any>>(parent: L): {
-      reducer<F extends (frame: OverrideFrame<D, BodyOfReducer<L>>)
+    <L extends GenericReactor<any, any>>(parent: L): {
+      reactor<F extends (frame: OverrideFrame<D, BodyOfReactor<L>>)
       => (...args: any) => ValueOf<D>>(
-        reducerFn: F): L extends Descriptor<any, any, AccessModifier.public> ? Reducer<ReturnType<F>> :
-        PrivateReducer<ReturnType<F>>
+        reactorFn: F): L extends Descriptor<any, any, AccessModifier.public> ? Reactor<ReturnType<F>> :
+        PrivateReactor<ReturnType<F>>
     };
 
-    <L extends Reactor<any>>(parent : L): {
-      reactor<F extends (frame: OverrideReactorFrame<D, (frame: ReactorFrame<D>) => BodyOfReactor<L>>) => any>
-      (reactorFn: F): ReturnType<F> extends void ? SafeReactor : DisposableReactor;
+    <L extends GenericSynthReactor<any, any>>(parent: L): {
+      synthReactor<F extends (frame: OverrideSynthReactorFrame<D, BodyOfSynthReactor<L>>)
+      => (...args: any) => Instruction | Instruction[]>(
+        reactorFn: F): L extends Descriptor<any, any, AccessModifier.public> ? SynthReactor<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> :
+        PrivateSynthReactor<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]>
+    };
+
+    <L extends Behavior<any>>(parent : L): {
+      behavior<F extends (frame: OverrideBehaviorFrame<D, (frame: BehaviorFrame<D>) => BodyOfBehavior<L>>) => any>
+      (behaviorFn: F): ReturnType<F> extends void ? SafeBehavior : DisposableBehavior;
     };
   } = this.createOverrideProxy;
-
-  selector<F extends (frame: Frame<D>) => any>(selectorFn: F): Selector<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createSelector(selectorFn as any));
-  }
-
-  paramSelector<F extends (frame: Frame<D>) => (...args: any) => any>(
-    selectorFn: F): ParamSelector<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any));
-  }
-
-  trigger<F extends (frame: TriggerFrame<D>) => (...args: any) => Instruction | Instruction[]>(
-    triggerFn: F): Trigger<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
-    return this.assembler.registerStaticProperty(createTrigger(triggerFn as any));
-  }
-
-  reducer<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
-    reducerFn: F): Reducer<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createReducer(reducerFn as any));
-  }
-
-  reactor<F extends (frame: ReactorFrame<D>) => (() => void) | void>(reactorFn: F):
-  ReturnType<F> extends void ? SafeReactor : DisposableReactor {
-    return this.assembler.registerStaticProperty(createReactor(reactorFn as any)) as any;
-  }
+  // #endregion
 }
 // #endregion

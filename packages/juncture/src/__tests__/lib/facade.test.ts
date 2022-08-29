@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JMachine } from '../../j-machine';
+import { Engine } from '../../engine';
 import { $Bit } from '../../lib/bit';
 import { $Facade } from '../../lib/facade';
 import { $Struct } from '../../lib/struct';
@@ -26,8 +26,8 @@ test('tmp test', () => {
     p2: SecretPerson
   }) { }
 
-  const machine = new JMachine(Group);
-  const { _, select } = machine.frame;
+  const engine = new Engine(Group);
+  const { _, select } = engine.frame;
 
   expect(select(_.p1.name).value).toBe('');
   expect(select(_.p2).data).toBe(' 0');

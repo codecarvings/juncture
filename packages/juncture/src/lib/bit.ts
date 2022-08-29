@@ -10,19 +10,19 @@ import { DescriptorType } from '../design/descriptor-type';
 import { BodyOfSchema, createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema, ValueOfSchema } from '../design/schema';
 import { ValueOf } from '../driver';
-import { OverrideSchemaFrame } from '../engine/frames/schema-frame';
 import { ForgeableDriver } from '../forgeable-driver';
 import { CreateDescriptorForOverrideArgs, Forger } from '../forger';
 import { AlterablePartialJuncture, Juncture } from '../juncture';
+import { OverrideSchemaFrame } from '../operation/frames/schema-frame';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
 export class BitSchema<V = any> extends JunctureSchema<V> {
   // Constructor is protected because type of the value cannot be changed in an inherited class
-  // to avoid problems with triggers in the super class
+  // to avoid problems with reactors in the super class
   // Example:
   // Super class type is { firstName: string }), if sub - class is chaged to { firstName: string, lastName: string }
-  // triggers in the super class will cause inexpected problems
+  // reactors in the super class will cause inexpected problems
   protected constructor(defaultValue: V) {
     super(defaultValue);
   }
@@ -74,9 +74,9 @@ export abstract class BitDriver extends ForgeableDriver {
 
 // #region Specializations
 export abstract class SettableBitDriver extends BitDriver {
-  reset = this.FORGE.reducer(({ select }) => () => select().defaultValue);
+  reset = this.FORGE.reactor(({ select }) => () => select().defaultValue);
 
-  set = this.FORGE.reducer(() => (value: ValueOf<this>) => value);
+  set = this.FORGE.reactor(() => (value: ValueOf<this>) => value);
 }
 
 export abstract class SettableStringBitDriver extends SettableBitDriver {
@@ -86,17 +86,17 @@ export abstract class SettableStringBitDriver extends SettableBitDriver {
 export abstract class SettableNumberBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<number>>;
 
-  add = this.FORGE.reducer(({ value }) => (num: number) => value() + num);
+  add = this.FORGE.reactor(({ value }) => (num: number) => value() + num);
 
-  inc = this.FORGE.reducer(({ value }) => () => value() + 1);
+  inc = this.FORGE.reactor(({ value }) => () => value() + 1);
 
-  dec = this.FORGE.reducer(({ value }) => () => value() - 1);
+  dec = this.FORGE.reactor(({ value }) => () => value() - 1);
 }
 
 export abstract class SettableBooleanBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<boolean>>;
 
-  switch = this.FORGE.reducer(({ value }) => () => !value());
+  switch = this.FORGE.reactor(({ value }) => () => !value());
 }
 
 export abstract class SettableSymbolBitDriver extends SettableBitDriver {

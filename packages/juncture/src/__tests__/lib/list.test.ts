@@ -7,7 +7,7 @@
  */
 
 import { Private } from '../../access';
-import { JMachine } from '../../j-machine';
+import { Engine } from '../../engine';
 import { $Bit } from '../../lib/bit';
 import { $List, ListValue } from '../../lib/list';
 import { $Struct } from '../../lib/struct';
@@ -21,13 +21,13 @@ test('tmp test', () => {
   class App extends $Struct.Of({
     list: $List.Of(Person)
   }) {
-    setListValue = this.FORGE.reducer(() => (value: ListValue<typeof Person>) => ({
+    setListValue = this.FORGE.reactor(() => (value: ListValue<typeof Person>) => ({
       list: value
     }));
   }
 
-  const machine = new JMachine(App);
-  const { _, select, dispatch } = machine.frame;
+  const engine = new Engine(App);
+  const { _, select, dispatch } = engine.frame;
 
   expect(select(_.list).length).toBe(0);
   dispatch().setListValue([{
@@ -37,7 +37,7 @@ test('tmp test', () => {
   expect(select(_.list).length).toBe(1);
   expect(select(_.list.item(0).age).value).toBe(47);
 
-  machine.stop();
+  engine.stop();
 });
 
 test('tmp test 2', () => {
@@ -51,15 +51,16 @@ test('tmp test 2', () => {
       firstName = this.FORGE.selector(({ value, _ }) => value(_.item(0).name));
     }
   }) {
-    setListValue = this.FORGE.reducer(() => (value: ListValue<typeof Person>) => ({
+    setListValue = this.FORGE.reactor(() => (value: ListValue<typeof Person>) => ({
       list: value
     }));
   }
 
-  const machine = new JMachine(App);
-  const { _, select, dispatch } = machine.frame;
+  const engine = new Engine(App);
+  const { _, select, dispatch } = engine.frame;
 
   expect(select(_.list).length).toBe(0);
+
   dispatch().setListValue([{
     name: 'sergio',
     age: 47
@@ -67,5 +68,5 @@ test('tmp test 2', () => {
   expect(select(_.list).length).toBe(1);
   expect(select(_.list).firstName).toBe('sergio');
 
-  machine.stop();
+  engine.stop();
 });

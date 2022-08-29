@@ -10,15 +10,17 @@ import { AccessModifier, PrivateJunctureAnnex } from '../access';
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { SingleChildSchema } from '../design/schema';
 import { SchemaOf } from '../driver';
-import { createCursor, Cursor } from '../engine/frame-equipment/cursor';
-import {
-  ControlledGear, Gear, GearLayout, GearMediator
-} from '../engine/gear';
-import { PathFragment } from '../engine/path';
+import { EngineRealmMediator } from '../engine';
 import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
-import { JMachineGearMediator } from '../j-machine';
-import { AlterablePartialJuncture, Juncture, OuterCursorOfJuncture, ValueOfJuncture } from '../juncture';
+import {
+  AlterablePartialJuncture, Juncture, OuterCursorOfJuncture, ValueOfJuncture
+} from '../juncture';
+import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
+import { PathFragment } from '../operation/path';
+import {
+  ControlledRealm, Realm, RealmLayout, RealmMediator
+} from '../operation/realm';
 import { jSymbols } from '../symbols';
 
 // #region Value & Schema
@@ -43,8 +45,8 @@ export class ListForger<D extends ListDriver> extends Forger<D> {
 }
 // #endregion
 
-// #region Engine
-export class ListGear extends Gear {
+// #region Operation
+export class ListRealm extends Realm {
   readonly schema!: ListSchema;
 
   // #region Value stuff
@@ -53,34 +55,34 @@ export class ListGear extends Gear {
   protected valueDidUpdate() {
     this.reconcileChildren();
     this.children.forEach(child => {
-      (child.gear as ListGear).detectValueChange();
+      (child.realm as ListRealm).detectValueChange();
     });
   }
   // #endregion
 
   // #region Children stuff
-  protected createChild(index: number): ControlledGear {
-    const layout: GearLayout = {
+  protected createChild(index: number): ControlledRealm {
+    const layout: RealmLayout = {
       parent: this,
       path: [...this.layout.path, index],
       isUnivocal: false,
       isDivergent: true
     };
-    const gearMediator: GearMediator = {
+    const realmMediator: RealmMediator = {
       getValue: () => this._value[index],
       setValue: childValue => {
         this._value[index] = childValue;
       }
     };
 
-    return this.machineMediator.gear.createControlled(this.schema.Child, layout, gearMediator);
+    return this.engineMediator.realm.createControlled(this.schema.Child, layout, realmMediator);
   }
 
-  protected createChildren(): ControlledGear[] {
+  protected createChildren(): ControlledRealm[] {
     return this._value.map((_v, index) => this.createChild(index));
   }
 
-  protected readonly children: ControlledGear[] = this.createChildren();
+  protected readonly children: ControlledRealm[] = this.createChildren();
 
   protected reconcileChildren() {
     const valueLen = this._value.length;
@@ -100,10 +102,10 @@ export class ListGear extends Gear {
     }
   }
 
-  resolveFragment(fragment: PathFragment): Gear {
+  resolveFragment(fragment: PathFragment): Realm {
     if (typeof fragment === 'number') {
       if (fragment >= 0 && fragment < this.children.length) {
-        return this.children[fragment].gear;
+        return this.children[fragment].realm;
       }
     }
     return super.resolveFragment(fragment);
@@ -128,26 +130,26 @@ export abstract class ListDriver extends ForgeableDriver {
     return new ListForger(this);
   }
 
-  [jSymbols.createGear](
-    layout: GearLayout,
-    gearMediator: GearMediator,
-    machineMediator: JMachineGearMediator
-  ): ListGear {
-    return new ListGear(this, layout, gearMediator, machineMediator);
+  [jSymbols.createRealm](
+    layout: RealmLayout,
+    realmMediator: RealmMediator,
+    engineMediator: EngineRealmMediator
+  ): ListRealm {
+    return new ListRealm(this, layout, realmMediator, engineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](gear: ListGear): ListCursor<this> {
-    const _: any = createCursor(gear);
-    _.item = (index: number) => gear.resolveFragment(index).outerCursor;
+  [jSymbols.createCursor](realm: ListRealm): ListCursor<this> {
+    const _: any = createCursor(realm);
+    _.item = (index: number) => realm.resolveFragment(index).outerCursor;
     return _;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createOuterCursor](gear: ListGear): OuterListCursor<this> {
-    const _: any = createCursor(gear);
-    if (gear.schema.childAccess === AccessModifier.public) {
-      _.item = (index: number) => gear.resolveFragment(index).outerCursor;
+  [jSymbols.createOuterCursor](realm: ListRealm): OuterListCursor<this> {
+    const _: any = createCursor(realm);
+    if (realm.schema.childAccess === AccessModifier.public) {
+      _.item = (index: number) => realm.resolveFragment(index).outerCursor;
     }
     return _;
   }

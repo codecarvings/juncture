@@ -10,13 +10,13 @@
 
 import { Private } from '../../access';
 import { JunctureSchema } from '../../design/schema';
-import { Gear } from '../../engine/gear';
-import { JMachine } from '../../j-machine';
+import { Engine } from '../../engine';
 import { JunctureMap } from '../../juncture';
 import { $Bit } from '../../lib/bit';
 import {
-  $Struct, PartialStructValue, StructGear, StructSchema
+  $Struct, PartialStructValue, StructRealm, StructSchema
 } from '../../lib/struct';
+import { Realm } from '../../operation/realm';
 
 // Exposes constructor as public
 export class TestStructSchema<JM extends JunctureMap> extends StructSchema<JM> {
@@ -88,9 +88,9 @@ describe('StructSchema', () => {
   });
 });
 
-describe('StructGear', () => {
-  test('should be a subclass of Gear', () => {
-    expect(StructGear.prototype).toBeInstanceOf(Gear);
+describe('StructRealm', () => {
+  test('should be a subclass of Realm', () => {
+    expect(StructRealm.prototype).toBeInstanceOf(Realm);
   });
 });
 
@@ -118,8 +118,8 @@ test('temp test', () => {
     motherAge = this.FORGE.selector(({ value, _ }) => value(_.mother.age));
   }
 
-  const machine = new JMachine(Parents);
-  const { _, select } = machine.frame;
+  const engine = new Engine(Parents);
+  const { _, select } = engine.frame;
   expect(select(_).totAge).toBe(2);
   expect(select(_).totAge).toBe(2);
 });

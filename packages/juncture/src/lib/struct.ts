@@ -10,15 +10,17 @@ import { AccessModifier, OuterCursorMapOfJunctureMap } from '../access';
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { SchemaOf } from '../driver';
-import { createCursor, Cursor } from '../engine/frame-equipment/cursor';
-import {
-  Gear, GearLayout, GearMap, GearMediator
-} from '../engine/gear';
-import { PathFragment } from '../engine/path';
+import { EngineRealmMediator } from '../engine';
 import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
-import { JMachineGearMediator } from '../j-machine';
-import { AlterablePartialJuncture, CursorMapOfJunctureMap, Juncture, JunctureMap, ValueOfJuncture } from '../juncture';
+import {
+  AlterablePartialJuncture, CursorMapOfJunctureMap, Juncture, JunctureMap, ValueOfJuncture
+} from '../juncture';
+import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
+import { PathFragment } from '../operation/path';
+import {
+  Realm, RealmLayout, RealmMap, RealmMediator
+} from '../operation/realm';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty, mappedAssign } from '../tool/object';
 
@@ -69,8 +71,8 @@ export class StructForger<D extends StructDriver> extends Forger<D> {
 }
 // #endregion
 
-// #region Engine
-export class StructGear extends Gear {
+// #region Operation
+export class StructRealm extends Realm {
   readonly schema!: StructSchema;
 
   // #region Value stuff
@@ -92,31 +94,31 @@ export class StructGear extends Gear {
   // #endregion
 
   // #region Children stuff
-  protected createChildren(): GearMap {
+  protected createChildren(): RealmMap {
     return mappedAssign(
       {},
       this.schema.childKeys,
       key => {
-        const layout: GearLayout = {
+        const layout: RealmLayout = {
           parent: this,
           path: [...this.layout.path, key],
           isUnivocal: this.layout.isUnivocal,
           isDivergent: false
         };
-        const gearMediator: GearMediator = {
+        const realmMediator: RealmMediator = {
           getValue: () => this._value[key],
           setValue: childValue => {
             this._value[key] = childValue;
           }
         };
-        return Juncture.createGear(this.schema.Children[key], layout, gearMediator, this.machineMediator);
+        return Juncture.createRealm(this.schema.Children[key], layout, realmMediator, this.engineMediator);
       }
     );
   }
 
-  protected readonly children: GearMap = this.createChildren();
+  protected readonly children: RealmMap = this.createChildren();
 
-  resolveFragment(fragment: PathFragment): Gear {
+  resolveFragment(fragment: PathFragment): Realm {
     const result = this.children[fragment as any];
     if (result) {
       return result;
@@ -138,28 +140,28 @@ export abstract class StructDriver extends ForgeableDriver {
     return new StructForger(this);
   }
 
-  [jSymbols.createGear](
-    layout: GearLayout,
-    mediator: GearMediator,
-    machineMediator: JMachineGearMediator
-  ): StructGear {
-    return new StructGear(this, layout, mediator, machineMediator);
+  [jSymbols.createRealm](
+    layout: RealmLayout,
+    mediator: RealmMediator,
+    engineMediator: EngineRealmMediator
+  ): StructRealm {
+    return new StructRealm(this, layout, mediator, engineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](gear: StructGear): StructCursor<this> {
-    const _: any = createCursor(gear);
-    gear.schema.childKeys.forEach(key => {
-      defineLazyProperty(_, key, () => gear.resolveFragment(key).outerCursor, { enumerable: true });
+  [jSymbols.createCursor](realm: StructRealm): StructCursor<this> {
+    const _: any = createCursor(realm);
+    realm.schema.childKeys.forEach(key => {
+      defineLazyProperty(_, key, () => realm.resolveFragment(key).outerCursor, { enumerable: true });
     });
     return _;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createOuterCursor](gear: StructGear): OuterStructCursor<this> {
-    const _: any = createCursor(gear);
-    gear.schema.outerChildKeys.forEach(key => {
-      defineLazyProperty(_, key, () => gear.resolveFragment(key).outerCursor, { enumerable: true });
+  [jSymbols.createOuterCursor](realm: StructRealm): OuterStructCursor<this> {
+    const _: any = createCursor(realm);
+    realm.schema.outerChildKeys.forEach(key => {
+      defineLazyProperty(_, key, () => realm.resolveFragment(key).outerCursor, { enumerable: true });
     });
     return _;
   }

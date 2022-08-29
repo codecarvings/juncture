@@ -9,20 +9,20 @@
 import { BodyOfSchema, Schema } from './design/descriptors/schema';
 import { createSelector, Selector } from './design/descriptors/selector';
 import { JunctureSchema } from './design/schema';
-import { createCursor, Cursor } from './engine/frame-equipment/cursor';
-import {
-  Gear, GearLayout, GearMediator, GearMountStatus
-} from './engine/gear';
-import { getGear } from './engine/gear-host';
-import { Path } from './engine/path';
-import { JMachineGearMediator } from './j-machine';
+import { EngineRealmMediator } from './engine';
 import { Juncture } from './juncture';
+import { createCursor, Cursor } from './operation/frame-equipment/cursor';
+import { Path } from './operation/path';
+import {
+  Realm, RealmLayout, RealmMediator, RealmMountStatus
+} from './operation/realm';
+import { getRealm } from './operation/realm-host';
 import { jSymbols } from './symbols';
 import { Initializable } from './tool/initializable';
 import { PropertyAssembler, PropertyAssemblerHost } from './tool/property-assembler';
 
 export abstract class Driver implements PropertyAssemblerHost, Initializable {
-  // #region Engine methods
+  // #region Operation stuff
   [jSymbols.createPropertyAssembler](): PropertyAssembler {
     return new PropertyAssembler(this);
   }
@@ -31,20 +31,24 @@ export abstract class Driver implements PropertyAssemblerHost, Initializable {
     PropertyAssembler.get(this).wire();
   }
 
-  [jSymbols.createGear](layout: GearLayout, gearMediator: GearMediator, machineMediator: JMachineGearMediator): Gear {
-    return new Gear(this, layout, gearMediator, machineMediator);
+  [jSymbols.createRealm](
+    layout: RealmLayout,
+    realmMediator: RealmMediator,
+    engineMediator: EngineRealmMediator
+  ): Realm {
+    return new Realm(this, layout, realmMediator, engineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](gear: Gear): Cursor<this> {
+  [jSymbols.createCursor](realm: Realm): Cursor<this> {
     // To save memory by detault use the outer cursor only.
     // Derivate Junctures can return the right cursor.
-    return gear.outerCursor as Cursor<this>;
+    return realm.outerCursor as Cursor<this>;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createOuterCursor](gear: Gear): Cursor<this> {
-    return createCursor(gear) as Cursor<this>;
+  [jSymbols.createOuterCursor](realm: Realm): Cursor<this> {
+    return createCursor(realm) as Cursor<this>;
   }
   // #endregion
 
@@ -54,22 +58,22 @@ export abstract class Driver implements PropertyAssemblerHost, Initializable {
     this.defaultValue = assembler
       .registerStaticProperty(createSelector((
         frame: any
-      ) => getGear(frame._).schema.defaultValue));
+      ) => getRealm(frame._).schema.defaultValue));
 
     this.path = assembler
       .registerStaticProperty(createSelector((
         frame: any
-      ) => getGear(frame._).layout.path));
+      ) => getRealm(frame._).layout.path));
 
     this.isMounted = assembler
       .registerStaticProperty(createSelector((
         frame: any
-      ) => getGear(frame._).mountStatus === GearMountStatus.mounted));
+      ) => getRealm(frame._).mountStatus === RealmMountStatus.mounted));
 
     this.value = assembler
       .registerStaticProperty(createSelector((
         frame: any
-      ) => getGear(frame._).value));
+      ) => getRealm(frame._).value));
 
     this.Juncture = assembler
       .registerStaticProperty(createSelector(() => this.constructor as Juncture<this>));

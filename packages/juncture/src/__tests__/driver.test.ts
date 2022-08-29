@@ -14,10 +14,10 @@ import { DescriptorType } from '../design/descriptor-type';
 import { createSchema } from '../design/descriptors/schema';
 import { JunctureSchema } from '../design/schema';
 import { Driver } from '../driver';
-import { Gear, GearLayout, GearMediator } from '../engine/gear';
-import { getGear, isGearHost } from '../engine/gear-host';
-import { JMachineGearMediator } from '../j-machine';
+import { EngineRealmMediator } from '../engine';
 import { Juncture } from '../juncture';
+import { Realm, RealmLayout, RealmMediator } from '../operation/realm';
+import { getRealm, isRealmHost } from '../operation/realm-host';
 import { jSymbols } from '../symbols';
 import { PropertyAssembler } from '../tool/property-assembler';
 
@@ -69,122 +69,122 @@ describe('Driver', () => {
     });
   });
 
-  describe('[jSymbols.createGear] property', () => {
-    const layout: GearLayout = {
+  describe('[jSymbols.createRealm] property', () => {
+    const layout: RealmLayout = {
       parent: null,
       path: [],
       isDivergent: false,
       isUnivocal: true
     };
-    const gearMediator: GearMediator = {
+    const realmMediator: RealmMediator = {
       getValue: () => undefined,
       setValue: () => { }
     };
-    const machineMediator: JMachineGearMediator = {
-      gear: {
+    const engineMediator: EngineRealmMediator = {
+      realm: {
         enroll: () => { },
         createControlled: () => undefined!
       },
-      transaction: {
-        begin: () => { },
-        registerAlteredGear: () => { },
-        commit: () => { }
+      action: {
+        dispatch: () => { }
       },
-      dispatch: () => {}
+      transaction: {
+        registerAlteredRealm: () => { }
+      }
     };
 
     test('should be a method', () => {
-      expect(typeof driver[jSymbols.createGear]).toBe('function');
+      expect(typeof driver[jSymbols.createRealm]).toBe('function');
     });
 
-    test('should create a new Gear for the provided driver, layout and mediators', () => {
-      const gear = driver[jSymbols.createGear](layout, gearMediator, machineMediator);
-      expect(gear).toBeInstanceOf(Gear);
-      expect(gear.driver).toBe(driver);
-      expect(gear.layout).toBe(layout);
+    test('should create a new Realm for the provided driver, layout and mediators', () => {
+      const realm = driver[jSymbols.createRealm](layout, realmMediator, engineMediator);
+      expect(realm).toBeInstanceOf(Realm);
+      expect(realm.driver).toBe(driver);
+      expect(realm.layout).toBe(layout);
     });
 
-    test('should always return a new Gear', () => {
-      const gear1 = driver[jSymbols.createGear](layout, gearMediator, machineMediator);
-      const gear2 = driver[jSymbols.createGear](layout, gearMediator, machineMediator);
-      expect(gear2).not.toBe(gear1);
+    test('should always return a new Realm', () => {
+      const realm1 = driver[jSymbols.createRealm](layout, realmMediator, engineMediator);
+      const realm2 = driver[jSymbols.createRealm](layout, realmMediator, engineMediator);
+      expect(realm2).not.toBe(realm1);
     });
   });
 
   describe('[jSymbols.createCursor] property', () => {
-    const layout: GearLayout = {
+    const layout: RealmLayout = {
       parent: null,
       path: [],
       isDivergent: false,
       isUnivocal: true
     };
-    const gearMediator: GearMediator = {
+    const realmMediator: RealmMediator = {
       getValue: () => undefined,
       setValue: () => { }
     };
-    const machineMediator: JMachineGearMediator = {
-      gear: {
+    const engineMediator: EngineRealmMediator = {
+      realm: {
         enroll: () => { },
         createControlled: () => undefined!
       },
-      transaction: {
-        begin: () => { },
-        registerAlteredGear: () => { },
-        commit: () => { }
+      action: {
+        dispatch: () => {}
       },
-      dispatch: () => {}
+      transaction: {
+        registerAlteredRealm: () => { }
+      }
     };
 
     test('should be a method', () => {
       expect(typeof driver[jSymbols.createCursor]).toBe('function');
     });
 
-    test('should return the outer Cursor of the Gear', () => {
-      const gear = driver[jSymbols.createGear](layout, gearMediator, machineMediator);
-      const cursor = driver[jSymbols.createCursor](gear);
-      expect(cursor).toBe(gear.outerCursor);
+    test('should return the outer Cursor of the Realm', () => {
+      const realm = driver[jSymbols.createRealm](layout, realmMediator, engineMediator);
+      const cursor = driver[jSymbols.createCursor](realm);
+      expect(cursor).toBe(realm.outerCursor);
     });
   });
 
   describe('[jSymbols.createOuterCursor] property', () => {
-    const layout: GearLayout = {
+    const layout: RealmLayout = {
       parent: null,
       path: [],
       isDivergent: false,
       isUnivocal: true
     };
-    const gearMediator: GearMediator = {
+    const realmMediator: RealmMediator = {
       getValue: () => undefined,
       setValue: () => { }
     };
-    const machineMediator: JMachineGearMediator = {
-      gear: {
+    const engineMediator: EngineRealmMediator = {
+      realm: {
         enroll: () => { },
         createControlled: () => undefined!
       },
-      transaction: {
-        begin: () => { },
-        registerAlteredGear: () => { },
-        commit: () => { }
+      action: {
+        dispatch: () => { }
       },
-      dispatch: () => {}
+      transaction: {
+        registerAlteredRealm: () => { }
+      }
     };
 
     test('should be a method', () => {
       expect(typeof driver[jSymbols.createOuterCursor]).toBe('function');
     });
 
-    test('should create a new Cursor for the provided Gear', () => {
-      const gear = driver[jSymbols.createGear](layout, gearMediator, machineMediator);
-      const cursor = driver[jSymbols.createOuterCursor](gear);
-      expect(isGearHost(cursor)).toBe(true);
-      expect(getGear(cursor)).toBe(gear);
+    test('should create a new Cursor for the provided Realm', () => {
+      const realm = driver[jSymbols.createRealm](layout, realmMediator, engineMediator);
+      const cursor = driver[jSymbols.createOuterCursor](realm);
+      expect(isRealmHost(cursor)).toBe(true);
+      expect(getRealm(cursor)).toBe(realm);
     });
 
     test('should always return a new Cursor', () => {
-      const gear = driver[jSymbols.createGear](layout, gearMediator, machineMediator);
-      const cursor1 = driver[jSymbols.createOuterCursor](gear);
-      const cursor2 = driver[jSymbols.createOuterCursor](gear);
+      const realm = driver[jSymbols.createRealm](layout, realmMediator, engineMediator);
+      const cursor1 = driver[jSymbols.createOuterCursor](realm);
+      const cursor2 = driver[jSymbols.createOuterCursor](realm);
       expect(cursor2).not.toBe(cursor1);
     });
   });

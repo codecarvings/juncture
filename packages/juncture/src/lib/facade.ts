@@ -12,13 +12,15 @@ import {
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { SingleChildSchema } from '../design/schema';
 import { SchemaOf } from '../driver';
-import { createCursor, Cursor } from '../engine/frame-equipment/cursor';
-import { Gear, GearLayout, GearMediator } from '../engine/gear';
-import { PathFragment } from '../engine/path';
+import { EngineRealmMediator } from '../engine';
 import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
-import { JMachineGearMediator } from '../j-machine';
-import { AlterablePartialJuncture, Juncture, OuterCursorOfJuncture, ValueOfJuncture } from '../juncture';
+import {
+  AlterablePartialJuncture, Juncture, OuterCursorOfJuncture, ValueOfJuncture
+} from '../juncture';
+import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
+import { PathFragment } from '../operation/path';
+import { Realm, RealmLayout, RealmMediator } from '../operation/realm';
 import { jSymbols } from '../symbols';
 import { defineLazyProperty } from '../tool/object';
 
@@ -44,10 +46,10 @@ export class FacadeForger<D extends FacadeDriver> extends Forger<D> {
 }
 // #endregion
 
-// #region Engine
+// #region Operation
 const childKey = 'inner';
 
-export class FacadeGear extends Gear {
+export class FacadeRealm extends Realm {
   readonly schema!: FacadeSchema;
 
   // #region Value stuff
@@ -57,27 +59,27 @@ export class FacadeGear extends Gear {
   // #endregion
 
   // #region Children stuff
-  protected createChild(): Gear {
-    const layout: GearLayout = {
+  protected createChild(): Realm {
+    const layout: RealmLayout = {
       parent: this,
       path: [...this.layout.path, childKey],
       isUnivocal: this.layout.isUnivocal,
       isDivergent: false
     };
-    const gearMediator: GearMediator = {
+    const realmMediator: RealmMediator = {
       getValue: () => this._value,
       setValue: childValue => {
         this._value = childValue;
         // Not a container...
-        this.gearMediator.setValue(this._value);
+        this.realmMediator.setValue(this._value);
       }
     };
-    return Juncture.createGear(this.schema.Child, layout, gearMediator, this.machineMediator);
+    return Juncture.createRealm(this.schema.Child, layout, realmMediator, this.engineMediator);
   }
 
-  protected readonly child: Gear = this.createChild();
+  protected readonly child: Realm = this.createChild();
 
-  resolveFragment(fragment: PathFragment): Gear {
+  resolveFragment(fragment: PathFragment): Realm {
     if (fragment === childKey) {
       return this.child;
     }
@@ -98,18 +100,18 @@ export abstract class FacadeDriver extends ForgeableDriver {
     return new FacadeForger(this);
   }
 
-  [jSymbols.createGear](
-    layout: GearLayout,
-    gearMediator: GearMediator,
-    machineMediator: JMachineGearMediator
-  ): FacadeGear {
-    return new FacadeGear(this, layout, gearMediator, machineMediator);
+  [jSymbols.createRealm](
+    layout: RealmLayout,
+    realmMediator: RealmMediator,
+    engineMediator: EngineRealmMediator
+  ): FacadeRealm {
+    return new FacadeRealm(this, layout, realmMediator, engineMediator);
   }
 
   // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
-  [jSymbols.createCursor](gear: FacadeGear): FacadeCursor<this> {
-    const _: any = createCursor(gear);
-    defineLazyProperty(_, childKey, () => gear.resolveFragment(childKey).outerCursor, { enumerable: true });
+  [jSymbols.createCursor](realm: FacadeRealm): FacadeCursor<this> {
+    const _: any = createCursor(realm);
+    defineLazyProperty(_, childKey, () => realm.resolveFragment(childKey).outerCursor, { enumerable: true });
     return _;
   }
 
