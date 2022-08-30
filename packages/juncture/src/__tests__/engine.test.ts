@@ -125,16 +125,33 @@ test('experiment with frames 2', () => {
     ageChanges: 0
   });
   const { _, select, dispatch } = engine.frame;
+
+  engine.valueUsageMonitor.start();
   expect(select(_).displayName).toBe('Mirco 47');
+  let paths = engine.valueUsageMonitor.stop();
+  // console.dir(paths);
+
   expect(select(_).value).toEqual({
     name: 'Mirco',
     age: 47,
     ageChanges: 0
   });
+
+  engine.valueUsageMonitor.start();
   expect(select(_.name).value).toBe('Mirco');
+  paths = engine.valueUsageMonitor.stop();
+  // console.dir(paths);
+
+  engine.valueUsageMonitor.start();
+  expect(select(_.name).value).toBe('Mirco');
+  expect(select(_).value).toBeTruthy();
+  paths = engine.valueUsageMonitor.stop();
+  // console.dir(paths);
+
   expect(select(_.age).value).toBe(47);
   dispatch(_.age).set(1001);
   expect(select(_.age).value).toBe(1001);
+
   expect(engine.value).toEqual({
     name: 'Mirco',
     age: 1001,

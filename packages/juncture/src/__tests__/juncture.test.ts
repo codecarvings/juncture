@@ -145,6 +145,9 @@ describe('Juncture', () => {
         enroll: () => { },
         createControlled: () => undefined!
       },
+      selection: {
+        registerValueUsage: () => { }
+      },
       reaction: {
         dispatch: () => { },
         registerAlteredRealm: () => { }

@@ -22,7 +22,7 @@ import { OuterFrame } from './frames/outer-frame';
 import { Instruction } from './instruction';
 import { OuterBinKit } from './kits/bin-kit';
 import {
-  isSameOrDescendantPath,
+  comparePaths,
   Path, PathFragment, pathFragmentToString, pathToString
 } from './path';
 import { createRealmRef, RealmRef } from './realm-ref';
@@ -81,9 +81,14 @@ export class Realm {
 
     defineLazyProperty(this, 'ref', () => createRealmRef(this));
 
+    const { registerValueUsage } = engineMediator.selection;
+    const { path } = layout;
     this._value = realmMediator.getValue();
     Object.defineProperty(this, 'value', {
-      get: () => this._value,
+      get: () => {
+        registerValueUsage(path);
+        return this._value;
+      },
       ...revocablePropOptions
     });
 
@@ -153,14 +158,14 @@ export class Realm {
           const instruction_or_instructions = desc[jSymbols.payload](this.core.frames.synthReactor)(...payload);
           if (Array.isArray(instruction_or_instructions)) {
             (instruction_or_instructions as Instruction[]).forEach(instruction => {
-              if (!isSameOrDescendantPath(this.layout.path, instruction.target.layout.path)) {
+              if (comparePaths(this.layout.path, instruction.target.layout.path) < 0) {
                 throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope`);
               }
               instruction.target.excuteInstruction(instruction.key, instruction.payload);
             });
           } else {
             const instruction = (instruction_or_instructions as Instruction);
-            if (!isSameOrDescendantPath(this.layout.path, instruction.target.layout.path)) {
+            if (comparePaths(this.layout.path, instruction.target.layout.path) < 0) {
               throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope`);
             }
             instruction.target.excuteInstruction(instruction.key, instruction.payload);

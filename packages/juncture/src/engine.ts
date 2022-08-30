@@ -9,12 +9,14 @@
 import { Juncture, ValueOfJuncture } from './juncture';
 import { Action } from './operation/action';
 import { OuterFrame } from './operation/frames/outer-frame';
+import { Path } from './operation/path';
 import {
   ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
 } from './operation/realm';
 import { getRealm, isRealmHost } from './operation/realm-host';
 import { RealmManager } from './operation/realm-manager';
 import { TransactionManager } from './operation/transaction-manager';
+import { ValueUsageMonitor } from './operation/value-usage-monitor';
 
 export enum EngineStatus {
   initializing = 'initializing',
@@ -27,6 +29,10 @@ export interface EngineRealmMediator {
     enroll(managedRealm: ManagedRealm): void
     createControlled(Juncture: Juncture, layout: RealmLayout, realmMediator: RealmMediator): ControlledRealm;
   };
+
+  readonly selection: {
+    registerValueUsage(path: Path): void;
+  }
 
   readonly reaction: {
     dispatch(action: Action): void;
@@ -41,6 +47,8 @@ export class Engine<J extends Juncture> {
     this._value = this.getInitialValue(value);
 
     this.realmManager = this.createRealmManger();
+
+    this.valueUsageMonitor = this.createValueUsageMonitor();
 
     this.transactionManager = this.createTransactionManager();
 
@@ -73,12 +81,18 @@ export class Engine<J extends Juncture> {
     return new RealmManager();
   }
 
+  readonly valueUsageMonitor: ValueUsageMonitor;
+
   // eslint-disable-next-line class-methods-use-this
-  protected createTransactionManager(): TransactionManager {
-    return new TransactionManager(this.realmManager.sync);
+  protected createValueUsageMonitor(): ValueUsageMonitor {
+    return new ValueUsageMonitor();
   }
 
   protected readonly transactionManager: TransactionManager;
+
+  protected createTransactionManager(): TransactionManager {
+    return new TransactionManager(this.realmManager.sync);
+  }
 
   protected readonly realm: Realm;
 
@@ -107,6 +121,9 @@ export class Engine<J extends Juncture> {
             }
           };
         }
+      },
+      selection: {
+        registerValueUsage: this.valueUsageMonitor.registerValueUsage
       },
       reaction: {
         dispatch: this.dispatch,

@@ -49,6 +49,9 @@ describe('Realm', () => {
           enroll: () => { },
           createControlled: () => undefined!
         },
+        selection: {
+          registerValueUsage: () => { }
+        },
         reaction: {
           dispatch: () => { },
           registerAlteredRealm: () => { }
@@ -85,6 +88,9 @@ describe('Realm', () => {
         realm: {
           enroll: realmManager.enroll,
           createControlled: () => undefined!
+        },
+        selection: {
+          registerValueUsage: () => { }
         },
         reaction: {
           dispatch: () => { },

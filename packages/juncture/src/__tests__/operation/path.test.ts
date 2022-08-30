@@ -6,105 +6,122 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  isSameOrDescendantPath, Path, pathFragmentToString, pathToString
-} from '../../operation/path';
+import { comparePaths, Path, PathComparisonResult } from '../../operation/path';
+import { ValueUsageMonitor } from '../../operation/value-usage-monitor';
 
-declare function BigInt(x: any): bigint;
+function arePathArraysEqual(paths1: Path[], paths2: Path[]) {
+  if (paths1.length !== paths2.length) {
+    return false;
+  }
+  return paths1.every(path1 => paths2.some(path2 => comparePaths(path1, path2) === PathComparisonResult.equal));
+}
 
-describe('pathFragmentToString', () => {
-  test('should transform a string fragment', () => {
-    expect(pathFragmentToString('str')).toBe('str');
+// Check the utility function
+describe('arePathArraysEqual', () => {
+  test('should return true if 2 path arrays are equal', () => {
+    expect(arePathArraysEqual([], [])).toBe(true);
+    expect(arePathArraysEqual([['a']], [['a']])).toBe(true);
+    expect(arePathArraysEqual([['a', 'b']], [['a', 'b']])).toBe(true);
+    expect(arePathArraysEqual([['a'], ['b']], [['a'], ['b']])).toBe(true);
+    expect(arePathArraysEqual([['a'], ['b']], [['b'], ['a']])).toBe(true);
   });
 
-  test('should escape a string fragment', () => {
-    expect(pathFragmentToString('\\')).toBe('\\\\');
-    expect(pathFragmentToString('\\\\')).toBe('\\\\\\\\');
-    expect(pathFragmentToString('a/b/c')).toBe('a\\/b\\/c');
-    expect(pathFragmentToString('a\\b\\c')).toBe('a\\\\b\\\\c');
-  });
-
-  test('should transform a number', () => {
-    expect(pathFragmentToString(21)).toBe('21');
-  });
-
-  test('should transform a bigint', () => {
-    expect(pathFragmentToString(BigInt(21))).toBe('21');
-  });
-
-  test('should transform a symbol with a string description', () => {
-    expect(pathFragmentToString(Symbol('\\'))).toBe('\\\\');
-    expect(pathFragmentToString(Symbol('\\\\'))).toBe('\\\\\\\\');
-    expect(pathFragmentToString(Symbol('a/b/c'))).toBe('a\\/b\\/c');
-    expect(pathFragmentToString(Symbol('a\\b\\c'))).toBe('a\\\\b\\\\c');
-  });
-
-  test('should transform a symbol with a number description', () => {
-    expect(pathFragmentToString(Symbol(3))).toBe('3');
-  });
-
-  test('should should escape a symbol with a fragment', () => {
-    expect(pathFragmentToString(Symbol('symbol-desc'))).toBe('symbol-desc');
-  });
-
-  test('should transform a symbol with a withouht description', () => {
-    expect(pathFragmentToString(Symbol(undefined))).toBe('{symbol}');
-  });
-
-  test('should transform a boolean', () => {
-    expect(pathFragmentToString(true)).toBe('true');
-    expect(pathFragmentToString(false)).toBe('false');
+  test('should return false if 2 path arrays are not equal', () => {
+    expect(arePathArraysEqual([['a']], [])).toBe(false);
+    expect(arePathArraysEqual([[]], [['a']])).toBe(false);
+    expect(arePathArraysEqual([['a']], [['b']])).toBe(false);
+    expect(arePathArraysEqual([['a']], [['a'], ['a', 'b']])).toBe(false);
+    expect(arePathArraysEqual([['a'], ['a', 'b']], [['a']])).toBe(false);
   });
 });
 
-describe('pathToString', () => {
-  const path: Path = ['a', 'b/c', 'd\\e', 4, BigInt(5), Symbol('s'), Symbol('x/y'), true, false];
-  const expectedInnerPath = 'a/b\\/c/d\\\\e/4/5/s/x\\/y/true/false';
+describe('ValueUsageMonitor', () => {
+  let monitor: ValueUsageMonitor;
 
-  test('should format a non absolute path', () => {
-    expect(pathToString(path, false)).toBe(`[${expectedInnerPath}]`);
-  });
-  test('should format an absolute path', () => {
-    expect(pathToString(path, true)).toBe(`[/${expectedInnerPath}]`);
-  });
-  test('should format as absolute path by default', () => {
-    expect(pathToString(path)).toBe(`[/${expectedInnerPath}]`);
-  });
-});
-
-describe('isSameOrDescendantPath', () => {
-  describe('when parentPath is empty', () => {
-    test('should detect same path', () => {
-      expect(isSameOrDescendantPath([], [])).toBe(true);
-    });
-
-    test('should detect descendant path', () => {
-      expect(isSameOrDescendantPath([], ['a'])).toBe(true);
-      expect(isSameOrDescendantPath([], ['a', 'b'])).toBe(true);
-    });
+  beforeEach(() => {
+    monitor = new ValueUsageMonitor();
   });
 
-  describe('when parentPath is not empty', () => {
-    test('should detect same path', () => {
-      expect(isSameOrDescendantPath(['a'], ['a'])).toBe(true);
-      expect(isSameOrDescendantPath(['a', 'b'], ['a', 'b'])).toBe(true);
-    });
+  test('should be able to detect the usage of no path', () => {
+    monitor.start();
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [])).toBe(true);
+  });
 
-    test('should detect descendant path', () => {
-      expect(isSameOrDescendantPath(['a'], ['a', 'b'])).toBe(true);
-      expect(isSameOrDescendantPath(['a'], ['a', 'b', 'c'])).toBe(true);
-      expect(isSameOrDescendantPath(['a', 'b'], ['a', 'b', 'c'])).toBe(true);
-      expect(isSameOrDescendantPath(['a', 'b'], ['a', 'b', 'c', 'd'])).toBe(true);
-    });
+  test('should be able to detect the usage of a single path', () => {
+    monitor.start();
+    monitor.registerValueUsage(['a']);
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [
+      ['a']
+    ])).toBe(true);
+  });
 
-    test('should detect ascendent path', () => {
-      expect(isSameOrDescendantPath(['a'], [])).toBe(false);
-      expect(isSameOrDescendantPath(['a'], ['b'])).toBe(false);
-      expect(isSameOrDescendantPath(['a'], ['b', 'c'])).toBe(false);
-      expect(isSameOrDescendantPath(['a', 'b'], [])).toBe(false);
-      expect(isSameOrDescendantPath(['a', 'b'], ['a'])).toBe(false);
-      expect(isSameOrDescendantPath(['a', 'b'], ['a', 'c'])).toBe(false);
-      expect(isSameOrDescendantPath(['a', 'b'], ['c', 'b'])).toBe(false);
-    });
+  test('should be able to detect the usage of two disjunted paths', () => {
+    monitor.start();
+    monitor.registerValueUsage(['a']);
+    monitor.registerValueUsage(['b']);
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [
+      ['a'],
+      ['b']
+    ])).toBe(true);
+  });
+
+  test('should be able to detect the usage of a descendent path', () => {
+    monitor.start();
+    monitor.registerValueUsage(['a']);
+    monitor.registerValueUsage(['a', 'b']);
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [
+      ['a']
+    ])).toBe(true);
+  });
+
+  test('should be able to detect the usage of a descendent path / 2', () => {
+    monitor.start();
+    monitor.registerValueUsage(['a']);
+    monitor.registerValueUsage(['a', 'b']);
+    monitor.registerValueUsage(['a', 'c']);
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [
+      ['a']
+    ])).toBe(true);
+  });
+
+  test('should be able to detect the usage of an ascendent path', () => {
+    monitor.start();
+    monitor.registerValueUsage(['a', 'b']);
+    monitor.registerValueUsage(['a']);
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [
+      ['a']
+    ])).toBe(true);
+  });
+
+  test('should be able to detect the usage of an ascendent path / 2', () => {
+    monitor.start();
+    monitor.registerValueUsage(['a', 'b']);
+    monitor.registerValueUsage(['a', 'c']);
+    monitor.registerValueUsage(['a']);
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [
+      ['a']
+    ])).toBe(true);
+  });
+
+  test('should be able to detect the usage divergent paths', () => {
+    monitor.start();
+    monitor.registerValueUsage(['a', 'b', 'c']);
+    monitor.registerValueUsage(['a', 'c', 'd']);
+    monitor.registerValueUsage(['a', 'b', 'd']);
+    monitor.registerValueUsage(['a', 'b']);
+    monitor.registerValueUsage(['a', 'e']);
+    const result = monitor.stop();
+    expect(arePathArraysEqual(result, [
+      ['a', 'b'],
+      ['a', 'c', 'd'],
+      ['a', 'e']
+    ])).toBe(true);
   });
 });

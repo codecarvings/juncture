@@ -35,16 +35,35 @@ export function pathToString(path: Path, absolute = true): string {
   return `[${absolute ? '/' : ''}${result}]`;
 }
 
-export function isSameOrDescendantPath(parent: Path, child: Path): boolean {
-  const parentLen = parent.length;
-  const childLen = child.length;
-  if (childLen < parentLen) {
-    return false;
+export enum PathComparisonResult {
+  disjointed = -2,
+  ascendant = -1,
+  equal = 0,
+  descendant = 1
+}
+
+export function comparePaths(path1: Path, path2: Path): PathComparisonResult {
+  const path1Len = path1.length;
+  const path2Len = path2.length;
+
+  let pathLen: number;
+  let finalResult: PathComparisonResult;
+
+  if (path1Len > path2Len) {
+    pathLen = path2Len;
+    finalResult = PathComparisonResult.ascendant;
+  } else if (path2Len > path1Len) {
+    pathLen = path1Len;
+    finalResult = PathComparisonResult.descendant;
+  } else {
+    pathLen = path1Len;
+    finalResult = PathComparisonResult.equal;
   }
-  for (let i = 0; i < parentLen; i += 1) {
-    if (child[i] !== parent[i]) {
-      return false;
+
+  for (let i = 0; i < pathLen; i += 1) {
+    if (path2[i] !== path1[i]) {
+      return PathComparisonResult.disjointed;
     }
   }
-  return true;
+  return finalResult;
 }

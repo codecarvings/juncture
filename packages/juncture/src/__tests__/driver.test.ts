@@ -85,6 +85,9 @@ describe('Driver', () => {
         enroll: () => { },
         createControlled: () => undefined!
       },
+      selection: {
+        registerValueUsage: () => { }
+      },
       reaction: {
         dispatch: () => { },
         registerAlteredRealm: () => { }
@@ -125,6 +128,9 @@ describe('Driver', () => {
         enroll: () => { },
         createControlled: () => undefined!
       },
+      selection: {
+        registerValueUsage: () => { }
+      },
       reaction: {
         dispatch: () => { },
         registerAlteredRealm: () => { }
@@ -157,6 +163,9 @@ describe('Driver', () => {
       realm: {
         enroll: () => { },
         createControlled: () => undefined!
+      },
+      selection: {
+        registerValueUsage: () => { }
       },
       reaction: {
         dispatch: () => { },
