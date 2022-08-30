@@ -34,10 +34,8 @@ const engineMediator: EngineRealmMediator = {
     enroll: () => { },
     createControlled: () => undefined!
   },
-  action: {
-    dispatch: () => {}
-  },
-  transaction: {
+  reaction: {
+    dispatch: () => { },
     registerAlteredRealm: () => { }
   }
 };

@@ -99,7 +99,7 @@ export class Realm {
   protected readonly core: Core;
 
   protected createCore(): Core {
-    return new Core(this, this.engineMediator.action);
+    return new Core(this, this.engineMediator.reaction);
   }
 
   readonly outerCursor!: Cursor;
@@ -121,7 +121,7 @@ export class Realm {
       return false;
     }
 
-    this.engineMediator.transaction.registerAlteredRealm(this);
+    this.engineMediator.reaction.registerAlteredRealm(this);
     this._value = value;
     this.valueDidUpdate();
     return true;

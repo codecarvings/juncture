@@ -145,10 +145,8 @@ describe('Juncture', () => {
         enroll: () => { },
         createControlled: () => undefined!
       },
-      action: {
-        dispatch: () => { }
-      },
-      transaction: {
+      reaction: {
+        dispatch: () => { },
         registerAlteredRealm: () => { }
       }
     };

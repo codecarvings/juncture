@@ -28,11 +28,8 @@ export interface EngineRealmMediator {
     createControlled(Juncture: Juncture, layout: RealmLayout, realmMediator: RealmMediator): ControlledRealm;
   };
 
-  readonly action: {
+  readonly reaction: {
     dispatch(action: Action): void;
-  };
-
-  readonly transaction: {
     registerAlteredRealm(realm: Realm): void;
   };
 }
@@ -111,10 +108,8 @@ export class Engine<J extends Juncture> {
           };
         }
       },
-      action: {
-        dispatch: this.dispatch
-      },
-      transaction: {
+      reaction: {
+        dispatch: this.dispatch,
         registerAlteredRealm: this.transactionManager.registerAlteredRealm
       }
     };
