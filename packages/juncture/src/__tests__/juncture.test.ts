@@ -131,8 +131,8 @@ describe('Juncture', () => {
 
   describe('createRealm', () => {
     const layout: RealmLayout = {
+      path: [] as any,
       parent: null,
-      path: [],
       isDivergent: false,
       isUnivocal: true
     };
@@ -142,6 +142,7 @@ describe('Juncture', () => {
     };
     const engineMediator: EngineRealmMediator = {
       realm: {
+        getPersistentPath: () => undefined!,
         enroll: () => { },
         createControlled: () => undefined!
       },

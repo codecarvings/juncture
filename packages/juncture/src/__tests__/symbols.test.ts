@@ -45,6 +45,10 @@ describe('jSymbols', () => {
     expect(typeof jSymbols.driver).toBe('symbol');
   });
 
+  test('should contain the persistent symbol', () => {
+    expect(typeof jSymbols.persistent).toBe('symbol');
+  });
+
   test('should contain the bitDefault symbol', () => {
     expect(typeof jSymbols.bitDefault).toBe('symbol');
   });

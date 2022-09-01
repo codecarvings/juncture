@@ -23,14 +23,14 @@ import { Instruction } from './instruction';
 import { OuterBinKit } from './kits/bin-kit';
 import {
   comparePaths,
-  Path, PathFragment, pathFragmentToString, pathToString
+  Path, PathFragment, pathFragmentToString, pathToString, PersistentPath
 } from './path';
 import { createRealmRef, RealmRef } from './realm-ref';
 
 // #region Support types
 export interface RealmLayout {
+  readonly path: PersistentPath;
   readonly parent: Realm | null;
-  readonly path: Path;
   readonly isUnivocal: boolean;
   readonly isDivergent: boolean;
 }
@@ -67,19 +67,19 @@ export interface ControlledRealmMap {
 const revocablePropOptions = { configurable: true };
 
 export class Realm {
-  readonly schema: JunctureSchema;
-
   readonly ref!: RealmRef;
+
+  readonly schema: JunctureSchema;
 
   constructor(
     readonly driver: Driver,
     readonly layout: RealmLayout,
     protected readonly realmMediator: RealmMediator,
     protected readonly engineMediator: EngineRealmMediator
-  ) {
-    this.schema = Juncture.getSchema(driver);
-
+  ) {   
     defineLazyProperty(this, 'ref', () => createRealmRef(this));
+
+    this.schema = Juncture.getSchema(driver);
 
     const { registerValueUsage } = engineMediator.selection;
     const { path } = layout;

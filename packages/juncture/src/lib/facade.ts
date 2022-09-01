@@ -61,8 +61,8 @@ export class FacadeRealm extends Realm {
   // #region Children stuff
   protected createChild(): Realm {
     const layout: RealmLayout = {
+      path: this.engineMediator.realm.getPersistentPath([...this.layout.path, childKey]),
       parent: this,
-      path: [...this.layout.path, childKey],
       isUnivocal: this.layout.isUnivocal,
       isDivergent: false
     };

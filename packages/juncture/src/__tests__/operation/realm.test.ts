@@ -35,8 +35,8 @@ describe('Realm', () => {
   describe('constructor', () => {
     test('should accept a driver, a RealmLayout, a RealmMediator and a EngineRealmMediator', () => {
       const layout: RealmLayout = {
+        path: [] as any,
         parent: null,
-        path: [],
         isDivergent: false,
         isUnivocal: true
       };
@@ -46,6 +46,7 @@ describe('Realm', () => {
       };
       const engineMediator: EngineRealmMediator = {
         realm: {
+          getPersistentPath: () => undefined!,
           enroll: () => { },
           createControlled: () => undefined!
         },
@@ -75,8 +76,8 @@ describe('Realm', () => {
     beforeEach(() => {
       realmManager = new RealmManager();
       layout = {
+        path: [] as any,
         parent: null,
-        path: [],
         isDivergent: false,
         isUnivocal: true
       };
@@ -86,6 +87,7 @@ describe('Realm', () => {
       };
       engineMediator = {
         realm: {
+          getPersistentPath: () => undefined!,
           enroll: realmManager.enroll,
           createControlled: () => undefined!
         },

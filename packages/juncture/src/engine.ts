@@ -9,7 +9,8 @@
 import { Juncture, ValueOfJuncture } from './juncture';
 import { Action } from './operation/action';
 import { OuterFrame } from './operation/frames/outer-frame';
-import { Path } from './operation/path';
+import { Path, PersistentPath } from './operation/path';
+import { PersistentPathManager } from './operation/persistent-path-manager';
 import {
   ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
 } from './operation/realm';
@@ -26,12 +27,13 @@ export enum EngineStatus {
 
 export interface EngineRealmMediator {
   readonly realm: {
+    getPersistentPath(path: Path): PersistentPath;
     enroll(managedRealm: ManagedRealm): void
     createControlled(Juncture: Juncture, layout: RealmLayout, realmMediator: RealmMediator): ControlledRealm;
   };
 
   readonly selection: {
-    registerValueUsage(path: Path): void;
+    registerValueUsage(path: PersistentPath): void;
   }
 
   readonly reaction: {
@@ -45,6 +47,8 @@ export class Engine<J extends Juncture> {
     this.dispatch = this.dispatch.bind(this);
 
     this._value = this.getInitialValue(value);
+
+    this.persistentPathManager = this.createPersistentPathManager();
 
     this.realmManager = this.createRealmManger();
 
@@ -70,9 +74,27 @@ export class Engine<J extends Juncture> {
     const schema = Juncture.getSchema(this.Juncture);
     return value === undefined ? schema.defaultValue : value;
   }
+
+  startVirtualSelectorOC(): () => PersistentPath[] {
+    this.valueUsageMonitor.start();
+    return () => {
+      const paths = this.valueUsageMonitor.stop() as PersistentPath[];
+      paths.forEach(path => {
+        this.persistentPathManager.registerRequirement(path);
+      });
+      return paths;
+    };
+  }
   // #endregion
 
-  // #region Mount stuff
+  // #region Realm stuff
+
+  protected readonly persistentPathManager: PersistentPathManager;
+
+  // eslint-disable-next-line class-methods-use-this
+  protected createPersistentPathManager(): PersistentPathManager {
+    return new PersistentPathManager();
+  }
 
   protected readonly realmManager: RealmManager;
 
@@ -81,7 +103,7 @@ export class Engine<J extends Juncture> {
     return new RealmManager();
   }
 
-  readonly valueUsageMonitor: ValueUsageMonitor;
+  protected readonly valueUsageMonitor: ValueUsageMonitor;
 
   // eslint-disable-next-line class-methods-use-this
   protected createValueUsageMonitor(): ValueUsageMonitor {
@@ -98,7 +120,7 @@ export class Engine<J extends Juncture> {
 
   protected createRealm(): Realm {
     const layout: RealmLayout = {
-      path: [],
+      path: this.persistentPathManager.getPersistentPath([]),
       parent: null,
       isUnivocal: true,
       isDivergent: false
@@ -111,6 +133,7 @@ export class Engine<J extends Juncture> {
     };
     const engineMediator: EngineRealmMediator = {
       realm: {
+        getPersistentPath: this.persistentPathManager.getPersistentPath,
         enroll: this.realmManager.enroll,
         createControlled: (Juncture2, layout2, realmMediator2) => {
           const realm = Juncture.createRealm(Juncture2, layout2, realmMediator2, engineMediator);
@@ -153,21 +176,26 @@ export class Engine<J extends Juncture> {
     this.realmManager.dismiss(this.realm);
     this.realmManager.sync();
   }
+
+  protected resolve(path: Path) {
+    let result: Realm;
+    if (isRealmHost(path)) {
+      // RealmRef
+      result = getRealm(path);
+      if (result.mountStatus === RealmMountStatus.unmounted) {
+        // Aready unmounted, try to resolve the path
+        result = this.realm.resolve(path);
+      }
+    } else {
+      result = this.realm.resolve(path);
+    }
+    return result;
+  }
   // #endregion
 
   // #region Frame stuff
   dispatch(action: Action) {
-    let target: Realm;
-    if (isRealmHost(action.target)) {
-      // RealmRef
-      target = getRealm(action.target);
-      if (target.mountStatus === RealmMountStatus.unmounted) {
-        // Aready unmounted, try to resolve the path
-        target = this.realm.resolve(action.target);
-      }
-    } else {
-      target = this.realm.resolve(action.target);
-    }
+    const target = this.resolve(action.target);
 
     this.transactionManager.begin();
     target.executeAction(action.key, action.payload);

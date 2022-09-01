@@ -6,8 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { jSymbols } from '../symbols';
+
 export type PathFragment = string | number | bigint | Symbol | boolean;
 export interface Path extends ReadonlyArray<PathFragment> { }
+
+// Just an usual Path, but bust be provided by a PersistentPathManager to guarantee persistence over time
+export interface PersistentPath extends Path {
+  [jSymbols.persistent]: undefined;
+}
 
 function escapePathFragmentString(fragment: string): string {
   return fragment
@@ -66,4 +73,19 @@ export function comparePaths(path1: Path, path2: Path): PathComparisonResult {
     }
   }
   return finalResult;
+}
+
+export function arePathEqual(path1: Path, path2: Path): boolean {
+  const path1Len = path1.length;
+  const path2Len = path2.length;
+
+  if (path1Len !== path2Len) {
+    return false;
+  }
+  for (let i = 0; i < path1Len; i += 1) {
+    if (path2[i] !== path1[i]) {
+      return false;
+    }
+  }
+  return true;
 }

@@ -20,8 +20,8 @@ class MyDriver extends Driver {
 }
 const driver = Juncture.getDriver(MyDriver);
 const layout: RealmLayout = {
+  path: [] as any,
   parent: null,
-  path: [],
   isDivergent: false,
   isUnivocal: true
 };
@@ -31,6 +31,7 @@ const realmMediator: RealmMediator = {
 };
 const engineMediator: EngineRealmMediator = {
   realm: {
+    getPersistentPath: () => undefined!,
     enroll: () => { },
     createControlled: () => undefined!
   },

@@ -100,8 +100,8 @@ export class StructRealm extends Realm {
       this.schema.childKeys,
       key => {
         const layout: RealmLayout = {
+          path: this.engineMediator.realm.getPersistentPath([...this.layout.path, key]),
           parent: this,
-          path: [...this.layout.path, key],
           isUnivocal: this.layout.isUnivocal,
           isDivergent: false
         };

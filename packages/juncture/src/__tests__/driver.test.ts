@@ -71,8 +71,8 @@ describe('Driver', () => {
 
   describe('[jSymbols.createRealm] property', () => {
     const layout: RealmLayout = {
+      path: [] as any,
       parent: null,
-      path: [],
       isDivergent: false,
       isUnivocal: true
     };
@@ -82,6 +82,7 @@ describe('Driver', () => {
     };
     const engineMediator: EngineRealmMediator = {
       realm: {
+        getPersistentPath: () => undefined!,
         enroll: () => { },
         createControlled: () => undefined!
       },
@@ -114,8 +115,8 @@ describe('Driver', () => {
 
   describe('[jSymbols.createCursor] property', () => {
     const layout: RealmLayout = {
+      path: [] as any,
       parent: null,
-      path: [],
       isDivergent: false,
       isUnivocal: true
     };
@@ -125,6 +126,7 @@ describe('Driver', () => {
     };
     const engineMediator: EngineRealmMediator = {
       realm: {
+        getPersistentPath: () => undefined!,
         enroll: () => { },
         createControlled: () => undefined!
       },
@@ -150,8 +152,8 @@ describe('Driver', () => {
 
   describe('[jSymbols.createOuterCursor] property', () => {
     const layout: RealmLayout = {
+      path: [] as any,
       parent: null,
-      path: [],
       isDivergent: false,
       isUnivocal: true
     };
@@ -161,6 +163,7 @@ describe('Driver', () => {
     };
     const engineMediator: EngineRealmMediator = {
       realm: {
+        getPersistentPath: () => undefined!,
         enroll: () => { },
         createControlled: () => undefined!
       },

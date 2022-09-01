@@ -15,6 +15,7 @@ const createCursor = Symbol('createCursor');
 const createOuterCursor = Symbol('createOuterCursor');
 const realm = Symbol('realm');
 const driver = Symbol('driver');
+const persistent = Symbol('persistent');
 const bitDefault = Symbol('bitDefault');
 
 export interface JSymbols {
@@ -27,6 +28,7 @@ export interface JSymbols {
   readonly createOuterCursor: typeof createOuterCursor;
   readonly realm: typeof realm;
   readonly driver: typeof driver;
+  readonly persistent: typeof persistent;
   readonly bitDefault: typeof bitDefault;
 }
 
@@ -40,5 +42,6 @@ export const jSymbols: JSymbols = {
   createOuterCursor,
   realm,
   driver,
+  persistent,
   bitDefault
 };
