@@ -63,7 +63,7 @@ export class ListRealm extends Realm {
   // #region Children stuff
   protected createChild(index: number): ControlledRealm {
     const layout: RealmLayout = {
-      path: this.engineMediator.realm.getPersistentPath([...this.layout.path, index]),
+      path: this.engineMediator.persistentPath.get([...this.layout.path, index]),
       parent: this,
       isUnivocal: false,
       isDivergent: true

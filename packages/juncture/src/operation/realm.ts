@@ -76,7 +76,7 @@ export class Realm {
     readonly layout: RealmLayout,
     protected readonly realmMediator: RealmMediator,
     protected readonly engineMediator: EngineRealmMediator
-  ) {   
+  ) {
     defineLazyProperty(this, 'ref', () => createRealmRef(this));
 
     this.schema = Juncture.getSchema(driver);
@@ -240,6 +240,7 @@ export class Realm {
     if (this.core.behaviors.started) {
       this.core.behaviors.stop();
     }
+    this.engineMediator.persistentPath.release(this.layout.path);
 
     const getRevoked = (desc: string) => () => {
       throw Error(`Cannot access ${desc}: Realm ${pathToString(this.layout.path)} not mounted`);

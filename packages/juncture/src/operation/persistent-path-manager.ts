@@ -6,86 +6,75 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { arePathEqual, Path, pathFragmentToString, pathToString, PersistentPath } from './path';
+import {
+  arePathEqual, Path, pathFragmentToString, pathToString, PersistentPath
+} from './path';
 
 interface PersistentPathData {
   readonly path: PersistentPath;
+  readonly key: string;
   usageCount: number;
 }
 
 export class PersistentPathManager {
   constructor() {
     this.getPersistentPath = this.getPersistentPath.bind(this);
+    this.registerRequirement = this.registerRequirement.bind(this);
+    this.releaseRequirement = this.releaseRequirement.bind(this);
   }
 
-  readonly cache = new Map<string, PersistentPathData[]>();
+  readonly searchableCache = new Map<string, PersistentPathData[]>();
 
+  readonly cache = new Map<PersistentPath, PersistentPathData>();
+
+  // eslint-disable-next-line class-methods-use-this
   protected getPathKey(path: Path): string {
     return path.map(fragment => pathFragmentToString(fragment)).join('/');
   }
 
   getPersistentPath(path: Path): PersistentPath {
     const key = this.getPathKey(path);
-    const datas = this.cache.get(key);
+
+    const datas = this.searchableCache.get(key);
     if (datas !== undefined) {
-      for (const data of datas) {
+      const totDatas = datas.length;
+      for (let i = 0; i < totDatas; i += 0) {
+        const data = datas[i];
         if (arePathEqual(path, data.path)) {
+          data.usageCount += 1;
           return data.path;
         }
       }
+    }
+
+    const data: PersistentPathData = {
+      path: path as PersistentPath,
+      key,
+      usageCount: 1
+    };
+
+    if (datas) {
+      datas.push(data);
+    } else {
+      this.searchableCache.set(key, [data]);
+      this.cache.set(path as PersistentPath, data);
     }
 
     return path as PersistentPath;
   }
 
   registerRequirement(path: PersistentPath) {
-    const key = this.getPathKey(path);
-
-    let data: PersistentPathData | undefined;
-
-    const datas = this.cache.get(key);
-    if (datas !== undefined) {
-      for (const curData of datas) {
-        if (arePathEqual(path, curData.path)) {
-          data = curData;
-          break;
-        }
-      }
+    const data = this.cache.get(path);
+    if (!data) {
+      throw Error(`Unable to register persistent path requirement: path ${pathToString(path)} not found`);
     }
-
-    if (data) {
-      data.usageCount += 1;
-    } else {
-      data = {
-        path,
-        usageCount: 1
-      };
-    }
-
-    if (datas) {
-      datas.push(data);
-    } else {
-      this.cache.set(key, [data]);
-    }
+    data.usageCount += 1;
   }
 
   releaseRequirement(path: PersistentPath) {
-    const key = this.getPathKey(path);
-
-    const datas = this.cache.get(key);
-    if (datas === undefined) {
-      throw Error(`Undable to release PersistentPath ${pathToString(path)}: key not found.`);
-    }
-
-    let data: PersistentPathData | undefined;
-    for (const curData of datas) {
-      if (arePathEqual(path, curData.path)) {
-        data = curData;
-        break;
-      }
-    }
+    const data = this.cache.get(path);
     if (!data) {
-      throw Error(`Undable to release PersistentPath ${pathToString(path)} data not found.`);
+      throw Error(`Unable to release persistent path requirement: path ${pathToString(path)} not found`);
     }
 
     data.usageCount -= 1;
@@ -93,10 +82,12 @@ export class PersistentPathManager {
       return;
     }
 
+    this.cache.delete(path);
+    const datas = this.searchableCache.get(data.key)!;
     if (datas.length > 1) {
-      this.cache.set(key, datas.filter(curData => curData !== data));
+      this.searchableCache.set(data.key, datas.filter(curData => curData !== data));
     } else {
-      this.cache.delete(key);
+      this.searchableCache.delete(data.key);
     }
   }
 }

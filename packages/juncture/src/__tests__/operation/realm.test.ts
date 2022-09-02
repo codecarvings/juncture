@@ -45,8 +45,11 @@ describe('Realm', () => {
         setValue: () => { }
       };
       const engineMediator: EngineRealmMediator = {
+        persistentPath: {
+          get: () => undefined!,
+          release: () => { }
+        },
         realm: {
-          getPersistentPath: () => undefined!,
           enroll: () => { },
           createControlled: () => undefined!
         },
@@ -86,8 +89,11 @@ describe('Realm', () => {
         setValue: () => { }
       };
       engineMediator = {
+        persistentPath: {
+          get: () => undefined!,
+          release: () => { }
+        },
         realm: {
-          getPersistentPath: () => undefined!,
           enroll: realmManager.enroll,
           createControlled: () => undefined!
         },

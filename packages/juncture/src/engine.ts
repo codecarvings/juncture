@@ -26,8 +26,12 @@ export enum EngineStatus {
 }
 
 export interface EngineRealmMediator {
+  readonly persistentPath: {
+    get(path: Path): PersistentPath;
+    release(path: PersistentPath): void;
+  }
+
   readonly realm: {
-    getPersistentPath(path: Path): PersistentPath;
     enroll(managedRealm: ManagedRealm): void
     createControlled(Juncture: Juncture, layout: RealmLayout, realmMediator: RealmMediator): ControlledRealm;
   };
@@ -132,8 +136,11 @@ export class Engine<J extends Juncture> {
       }
     };
     const engineMediator: EngineRealmMediator = {
+      persistentPath: {
+        get: this.persistentPathManager.getPersistentPath,
+        release: this.persistentPathManager.releaseRequirement
+      },
       realm: {
-        getPersistentPath: this.persistentPathManager.getPersistentPath,
         enroll: this.realmManager.enroll,
         createControlled: (Juncture2, layout2, realmMediator2) => {
           const realm = Juncture.createRealm(Juncture2, layout2, realmMediator2, engineMediator);
