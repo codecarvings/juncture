@@ -126,9 +126,9 @@ test('experiment with frames 2', () => {
   });
   const { _, select, dispatch } = engine.frame;
 
-  let stop = engine.startVirtualSelectorOC();
+  let stop = engine.startSelectorAudit();
   expect(select(_).displayName).toBe('Mirco 47');
-  let paths = stop();
+  stop();
 
   expect(select(_).value).toEqual({
     name: 'Mirco',
@@ -136,15 +136,19 @@ test('experiment with frames 2', () => {
     ageChanges: 0
   });
 
-  stop = engine.startVirtualSelectorOC();
+  stop = engine.startSelectorAudit();
   expect(select(_.name).value).toBe('Mirco');
-  paths = stop();
+  stop();
 
-  stop = engine.startVirtualSelectorOC();
+  stop = engine.startSelectorAudit();
   expect(select(_.name).value).toBe('Mirco');
   expect(select(_.age).value).toBe(47);
   // expect(select(_).value).toBeTruthy();
-  paths = stop();
+  stop().subscribe({
+    complete: () => {
+      console.log('Selectors must be recomputed');
+    }
+  });
   // console.dir(paths);
 
   expect(select(_.age).value).toBe(47);

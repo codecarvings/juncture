@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Observable } from 'rxjs';
 import { Juncture, ValueOfJuncture } from './juncture';
 import { Action } from './operation/action';
 import { OuterFrame } from './operation/frames/outer-frame';
@@ -16,6 +17,7 @@ import {
 } from './operation/realm';
 import { getRealm, isRealmHost } from './operation/realm-host';
 import { RealmManager } from './operation/realm-manager';
+import { SelectorCatalyst } from './operation/selector-catalyst';
 import { TransactionManager } from './operation/transaction-manager';
 import { ValueUsageMonitor } from './operation/value-usage-monitor';
 
@@ -60,6 +62,8 @@ export class Engine<J extends Juncture> {
 
     this.transactionManager = this.createTransactionManager();
 
+    this.selectorCatalyst = this.craeteSelectorCatalyst();
+
     this.realm = this.createRealm();
 
     this.realmManager.sync();
@@ -79,15 +83,8 @@ export class Engine<J extends Juncture> {
     return value === undefined ? schema.defaultValue : value;
   }
 
-  startVirtualSelectorOC(): () => PersistentPath[] {
-    this.valueUsageMonitor.start();
-    return () => {
-      const paths = this.valueUsageMonitor.stop() as PersistentPath[];
-      paths.forEach(path => {
-        this.persistentPathManager.registerRequirement(path);
-      });
-      return paths;
-    };
+  startSelectorAudit(): () => Observable<void> {
+    return this.selectorCatalyst.startAudit();
   }
   // #endregion
 
@@ -118,6 +115,21 @@ export class Engine<J extends Juncture> {
 
   protected createTransactionManager(): TransactionManager {
     return new TransactionManager(this.realmManager.sync);
+  }
+
+  protected readonly selectorCatalyst: SelectorCatalyst;
+
+  protected craeteSelectorCatalyst(): SelectorCatalyst {
+    return new SelectorCatalyst({
+      valueUsageMonitor: {
+        start: this.valueUsageMonitor.start,
+        stop: this.valueUsageMonitor.stop as () => PersistentPath[]
+      },
+      persistentPathManager: {
+        registerRequirement: this.persistentPathManager.registerRequirement,
+        releaseRequirement: this.persistentPathManager.releaseRequirement
+      }
+    });
   }
 
   protected readonly realm: Realm;
