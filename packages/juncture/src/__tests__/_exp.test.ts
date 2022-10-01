@@ -83,6 +83,10 @@ test('experiment', () => {
     'channel.onTickWithValue' = this.FORGE.channel<string>();
   }
 
+  class Counter2 extends Counter {
+
+  }
+
   class App extends STRUCT.of({
     config: Config,
     counter: Counter

@@ -28,11 +28,11 @@ import { defineLazyProperty, mappedAssign } from '../utilities/object';
 export type StructValue<JM extends JunctureMap> = {
   readonly [K in keyof JM]: ValueOfJuncture<JM[K]>;
 };
-export type PartialStructValue<JM extends JunctureMap> = {
+export type StructPartialValue<JM extends JunctureMap> = {
   readonly [K in keyof JM]?: ValueOfJuncture<JM[K]>;
 };
 export class StructSchema<JM extends JunctureMap = JunctureMap> extends JunctureSchema<StructValue<JM>> {
-  protected constructor(readonly children: JM, defaultValue?: PartialStructValue<JM>) {
+  protected constructor(readonly children: JM, defaultValue?: StructPartialValue<JM>) {
     const childKeys = Object.keys(children);
     const childDefaultValue = mappedAssign(
       { },
@@ -60,7 +60,7 @@ export class StructSchema<JM extends JunctureMap = JunctureMap> extends Juncture
 
 function createStructSchema<JM extends JunctureMap>(
   children: JM,
-  defaultValue?: PartialStructValue<JM>
+  defaultValue?: StructPartialValue<JM>
 ): StructSchema<JM> {
   return new (StructSchema as any)(children, defaultValue);
 }
@@ -183,7 +183,7 @@ interface StructJuncture<JM extends JunctureMap> extends Juncture<Struct<JM>> { 
 
 // #region Builder
 function createStructJuncture<J extends AlterablePartialJuncture<StructDriver>,
-  JM extends JunctureMap>(baseJuncture: J, children: JM, defaultValue?: PartialStructValue<JM>) {
+  JM extends JunctureMap>(baseJuncture: J, children: JM, defaultValue?: StructPartialValue<JM>) {
   abstract class Struct extends baseJuncture {
     schema = createSchema(() => createStructSchema(children, defaultValue));
   }
@@ -191,13 +191,13 @@ function createStructJuncture<J extends AlterablePartialJuncture<StructDriver>,
 }
 
 interface StructJunctureBuilder {
-  of<JM extends JunctureMap>(children: JM, defaultValue?: PartialStructValue<JM>): StructJuncture<JM>;
+  of<JM extends JunctureMap>(children: JM, defaultValue?: StructPartialValue<JM>): StructJuncture<JM>;
 }
 
 export const STRUCT: StructJunctureBuilder = {
   of<JM extends JunctureMap>(
     children: JM,
-    defaultValue?: PartialStructValue<JM>
+    defaultValue?: StructPartialValue<JM>
   ) {
     return createStructJuncture(StructDriver, children, defaultValue) as any;
   }

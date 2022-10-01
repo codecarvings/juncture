@@ -88,6 +88,8 @@ export type FacadeCursor<D extends FacadeDriver> = Cursor<D> & {
   readonly inner: XpCursorOf<ChildOf<D>>;
 };
 
+export type FacadeXpCursor<D extends FacadeDriver> = Cursor<D>;
+
 // #endregion
 
 // #region Driver
@@ -104,11 +106,15 @@ export abstract class FacadeDriver extends ForgeableDriver {
     return new FacadeRealm(this, layout, realmMediator, engineMediator);
   }
 
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line class-methods-use-this
   [junctureSymbols.createCursor](realm: FacadeRealm): FacadeCursor<this> {
     const _: any = createCursor(realm);
     defineLazyProperty(_, childKey, () => realm.getChildRealm(childKey).xpCursor, { enumerable: true });
     return _;
+  }
+
+  [junctureSymbols.createXpCursor](realm: Realm): FacadeXpCursor<this> {
+    return super[junctureSymbols.createXpCursor](realm);
   }
 
   protected readonly FORGE!: FacadeForger<this>;

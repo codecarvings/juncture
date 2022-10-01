@@ -12,7 +12,7 @@ import { ValueOf } from '../driver';
 import { Engine } from '../engine';
 import { JunctureMap } from '../juncture';
 import { BIT } from '../lib/bit';
-import { PartialStructValue, STRUCT, StructSchema } from '../lib/struct';
+import { STRUCT, StructPartialValue, StructSchema } from '../lib/struct';
 import { Instruction } from '../operation/instruction';
 import { JunctureSchema } from '../schema';
 
@@ -215,7 +215,7 @@ test('experiment with frames 2', () => {
   }
 
   class StructSchema2<JM extends JunctureMap = JunctureMap> extends StructSchema<JM> {
-    constructor(readonly children: JM, defaultValue?: PartialStructValue<JM>) {
+    constructor(readonly children: JM, defaultValue?: StructPartialValue<JM>) {
       super(children, defaultValue);
     }
   }

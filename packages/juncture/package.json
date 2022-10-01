@@ -1,7 +1,7 @@
 {
   "name": "@codecarvings/juncture",
   "version": "0.1.0",
-  "description": "Composable & Reactive State Management for JS Apps",
+  "description": "Reactive & Composable State Management for JS Apps",
   "author": {
     "name": "Sergio Turolla",
     "url": "https://codecarvings.com"

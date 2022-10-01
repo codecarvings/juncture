@@ -11,16 +11,14 @@
 import { Engine } from '../../engine';
 import { JunctureMap } from '../../juncture';
 import { BIT } from '../../lib/bit';
-import {
-  PartialStructValue, STRUCT, StructRealm, StructSchema
-} from '../../lib/struct';
+import { STRUCT, StructPartialValue, StructRealm, StructSchema } from '../../lib/struct';
 import { Realm } from '../../operation/realm';
 import { Private } from '../../private-juncture';
 import { JunctureSchema } from '../../schema';
 
 // Exposes constructor as public
 export class TestStructSchema<JM extends JunctureMap> extends StructSchema<JM> {
-  constructor(readonly children: JM, defaultValue?: PartialStructValue<JM>) {
+  constructor(readonly children: JM, defaultValue?: StructPartialValue<JM>) {
     super(children, defaultValue);
   }
 }
