@@ -6,17 +6,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BaseDriver } from '../../base-driver';
 import { createSchema, Schema } from '../../design/descriptors/schema';
-import { JunctureSchema } from '../../design/schema';
 import { Driver } from '../../driver';
 import { EngineRealmMediator } from '../../engine';
+import { RealmManager } from '../../engine-parts/realm-manager';
 import { Juncture } from '../../juncture';
+import { junctureSymbols } from '../../juncture-symbols';
 import {
   Realm, RealmLayout, RealmMediator, RealmMountStatus
 } from '../../operation/realm';
 import { getRealm, isRealmHost } from '../../operation/realm-host';
-import { RealmManager } from '../../operation/realm-manager';
-import { jSymbols } from '../../symbols';
+import { JunctureSchema } from '../../schema';
 
 describe('Realm', () => {
   interface MyDriver extends Driver {
@@ -26,7 +27,7 @@ describe('Realm', () => {
   let driver: MyDriver;
 
   beforeEach(() => {
-    MyMod = class extends Driver {
+    MyMod = class extends BaseDriver {
       schema = createSchema(() => new JunctureSchema(''));
     };
     driver = Juncture.getDriver(MyMod);
@@ -121,20 +122,20 @@ describe('Realm', () => {
       expect(realm.mountStatus).toBe(RealmMountStatus.pending);
     });
 
-    describe('outerCursor property', () => {
-      test('should give access to a outer cursor associated with the Realm', () => {
-        expect(isRealmHost(realm.outerCursor)).toBe(true);
-        expect(getRealm(realm.outerCursor)).toBe(realm);
+    describe('xpCursor property', () => {
+      test('should give access to a exposed cursor associated with the Realm', () => {
+        expect(isRealmHost(realm.xpCursor)).toBe(true);
+        expect(getRealm(realm.xpCursor)).toBe(realm);
       });
 
-      test('should invoke the driver[jSymbols.createOuterCursor] factory only once the first time is accessed', () => {
-        (driver as any)[jSymbols.createOuterCursor] = jest.fn(driver[jSymbols.createOuterCursor]);
-        expect(driver[jSymbols.createOuterCursor]).toBeCalledTimes(0);
-        expect(isRealmHost(realm.outerCursor)).toBe(true);
-        expect(getRealm(realm.outerCursor)).toBe(realm);
-        expect(driver[jSymbols.createOuterCursor]).toBeCalledTimes(1);
-        expect(isRealmHost(realm.outerCursor)).toBe(true);
-        expect(driver[jSymbols.createOuterCursor]).toBeCalledTimes(1);
+      test('should invoke the driver[jSymbols.createXpCursor] factory only once the first time is accessed', () => {
+        (driver as any)[junctureSymbols.createXpCursor] = jest.fn(driver[junctureSymbols.createXpCursor]);
+        expect(driver[junctureSymbols.createXpCursor]).toBeCalledTimes(0);
+        expect(isRealmHost(realm.xpCursor)).toBe(true);
+        expect(getRealm(realm.xpCursor)).toBe(realm);
+        expect(driver[junctureSymbols.createXpCursor]).toBeCalledTimes(1);
+        expect(isRealmHost(realm.xpCursor)).toBe(true);
+        expect(driver[junctureSymbols.createXpCursor]).toBeCalledTimes(1);
       });
     });
 
@@ -169,7 +170,7 @@ describe('Realm', () => {
       test('should throw error if tryng to access the cursor property', () => {
         expect(() => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _ = realm.outerCursor;
+          const _ = realm.xpCursor;
         }).toThrow();
       });
     });

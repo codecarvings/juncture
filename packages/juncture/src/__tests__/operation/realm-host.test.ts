@@ -6,16 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BaseDriver } from '../../base-driver';
 import { createSchema } from '../../design/descriptors/schema';
-import { JunctureSchema } from '../../design/schema';
-import { Driver } from '../../driver';
 import { EngineRealmMediator } from '../../engine';
 import { Juncture } from '../../juncture';
+import { junctureSymbols } from '../../juncture-symbols';
 import { Realm, RealmLayout, RealmMediator } from '../../operation/realm';
 import { addRealmLink, getRealm, isRealmHost } from '../../operation/realm-host';
-import { jSymbols } from '../../symbols';
+import { JunctureSchema } from '../../schema';
 
-class MyDriver extends Driver {
+class MyDriver extends BaseDriver {
   schema = createSchema(() => new JunctureSchema(''));
 }
 const driver = Juncture.getDriver(MyDriver);
@@ -54,7 +54,7 @@ describe('addRealmLink', () => {
   test('should add a property [jSymbols.realm] containing a refernce to the provided Realm', () => {
     const host: any = {};
     addRealmLink(host, realm1);
-    expect(host[jSymbols.realm]).toBe(realm1);
+    expect(host[junctureSymbols.realm]).toBe(realm1);
   });
 
   test('should return the provided container', () => {

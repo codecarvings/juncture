@@ -6,23 +6,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier, OuterCursorMapOfJunctureMap } from '../access';
+import { AccessModifier } from '../access-modifier';
 import { createSchema, Schema } from '../design/descriptors/schema';
-import { JunctureSchema } from '../design/schema';
 import { SchemaOf } from '../driver';
 import { EngineRealmMediator } from '../engine';
 import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
 import {
-  AlterablePartialJuncture, CursorMapOfJunctureMap, Juncture, JunctureMap, ValueOfJuncture
+  AlterablePartialJuncture, CursorMapOfJunctureMap, Juncture, JunctureMap, ValueOfJuncture, XpCursorMapOfJunctureMap
 } from '../juncture';
+import { junctureSymbols } from '../juncture-symbols';
 import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
 import { PathFragment } from '../operation/path';
 import {
   Realm, RealmLayout, RealmMap, RealmMediator
 } from '../operation/realm';
-import { jSymbols } from '../symbols';
-import { defineLazyProperty, mappedAssign } from '../tool/object';
+import { JunctureSchema } from '../schema';
+import { defineLazyProperty, mappedAssign } from '../utilities/object';
 
 // #region Value & Schema
 export type StructValue<JM extends JunctureMap> = {
@@ -31,13 +31,13 @@ export type StructValue<JM extends JunctureMap> = {
 export type PartialStructValue<JM extends JunctureMap> = {
   readonly [K in keyof JM]?: ValueOfJuncture<JM[K]>;
 };
-export class StructSchema<JM extends JunctureMap = any> extends JunctureSchema<StructValue<JM>> {
-  protected constructor(readonly Children: JM, defaultValue?: PartialStructValue<JM>) {
-    const childKeys = Object.keys(Children);
+export class StructSchema<JM extends JunctureMap = JunctureMap> extends JunctureSchema<StructValue<JM>> {
+  protected constructor(readonly children: JM, defaultValue?: PartialStructValue<JM>) {
+    const childKeys = Object.keys(children);
     const childDefaultValue = mappedAssign(
       { },
       childKeys,
-      key => Juncture.getSchema(Children[key]).defaultValue
+      key => Juncture.getSchema(children[key]).defaultValue
     );
     const mergedDefaultValue = defaultValue !== undefined ? {
       ...childDefaultValue,
@@ -45,8 +45,8 @@ export class StructSchema<JM extends JunctureMap = any> extends JunctureSchema<S
     } : childDefaultValue;
     super(mergedDefaultValue);
     this.childKeys = childKeys;
-    this.outerChildKeys = childKeys.filter(key => {
-      if (Children[key].access === AccessModifier.private) {
+    this.xpChildKeys = childKeys.filter(key => {
+      if (children[key].access === AccessModifier.private) {
         return false;
       }
       return true;
@@ -55,14 +55,14 @@ export class StructSchema<JM extends JunctureMap = any> extends JunctureSchema<S
 
   readonly childKeys: string[];
 
-  readonly outerChildKeys: string[];
+  readonly xpChildKeys: string[];
 }
 
 function createStructSchema<JM extends JunctureMap>(
-  Children: JM,
+  children: JM,
   defaultValue?: PartialStructValue<JM>
 ): StructSchema<JM> {
-  return new (StructSchema as any)(Children, defaultValue);
+  return new (StructSchema as any)(children, defaultValue);
 }
 // #endregion
 
@@ -111,36 +111,34 @@ export class StructRealm extends Realm {
             this._value[key] = childValue;
           }
         };
-        return Juncture.createRealm(this.schema.Children[key], layout, realmMediator, this.engineMediator);
+        return Juncture.createRealm(this.schema.children[key], layout, realmMediator, this.engineMediator);
       }
     );
   }
 
   protected readonly children: RealmMap = this.createChildren();
 
-  resolveFragment(fragment: PathFragment): Realm {
+  getChildRealm(fragment: PathFragment): Realm {
     const result = this.children[fragment as any];
     if (result) {
       return result;
     }
-    return super.resolveFragment(fragment);
+    return super.getChildRealm(fragment);
   }
   // #endregion
 }
 
 export type StructCursor<D extends StructDriver> = Cursor<D> & CursorMapOfJunctureMap<ChildrenOf<D>>;
-
-export type OuterStructCursor<D extends StructDriver> = Cursor<D> & OuterCursorMapOfJunctureMap<ChildrenOf<D>>;
-
+export type StructXpCursor<D extends StructDriver> = Cursor<D> & XpCursorMapOfJunctureMap<ChildrenOf<D>>;
 // #endregion
 
 // #region Driver
 export abstract class StructDriver extends ForgeableDriver {
-  protected [jSymbols.createForger](): StructForger<this> {
+  protected [junctureSymbols.createForger](): StructForger<this> {
     return new StructForger(this);
   }
 
-  [jSymbols.createRealm](
+  [junctureSymbols.createRealm](
     layout: RealmLayout,
     mediator: RealmMediator,
     engineMediator: EngineRealmMediator
@@ -149,19 +147,19 @@ export abstract class StructDriver extends ForgeableDriver {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](realm: StructRealm): StructCursor<this> {
+  [junctureSymbols.createCursor](realm: StructRealm): StructCursor<this> {
     const _: any = createCursor(realm);
     realm.schema.childKeys.forEach(key => {
-      defineLazyProperty(_, key, () => realm.resolveFragment(key).outerCursor, { enumerable: true });
+      defineLazyProperty(_, key, () => realm.getChildRealm(key).xpCursor, { enumerable: true });
     });
     return _;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createOuterCursor](realm: StructRealm): OuterStructCursor<this> {
+  [junctureSymbols.createXpCursor](realm: StructRealm): StructXpCursor<this> {
     const _: any = createCursor(realm);
-    realm.schema.outerChildKeys.forEach(key => {
-      defineLazyProperty(_, key, () => realm.resolveFragment(key).outerCursor, { enumerable: true });
+    realm.schema.xpChildKeys.forEach(key => {
+      defineLazyProperty(_, key, () => realm.getChildRealm(key).xpCursor, { enumerable: true });
     });
     return _;
   }
@@ -172,7 +170,7 @@ export abstract class StructDriver extends ForgeableDriver {
 }
 
 // ---  Derivations
-export type ChildrenOf<D extends StructDriver> = SchemaOf<D>['Children'];
+export type ChildrenOf<D extends StructDriver> = SchemaOf<D>['children'];
 // #endregion
 
 // #region Juncture
@@ -185,21 +183,23 @@ interface StructJuncture<JM extends JunctureMap> extends Juncture<Struct<JM>> { 
 
 // #region Builder
 function createStructJuncture<J extends AlterablePartialJuncture<StructDriver>,
-  JM extends JunctureMap>(BaseJuncture: J, Children: JM, defaultValue?: PartialStructValue<JM>) {
-  abstract class Struct extends BaseJuncture {
-    schema = createSchema(() => createStructSchema(Children, defaultValue));
+  JM extends JunctureMap>(baseJuncture: J, children: JM, defaultValue?: PartialStructValue<JM>) {
+  abstract class Struct extends baseJuncture {
+    schema = createSchema(() => createStructSchema(children, defaultValue));
   }
   return Struct;
 }
 
 interface StructJunctureBuilder {
-  Of<JM extends JunctureMap>(Children: JM, defaultValue?: PartialStructValue<JM>): StructJuncture<JM>;
+  of<JM extends JunctureMap>(children: JM, defaultValue?: PartialStructValue<JM>): StructJuncture<JM>;
 }
 
-export const $Struct: StructJunctureBuilder = {
-  Of: <JM extends JunctureMap>(
-    Children: JM,
+export const STRUCT: StructJunctureBuilder = {
+  of<JM extends JunctureMap>(
+    children: JM,
     defaultValue?: PartialStructValue<JM>
-  ) => createStructJuncture(StructDriver, Children, defaultValue) as any
+  ) {
+    return createStructJuncture(StructDriver, children, defaultValue) as any;
+  }
 };
 // #endregion

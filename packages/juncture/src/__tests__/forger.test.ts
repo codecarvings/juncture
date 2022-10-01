@@ -9,7 +9,8 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-assign */
 
-import { AccessModifier } from '../access';
+import { AccessModifier } from '../access-modifier';
+import { BaseDriver } from '../base-driver';
 import { isDescriptor } from '../design/descriptor';
 import { DescriptorType } from '../design/descriptor-type';
 import { ParamSelector, PrivateParamSelector } from '../design/descriptors/param-selector';
@@ -17,12 +18,12 @@ import { PrivateReactor, Reactor } from '../design/descriptors/reactor';
 import { createSchema, Schema } from '../design/descriptors/schema';
 import { PrivateSelector, Selector } from '../design/descriptors/selector';
 import { PrivateSynthReactor, SynthReactor } from '../design/descriptors/synth-reactor';
-import { JunctureSchema } from '../design/schema';
 import { Driver } from '../driver';
 import { Forger, PrivateForger } from '../forger';
+import { junctureSymbols } from '../juncture-symbols';
 import { Instruction } from '../operation/instruction';
-import { jSymbols } from '../symbols';
-import { PropertyAssembler } from '../tool/property-assembler';
+import { JunctureSchema } from '../schema';
+import { PropertyAssembler } from '../utilities/property-assembler';
 
 interface MyDriver extends Driver {
   schema: Schema<JunctureSchema<string>>;
@@ -113,7 +114,7 @@ describe('Forger', () => {
     });
 
     test('should accept a driver', () => {
-      class MyDriver2 extends Driver {
+      class MyDriver2 extends BaseDriver {
         schema = createSchema(() => new JunctureSchema(''));
       }
       const driver = new MyDriver2();
@@ -244,7 +245,7 @@ describe('Forger', () => {
             const proxy = forger.override(myOriginalDesc);
             container.myDesc = proxy.selector(({ parent }) => `${parent}2`);
             assembler.wire();
-            const result = container.myDesc[jSymbols.payload]();
+            const result = container.myDesc[junctureSymbols.payload]();
             expect(result).toBe('original2');
           });
 
@@ -309,7 +310,7 @@ describe('Forger', () => {
             const proxy = forger.override(myOriginalDesc);
             container.myDesc = proxy.paramSelector(({ parent }) => () => parent('abc'));
             assembler.wire();
-            const result = container.myDesc[jSymbols.payload]()();
+            const result = container.myDesc[junctureSymbols.payload]()();
             expect(result).toBe(3);
           });
 
@@ -380,7 +381,7 @@ describe('Forger', () => {
             const proxy = forger.override(myOriginalDesc);
             container.myDesc = proxy.synthReactor(({ parent }) => (value: string) => parent(`${value}2`));
             assembler.wire();
-            const result = container.myDesc[jSymbols.payload]()('abc');
+            const result = container.myDesc[junctureSymbols.payload]()('abc');
             expect(result).toEqual([{
               target: null,
               key: 'dummy',
@@ -456,7 +457,7 @@ describe('Forger', () => {
             const proxy = forger.override(myOriginalDesc);
             container.myDesc = proxy.reactor(({ parent }) => (value: string) => parent(`${value}2`));
             assembler.wire();
-            const result = container.myDesc[jSymbols.payload]()('abc');
+            const result = container.myDesc[junctureSymbols.payload]()('abc');
             expect(result).toBe('ABC2');
           });
 

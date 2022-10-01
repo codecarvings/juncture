@@ -6,16 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BaseDriver } from '../../../base-driver';
 import { createSchema } from '../../../design/descriptors/schema';
-import { JunctureSchema } from '../../../design/schema';
-import { Driver } from '../../../driver';
 import { EngineRealmMediator } from '../../../engine';
 import { Juncture } from '../../../juncture';
 import { createCursor } from '../../../operation/frame-equipment/cursor';
 import { Realm, RealmLayout, RealmMediator } from '../../../operation/realm';
 import { getRealm, isRealmHost } from '../../../operation/realm-host';
+import { JunctureSchema } from '../../../schema';
 
-class MyDriver extends Driver {
+class MyDriver extends BaseDriver {
   schema = createSchema(() => new JunctureSchema(''));
 }
 const driver = Juncture.getDriver(MyDriver);

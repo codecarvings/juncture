@@ -8,24 +8,23 @@
 
 /* eslint-disable max-len */
 
-import { jSymbols } from '../symbols';
-import { defineLazyProperty } from '../tool/object';
+import { junctureSymbols } from '../juncture-symbols';
+import { defineLazyProperty } from '../utilities/object';
 import { Dispatcher } from './action';
-import { BehaviorHandler } from './behavior-supervisor';
+import { BehaviorHandler } from './behavior-handler';
 import { Cursor } from './frame-equipment/cursor';
-import { createValueHandler, ValueHandler } from './frame-equipment/value-handler';
-import { createOuterFrame, OuterFrame } from './frames/outer-frame';
+import { createValueAccessor, ValueAccessor } from './frame-equipment/value-accessor';
 import {
-  AccessorKit, OuterAccessorKit, prepareAccessorKit, prepareOuterAccessorKit
-} from './kits/accessor-kit';
-import {
-  BinKit, OuterBinKit, prepareBinKit, prepareOuterBinKit
+  BinKit, prepareBinKit, prepareXpBinKit, XpBinKit
 } from './kits/bin-kit';
 import { FrameKit, prepareFrameKit } from './kits/frame-kit';
+import {
+  PickerKit, preparePickerKit, prepareXpPickerKit, XpPickerKit
+} from './kits/picker-kit';
 import { Realm } from './realm';
 
 export class Core {
-  readonly value!: ValueHandler;
+  readonly value!: ValueAccessor;
 
   readonly cursor!: Cursor;
 
@@ -33,28 +32,25 @@ export class Core {
 
   readonly bins: BinKit = {} as any;
 
-  readonly accessors: AccessorKit = {} as any;
+  readonly pickers: PickerKit = {} as any;
 
-  readonly outerCursor!: Cursor;
+  readonly xpCursor!: Cursor;
 
-  readonly outerFrame!: OuterFrame;
+  readonly xpBins: XpBinKit = {} as any;
 
-  readonly outerBins: OuterBinKit = {} as any;
-
-  readonly outerAccessors: OuterAccessorKit = {} as any;
+  readonly xpPickers: XpPickerKit = {} as any;
 
   constructor(protected readonly realm: Realm, dispatcher: Dispatcher) {
-    defineLazyProperty(this, 'value', () => createValueHandler(realm));
+    defineLazyProperty(this, 'value', () => createValueAccessor(realm));
 
-    defineLazyProperty(this, 'cursor', () => realm.driver[jSymbols.createCursor](realm));
-    prepareFrameKit(this.frames, this, this, this.accessors);
+    defineLazyProperty(this, 'cursor', () => realm.driver[junctureSymbols.createCursor](realm));
+    prepareFrameKit(this.frames, this, this, this.pickers);
     prepareBinKit(this.bins, realm, this.frames, dispatcher);
-    prepareAccessorKit(this.accessors, realm, this.bins);
+    preparePickerKit(this.pickers, realm, this.bins);
 
-    defineLazyProperty(this, 'outerCursor', () => realm.driver[jSymbols.createOuterCursor](realm));
-    defineLazyProperty(this, 'outerFrame', () => createOuterFrame(this, this, this.outerAccessors));
-    prepareOuterBinKit(this.outerBins, realm, this.frames, dispatcher);
-    prepareOuterAccessorKit(this.outerAccessors, realm);
+    defineLazyProperty(this, 'xpCursor', () => realm.driver[junctureSymbols.createXpCursor](realm));
+    prepareXpBinKit(this.xpBins, realm, this.frames, dispatcher);
+    prepareXpPickerKit(this.xpPickers, realm);
 
     this.behaviors = this.createBehaviorHandler();
   }

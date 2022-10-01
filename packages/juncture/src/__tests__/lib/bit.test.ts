@@ -15,16 +15,16 @@ import {
   createSchema, Schema
 } from '../../design/descriptors/schema';
 import { createSelector } from '../../design/descriptors/selector';
-import { JunctureSchema } from '../../design/schema';
-import { Driver } from '../../driver';
 import { ForgeableDriver } from '../../forgeable-driver';
 import { Juncture } from '../../juncture';
+import { junctureSymbols } from '../../juncture-symbols';
 import {
-  $Bit, BitDriver, BitForger, BitSchema, SettableBitDriver,
+  BIT,
+  BitDriver, BitForger, BitSchema, SettableBitDriver,
   SettableBooleanBitDriver, SettableNumberBitDriver, SettableStringBitDriver, SettableSymbolBitDriver
 } from '../../lib/bit';
-import { jSymbols } from '../../symbols';
-import { PropertyAssembler } from '../../tool/property-assembler';
+import { JunctureSchema } from '../../schema';
+import { PropertyAssembler } from '../../utilities/property-assembler';
 
 // Exposes constructor as public
 export class TestBitSchema<V> extends BitSchema<V> {
@@ -116,7 +116,7 @@ describe('BitForger', () => {
               firstName: `${parent.defaultValue.firstName}2`
             }));
             assembler.wire();
-            const result: BitSchema<{ firstName: string }> = container.mySchema[jSymbols.payload]();
+            const result: BitSchema<{ firstName: string }> = container.mySchema[junctureSymbols.payload]();
             expect(result.defaultValue).toEqual({
               firstName: 'Sergio2'
             });
@@ -147,8 +147,10 @@ describe('Bit', () => {
     class MyBit extends BitDriver {
       schema = createSchema(() => new TestBitSchema(undefined));
     }
-    const driver = new MyBit();
-    expect(driver).toBeInstanceOf(Driver);
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const driver = new MyBit();
+    }).not.toThrow();
   });
 
   test('should have BitForger as forger', () => {
@@ -217,281 +219,281 @@ describe('SettableSymbolBit', () => {
   });
 });
 
-describe('jBit - Bit Builder', () => {
+describe('BIT - Bit Builder', () => {
   test('should be an object', () => {
-    expect(typeof $Bit).toBe('object');
+    expect(typeof BIT).toBe('object');
   });
 
   describe('String', () => {
     test('should return a subclass of Bit', () => {
-      expect($Bit.String.prototype).toBeInstanceOf(BitDriver);
+      expect(BIT.string.prototype).toBeInstanceOf(BitDriver);
     });
 
     test('should always return the same Juncture', () => {
-      const s1 = $Bit.String;
-      const s2 = $Bit.String;
+      const s1 = BIT.string;
+      const s2 = BIT.string;
       expect(s2).toBe(s1);
     });
 
     test('should return a Juncture with default value ""', () => {
-      const schema = Juncture.getSchema($Bit.String);
+      const schema = Juncture.getSchema(BIT.string);
       expect(schema.defaultValue).toBe('');
     });
   });
 
   describe('Number', () => {
     test('should return a subclass of Bit', () => {
-      expect($Bit.Number.prototype).toBeInstanceOf(BitDriver);
+      expect(BIT.number.prototype).toBeInstanceOf(BitDriver);
     });
 
     test('should always return the same Juncture', () => {
-      const s1 = $Bit.Number;
-      const s2 = $Bit.Number;
+      const s1 = BIT.number;
+      const s2 = BIT.number;
       expect(s2).toBe(s1);
     });
 
     test('should return a Juncture with default value 0', () => {
-      const schema = Juncture.getSchema($Bit.Number);
+      const schema = Juncture.getSchema(BIT.number);
       expect(schema.defaultValue).toBe(0);
     });
   });
 
   describe('Boolean', () => {
     test('should return a subclass of Bit', () => {
-      expect($Bit.Boolean.prototype).toBeInstanceOf(BitDriver);
+      expect(BIT.boolean.prototype).toBeInstanceOf(BitDriver);
     });
 
     test('should always return the same Juncture', () => {
-      const s1 = $Bit.Boolean;
-      const s2 = $Bit.Boolean;
+      const s1 = BIT.boolean;
+      const s2 = BIT.boolean;
       expect(s2).toBe(s1);
     });
 
     test('should return a Juncture with default value false', () => {
-      const schema = Juncture.getSchema($Bit.Boolean);
+      const schema = Juncture.getSchema(BIT.boolean);
       expect(schema.defaultValue).toBe(false);
     });
   });
 
   describe('Symbol', () => {
     test('should return a subclass of Bit', () => {
-      expect($Bit.Symbol.prototype).toBeInstanceOf(BitDriver);
+      expect(BIT.symbol.prototype).toBeInstanceOf(BitDriver);
     });
 
     test('should always return the same Juncture', () => {
-      const s1 = $Bit.Symbol;
-      const s2 = $Bit.Symbol;
+      const s1 = BIT.symbol;
+      const s2 = BIT.symbol;
       expect(s2).toBe(s1);
     });
 
     test('should return a Juncture with default value jSymbols.bitDefault', () => {
-      const schema = Juncture.getSchema($Bit.Symbol);
-      expect(schema.defaultValue).toBe(jSymbols.bitDefault);
+      const schema = Juncture.getSchema(BIT.symbol);
+      expect(schema.defaultValue).toBe(junctureSymbols.bitDefault);
     });
   });
 
-  describe('Of', () => {
+  describe('of', () => {
     test('should be a method', () => {
-      expect(typeof $Bit.Of).toBe('function');
+      expect(typeof BIT.of).toBe('function');
     });
 
     describe('when passing an empty string as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of('').prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of('').prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.Of('');
-        const s2 = $Bit.Of('');
+        const s1 = BIT.of('');
+        const s2 = BIT.of('');
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value ""', () => {
-        const schema = Juncture.getSchema($Bit.Of(''));
+        const schema = Juncture.getSchema(BIT.of(''));
         expect(schema.defaultValue).toBe('');
       });
     });
 
     describe('when passing a non-empty string as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of('').prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of('').prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return a different Juncture', () => {
         const defaultValue = 'a';
-        const s1 = $Bit.Of(defaultValue);
-        const s2 = $Bit.Of(defaultValue);
+        const s1 = BIT.of(defaultValue);
+        const s2 = BIT.of(defaultValue);
         expect(s2).not.toBe(s1);
       });
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = 'X';
-        const schema = Juncture.getSchema($Bit.Of(defaultValue));
+        const schema = Juncture.getSchema(BIT.of(defaultValue));
         expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
     describe('when passing the number zero as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(0).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(0).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.Of(0);
-        const s2 = $Bit.Of(0);
+        const s1 = BIT.of(0);
+        const s2 = BIT.of(0);
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value 0', () => {
-        const schema = Juncture.getSchema($Bit.Of(0));
+        const schema = Juncture.getSchema(BIT.of(0));
         expect(schema.defaultValue).toBe(0);
       });
     });
 
     describe('when passing a non-zero number as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(1).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(1).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return a different Juncture', () => {
         const defaultValue = 1;
-        const s1 = $Bit.Of(defaultValue);
-        const s2 = $Bit.Of(defaultValue);
+        const s1 = BIT.of(defaultValue);
+        const s2 = BIT.of(defaultValue);
         expect(s2).not.toBe(s1);
       });
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = 2;
-        const schema = Juncture.getSchema($Bit.Of(defaultValue));
+        const schema = Juncture.getSchema(BIT.of(defaultValue));
         expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
     describe('when passing the boolean value "false" as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(false).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(false).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.Of(false);
-        const s2 = $Bit.Of(false);
+        const s1 = BIT.of(false);
+        const s2 = BIT.of(false);
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value "false"', () => {
-        const schema = Juncture.getSchema($Bit.Of(false));
+        const schema = Juncture.getSchema(BIT.of(false));
         expect(schema.defaultValue).toBe(false);
       });
     });
 
     describe('when passing the boolean value "true" as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(true).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(true).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return a different Juncture', () => {
         const defaultValue = true;
-        const s1 = $Bit.Of(defaultValue);
-        const s2 = $Bit.Of(defaultValue);
+        const s1 = BIT.of(defaultValue);
+        const s2 = BIT.of(defaultValue);
         expect(s2).not.toBe(s1);
       });
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = true;
-        const schema = Juncture.getSchema($Bit.Of(defaultValue));
+        const schema = Juncture.getSchema(BIT.of(defaultValue));
         expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
     describe('when passing the symbol jSymbols.bitDefault as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(jSymbols.bitDefault).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(junctureSymbols.bitDefault).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.Of(jSymbols.bitDefault);
-        const s2 = $Bit.Of(jSymbols.bitDefault);
+        const s1 = BIT.of(junctureSymbols.bitDefault);
+        const s2 = BIT.of(junctureSymbols.bitDefault);
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value jSymbols.bitDefault', () => {
-        const schema = Juncture.getSchema($Bit.Of(jSymbols.bitDefault));
-        expect(schema.defaultValue).toBe(jSymbols.bitDefault);
+        const schema = Juncture.getSchema(BIT.of(junctureSymbols.bitDefault));
+        expect(schema.defaultValue).toBe(junctureSymbols.bitDefault);
       });
     });
 
     describe('when passing a symbol different from jSymbols.bitDefault as paramter', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(Symbol('test')).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(Symbol('test')).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return a different Juncture', () => {
         const defaultValue = Symbol('test');
-        const s1 = $Bit.Of(defaultValue);
-        const s2 = $Bit.Of(defaultValue);
+        const s1 = BIT.of(defaultValue);
+        const s2 = BIT.of(defaultValue);
         expect(s2).not.toBe(s1);
       });
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = Symbol('test');
-        const schema = Juncture.getSchema($Bit.Of(defaultValue));
+        const schema = Juncture.getSchema(BIT.of(defaultValue));
         expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
-    describe('when passing an object as parameter', () => {
+    describe('when passing an object as argument', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of({ myValue: 1 }).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of({ myValue: 1 }).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return a different Juncture', () => {
         const defaultValue = { myValue: 1 };
-        const s1 = $Bit.Of(defaultValue);
-        const s2 = $Bit.Of(defaultValue);
+        const s1 = BIT.of(defaultValue);
+        const s2 = BIT.of(defaultValue);
         expect(s2).not.toBe(s1);
       });
 
       test('should return a Juncture with default value set', () => {
         const defaultValue = { myValue: 1 };
-        const schema = Juncture.getSchema($Bit.Of(defaultValue));
+        const schema = Juncture.getSchema(BIT.of(defaultValue));
         expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
-    describe('when passing null as parameter', () => {
+    describe('when passing null as argument', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(null).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(null).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return a different Juncture', () => {
         const defaultValue = null;
-        const s1 = $Bit.Of(defaultValue);
-        const s2 = $Bit.Of(defaultValue);
+        const s1 = BIT.of(defaultValue);
+        const s2 = BIT.of(defaultValue);
         expect(s2).not.toBe(s1);
       });
 
       test('should return a Juncture with default value set to null', () => {
         const defaultValue = null;
-        const schema = Juncture.getSchema($Bit.Of(defaultValue));
+        const schema = Juncture.getSchema(BIT.of(defaultValue));
         expect(schema.defaultValue).toBe(defaultValue);
       });
     });
 
-    describe('when passing undefined as parameter', () => {
+    describe('when passing undefined as argument', () => {
       test('should return a subclass of Bit', () => {
-        expect($Bit.Of(undefined).prototype).toBeInstanceOf(BitDriver);
+        expect(BIT.of(undefined).prototype).toBeInstanceOf(BitDriver);
       });
 
       test('should always return a different Juncture', () => {
         const defaultValue = undefined;
-        const s1 = $Bit.Of(defaultValue);
-        const s2 = $Bit.Of(defaultValue);
+        const s1 = BIT.of(defaultValue);
+        const s2 = BIT.of(defaultValue);
         expect(s2).not.toBe(s1);
       });
 
       test('should return a Juncture with default value set to undefined', () => {
         const defaultValue = undefined;
-        const schema = Juncture.getSchema($Bit.Of(defaultValue));
+        const schema = Juncture.getSchema(BIT.of(defaultValue));
         expect(schema.defaultValue).toBe(defaultValue);
       });
     });
@@ -499,279 +501,279 @@ describe('jBit - Bit Builder', () => {
 
   describe('settable', () => {
     test('should be an object', () => {
-      expect(typeof $Bit.settable).toBe('object');
+      expect(typeof BIT.settable).toBe('object');
     });
 
     describe('String', () => {
       test('should return a subclass of SettableStringBit', () => {
-        expect($Bit.settable.String.prototype).toBeInstanceOf(SettableStringBitDriver);
+        expect(BIT.settable.string.prototype).toBeInstanceOf(SettableStringBitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.settable.String;
-        const s2 = $Bit.settable.String;
+        const s1 = BIT.settable.string;
+        const s2 = BIT.settable.string;
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value ""', () => {
-        const schema = Juncture.getSchema($Bit.settable.String);
+        const schema = Juncture.getSchema(BIT.settable.string);
         expect(schema.defaultValue).toBe('');
       });
     });
 
     describe('Number', () => {
       test('should return a subclass of SettableNumberBit', () => {
-        expect($Bit.settable.Number.prototype).toBeInstanceOf(SettableNumberBitDriver);
+        expect(BIT.settable.number.prototype).toBeInstanceOf(SettableNumberBitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.settable.Number;
-        const s2 = $Bit.settable.Number;
+        const s1 = BIT.settable.number;
+        const s2 = BIT.settable.number;
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value 0', () => {
-        const schema = Juncture.getSchema($Bit.settable.Number);
+        const schema = Juncture.getSchema(BIT.settable.number);
         expect(schema.defaultValue).toBe(0);
       });
     });
 
     describe('Boolean', () => {
       test('should return a subclass of SettableBooleanBit', () => {
-        expect($Bit.settable.Boolean.prototype).toBeInstanceOf(SettableBooleanBitDriver);
+        expect(BIT.settable.boolean.prototype).toBeInstanceOf(SettableBooleanBitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.settable.Boolean;
-        const s2 = $Bit.settable.Boolean;
+        const s1 = BIT.settable.boolean;
+        const s2 = BIT.settable.boolean;
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value false', () => {
-        const schema = Juncture.getSchema($Bit.settable.Boolean);
+        const schema = Juncture.getSchema(BIT.settable.boolean);
         expect(schema.defaultValue).toBe(false);
       });
     });
 
     describe('Symbol', () => {
       test('should return a subclass of SettableSymbolBit', () => {
-        expect($Bit.settable.Symbol.prototype).toBeInstanceOf(SettableSymbolBitDriver);
+        expect(BIT.settable.symbol.prototype).toBeInstanceOf(SettableSymbolBitDriver);
       });
 
       test('should always return the same Juncture', () => {
-        const s1 = $Bit.settable.Symbol;
-        const s2 = $Bit.settable.Symbol;
+        const s1 = BIT.settable.symbol;
+        const s2 = BIT.settable.symbol;
         expect(s2).toBe(s1);
       });
 
       test('should return a Juncture with default value jSymbols.bitDefault', () => {
-        const schema = Juncture.getSchema($Bit.settable.Symbol);
-        expect(schema.defaultValue).toBe(jSymbols.bitDefault);
+        const schema = Juncture.getSchema(BIT.settable.symbol);
+        expect(schema.defaultValue).toBe(junctureSymbols.bitDefault);
       });
     });
 
-    describe('Of', () => {
+    describe('of', () => {
       test('should be a method', () => {
-        expect(typeof $Bit.settable.Of).toBe('function');
+        expect(typeof BIT.settable.of).toBe('function');
       });
 
       describe('when passing an empty string as paramter', () => {
         test('should return a subclass of SettableStringBit', () => {
-          expect($Bit.settable.Of('').prototype).toBeInstanceOf(SettableStringBitDriver);
+          expect(BIT.settable.of('').prototype).toBeInstanceOf(SettableStringBitDriver);
         });
 
         test('should always return the same Juncture', () => {
-          const s1 = $Bit.settable.Of('');
-          const s2 = $Bit.settable.Of('');
+          const s1 = BIT.settable.of('');
+          const s2 = BIT.settable.of('');
           expect(s2).toBe(s1);
         });
 
         test('should return a Juncture with default value ""', () => {
-          const schema = Juncture.getSchema($Bit.settable.Of(''));
+          const schema = Juncture.getSchema(BIT.settable.of(''));
           expect(schema.defaultValue).toBe('');
         });
       });
 
       describe('when passing a non-empty string as paramter', () => {
         test('should return a subclass of SettableStringBit', () => {
-          expect($Bit.settable.Of('').prototype).toBeInstanceOf(SettableStringBitDriver);
+          expect(BIT.settable.of('').prototype).toBeInstanceOf(SettableStringBitDriver);
         });
 
         test('should always return a different Juncture', () => {
           const defaultValue = 'a';
-          const s1 = $Bit.settable.Of(defaultValue);
-          const s2 = $Bit.settable.Of(defaultValue);
+          const s1 = BIT.settable.of(defaultValue);
+          const s2 = BIT.settable.of(defaultValue);
           expect(s2).not.toBe(s1);
         });
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = 'X';
-          const schema = Juncture.getSchema($Bit.settable.Of(defaultValue));
+          const schema = Juncture.getSchema(BIT.settable.of(defaultValue));
           expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
       describe('when passing the number zero as paramter', () => {
         test('should return a subclass of SettableNumberBit', () => {
-          expect($Bit.settable.Of(0).prototype).toBeInstanceOf(SettableNumberBitDriver);
+          expect(BIT.settable.of(0).prototype).toBeInstanceOf(SettableNumberBitDriver);
         });
 
         test('should always return the same Juncture', () => {
-          const s1 = $Bit.settable.Of(0);
-          const s2 = $Bit.settable.Of(0);
+          const s1 = BIT.settable.of(0);
+          const s2 = BIT.settable.of(0);
           expect(s2).toBe(s1);
         });
 
         test('should return a Juncture with default value 0', () => {
-          const schema = Juncture.getSchema($Bit.settable.Of(0));
+          const schema = Juncture.getSchema(BIT.settable.of(0));
           expect(schema.defaultValue).toBe(0);
         });
       });
 
       describe('when passing a non-zero number as paramter', () => {
         test('should return a subclass of SettableNumberBit', () => {
-          expect($Bit.settable.Of(1).prototype).toBeInstanceOf(SettableNumberBitDriver);
+          expect(BIT.settable.of(1).prototype).toBeInstanceOf(SettableNumberBitDriver);
         });
 
         test('should always return a different Juncture', () => {
           const defaultValue = 1;
-          const s1 = $Bit.settable.Of(defaultValue);
-          const s2 = $Bit.settable.Of(defaultValue);
+          const s1 = BIT.settable.of(defaultValue);
+          const s2 = BIT.settable.of(defaultValue);
           expect(s2).not.toBe(s1);
         });
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = 2;
-          const schema = Juncture.getSchema($Bit.settable.Of(defaultValue));
+          const schema = Juncture.getSchema(BIT.settable.of(defaultValue));
           expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
       describe('when passing the boolean value "false" as paramter', () => {
         test('should return a subclass of SettableBooleanBit', () => {
-          expect($Bit.settable.Of(false).prototype).toBeInstanceOf(SettableBooleanBitDriver);
+          expect(BIT.settable.of(false).prototype).toBeInstanceOf(SettableBooleanBitDriver);
         });
 
         test('should always return the same Juncture', () => {
-          const s1 = $Bit.settable.Of(false);
-          const s2 = $Bit.settable.Of(false);
+          const s1 = BIT.settable.of(false);
+          const s2 = BIT.settable.of(false);
           expect(s2).toBe(s1);
         });
 
         test('should return a Juncture with default value "false"', () => {
-          const schema = Juncture.getSchema($Bit.settable.Of(false));
+          const schema = Juncture.getSchema(BIT.settable.of(false));
           expect(schema.defaultValue).toBe(false);
         });
       });
 
       describe('when passing the boolean value "true" as paramter', () => {
         test('should return a subclass of SettableBooleanBit', () => {
-          expect($Bit.settable.Of(true).prototype).toBeInstanceOf(SettableBooleanBitDriver);
+          expect(BIT.settable.of(true).prototype).toBeInstanceOf(SettableBooleanBitDriver);
         });
 
         test('should always return a different Juncture', () => {
           const defaultValue = true;
-          const s1 = $Bit.settable.Of(defaultValue);
-          const s2 = $Bit.settable.Of(defaultValue);
+          const s1 = BIT.settable.of(defaultValue);
+          const s2 = BIT.settable.of(defaultValue);
           expect(s2).not.toBe(s1);
         });
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = true;
-          const schema = Juncture.getSchema($Bit.settable.Of(defaultValue));
+          const schema = Juncture.getSchema(BIT.settable.of(defaultValue));
           expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
       describe('when passing the symbol jSymbols.bitDefault as paramter', () => {
         test('should return a subclass of SettableSymbolBit', () => {
-          expect($Bit.settable.Of(jSymbols.bitDefault).prototype).toBeInstanceOf(SettableSymbolBitDriver);
+          expect(BIT.settable.of(junctureSymbols.bitDefault).prototype).toBeInstanceOf(SettableSymbolBitDriver);
         });
 
         test('should always return the same Juncture', () => {
-          const s1 = $Bit.settable.Of(jSymbols.bitDefault);
-          const s2 = $Bit.settable.Of(jSymbols.bitDefault);
+          const s1 = BIT.settable.of(junctureSymbols.bitDefault);
+          const s2 = BIT.settable.of(junctureSymbols.bitDefault);
           expect(s2).toBe(s1);
         });
 
         test('should return a Juncture with default value jSymbols.bitDefault', () => {
-          const schema = Juncture.getSchema($Bit.settable.Of(jSymbols.bitDefault));
-          expect(schema.defaultValue).toBe(jSymbols.bitDefault);
+          const schema = Juncture.getSchema(BIT.settable.of(junctureSymbols.bitDefault));
+          expect(schema.defaultValue).toBe(junctureSymbols.bitDefault);
         });
       });
 
       describe('when passing a symbol different from jSymbols.bitDefault as paramter', () => {
         test('should return a subclass of SettableSymbolBit', () => {
-          expect($Bit.settable.Of(Symbol('test')).prototype).toBeInstanceOf(SettableSymbolBitDriver);
+          expect(BIT.settable.of(Symbol('test')).prototype).toBeInstanceOf(SettableSymbolBitDriver);
         });
 
         test('should always return a different Juncture', () => {
           const defaultValue = Symbol('test');
-          const s1 = $Bit.settable.Of(defaultValue);
-          const s2 = $Bit.settable.Of(defaultValue);
+          const s1 = BIT.settable.of(defaultValue);
+          const s2 = BIT.settable.of(defaultValue);
           expect(s2).not.toBe(s1);
         });
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = Symbol('test');
-          const schema = Juncture.getSchema($Bit.settable.Of(defaultValue));
+          const schema = Juncture.getSchema(BIT.settable.of(defaultValue));
           expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
-      describe('when passing an object as parameter', () => {
+      describe('when passing an object as argument', () => {
         test('should return a subclass of SettableBit', () => {
-          expect($Bit.settable.Of({ myValue: 1 }).prototype).toBeInstanceOf(SettableBitDriver);
+          expect(BIT.settable.of({ myValue: 1 }).prototype).toBeInstanceOf(SettableBitDriver);
         });
 
         test('should always return a different Juncture', () => {
           const defaultValue = { myValue: 1 };
-          const s1 = $Bit.settable.Of(defaultValue);
-          const s2 = $Bit.settable.Of(defaultValue);
+          const s1 = BIT.settable.of(defaultValue);
+          const s2 = BIT.settable.of(defaultValue);
           expect(s2).not.toBe(s1);
         });
 
         test('should return a Juncture with default value set', () => {
           const defaultValue = { myValue: 1 };
-          const schema = Juncture.getSchema($Bit.settable.Of(defaultValue));
+          const schema = Juncture.getSchema(BIT.settable.of(defaultValue));
           expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
-      describe('when passing null as parameter', () => {
+      describe('when passing null as argument', () => {
         test('should return a subclass of SettableBit', () => {
-          expect($Bit.settable.Of(null).prototype).toBeInstanceOf(SettableBitDriver);
+          expect(BIT.settable.of(null).prototype).toBeInstanceOf(SettableBitDriver);
         });
 
         test('should always return a different Juncture', () => {
           const defaultValue = null;
-          const s1 = $Bit.settable.Of(defaultValue);
-          const s2 = $Bit.settable.Of(defaultValue);
+          const s1 = BIT.settable.of(defaultValue);
+          const s2 = BIT.settable.of(defaultValue);
           expect(s2).not.toBe(s1);
         });
 
         test('should return a Juncture with default value set to null', () => {
           const defaultValue = null;
-          const schema = Juncture.getSchema($Bit.settable.Of(defaultValue));
+          const schema = Juncture.getSchema(BIT.settable.of(defaultValue));
           expect(schema.defaultValue).toBe(defaultValue);
         });
       });
 
-      describe('when passing undefined as parameter', () => {
+      describe('when passing undefined as argument', () => {
         test('should return a subclass of SettableBit', () => {
-          expect($Bit.settable.Of(undefined).prototype).toBeInstanceOf(SettableBitDriver);
+          expect(BIT.settable.of(undefined).prototype).toBeInstanceOf(SettableBitDriver);
         });
 
         test('should always return a different Juncture', () => {
           const defaultValue = undefined;
-          const s1 = $Bit.settable.Of(defaultValue);
-          const s2 = $Bit.settable.Of(defaultValue);
+          const s1 = BIT.settable.of(defaultValue);
+          const s2 = BIT.settable.of(defaultValue);
           expect(s2).not.toBe(s1);
         });
 
         test('should return a Juncture with default value set to undefined', () => {
           const defaultValue = undefined;
-          const schema = Juncture.getSchema($Bit.settable.Of(defaultValue));
+          const schema = Juncture.getSchema(BIT.settable.of(defaultValue));
           expect(schema.defaultValue).toBe(defaultValue);
         });
       });

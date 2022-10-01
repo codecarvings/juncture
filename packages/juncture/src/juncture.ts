@@ -6,23 +6,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from './access';
+import { AccessModifier } from './access-modifier';
 import {
-  CursorOf, Driver, OuterCursorOf, SchemaOf, ValueOf
+  CursorOf, Driver, SchemaOf, ValueOf, XpCursorOfDriver
 } from './driver';
 import { EngineRealmMediator } from './engine';
+import { junctureSymbols } from './juncture-symbols';
 import { Realm, RealmLayout, RealmMediator } from './operation/realm';
-import { jSymbols } from './symbols';
-import { getObjectAttachment } from './tool/object';
-import { Singleton } from './tool/singleton';
+import { PrivateJunctureAnnex } from './private-juncture';
+import { Setup } from './setup';
+import { getObjectAttachment } from './utilities/object';
+import { Singleton } from './utilities/singleton';
 
-// #region Symbols
-const schemaCacheSymbol = Symbol('schemaCache');
-interface JunctureSymbols {
-  readonly schemaCache: typeof schemaCacheSymbol;
+// #region Private Symbols
+const schemaSymbol = Symbol('schema');
+const setupSymbol = Symbol('setup');
+interface PrvSymbols {
+  readonly schema: typeof schemaSymbol;
+  readonly setup: typeof setupSymbol;
 }
-const junctureSymbols: JunctureSymbols = {
-  schemaCache: schemaCacheSymbol
+const prvSymbols: PrvSymbols = {
+  schema: schemaSymbol,
+  setup: setupSymbol
 };
 // #endregion
 
@@ -38,7 +43,7 @@ export type SchemaOfJuncture<J extends Juncture> = SchemaOf<InstanceType<J>>;
 export type ValueOfJuncture<J extends Juncture> = ValueOf<InstanceType<J>>;
 
 export type CursorOfJuncture<J extends Juncture> = CursorOf<InstanceType<J>>;
-export type OuterCursorOfJuncture<J extends Juncture> = OuterCursorOf<InstanceType<J>>;
+export type XpCursorOf<J extends Juncture> = XpCursorOfDriver<InstanceType<J>>;
 // #endregion
 
 // #region Additional juncture types
@@ -52,24 +57,30 @@ export type AlterablePartialJuncture<D extends Driver = Driver> = abstract new (
 
 // #region JunctureMap
 export interface JunctureMap {
-  readonly [key: string]: Juncture;
+  readonly [key: PropertyKey]: Juncture;
 }
 
 // ---  Derivations
 export type CursorMapOfJunctureMap<JM extends JunctureMap> = {
-  readonly [K in keyof JM]: OuterCursorOfJuncture<JM[K]>;
+  readonly [K in keyof JM]: XpCursorOf<JM[K]>;
+};
+export type XpCursorMapOfJunctureMap<JM extends JunctureMap> = {
+  readonly [K in keyof JM as JM[K] extends PrivateJunctureAnnex ? never : K]: XpCursorOf<JM[K]>;
 };
 // #endregion
 
-// #region JunctureSupplier
-interface JunctureSupplier {
-  getDriver<J extends Juncture>(Juncture: J): InstanceType<J>;
+// #region JunctureHelper
+interface JunctureHelper {
+  getDriver<J extends Juncture>(juncture: J): InstanceType<J>;
 
-  getSchema<J extends Juncture>(Juncture: J): SchemaOfJuncture<J>;
+  getSchema<J extends Juncture>(juncture: J): SchemaOfJuncture<J>;
   getSchema<D extends Driver>(driver: D): SchemaOf<D>;
 
+  getSetup<J extends Juncture>(juncture: J): Setup;
+  getSetup<D extends Driver>(driver: D): Setup;
+
   createRealm(
-    Juncture: Juncture,
+    juncture: Juncture,
     layoyt: RealmLayout,
     realmMediator: RealmMediator,
     engineMediator: EngineRealmMediator
@@ -77,24 +88,29 @@ interface JunctureSupplier {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Juncture: JunctureSupplier = {
-  getDriver<J extends Juncture>(Juncture: J): InstanceType<J> {
-    return Singleton.get(Juncture).instance;
+export const Juncture: JunctureHelper = {
+  getDriver<J extends Juncture>(juncture: J): InstanceType<J> {
+    return Singleton.get(juncture).instance;
   },
 
-  getSchema(driver_or_Juncture: Driver | Juncture) {
-    const driver = Singleton.getInstance(driver_or_Juncture) as Driver;
-    return getObjectAttachment(driver, junctureSymbols.schemaCache, () => driver.schema[jSymbols.payload]());
+  getSchema(driver_or_juncture: Driver | Juncture) {
+    const driver = Singleton.getInstance(driver_or_juncture) as Driver;
+    return getObjectAttachment(driver, prvSymbols.schema, () => driver.schema[junctureSymbols.payload]());
+  },
+
+  getSetup(driver_or_juncture: Driver | Juncture) {
+    const driver = Singleton.getInstance(driver_or_juncture) as Driver;
+    return getObjectAttachment(driver, prvSymbols.setup, () => driver[junctureSymbols.createSetup]());
   },
 
   createRealm(
-    Juncture: Juncture,
+    juncture: Juncture,
     layoyt: RealmLayout,
     realmMediator: RealmMediator,
     engineMediator: EngineRealmMediator
   ): Realm {
-    const driver = Singleton.get(Juncture).instance;
-    return driver[jSymbols.createRealm](layoyt, realmMediator, engineMediator);
+    const driver = Singleton.get(juncture).instance;
+    return driver[junctureSymbols.createRealm](layoyt, realmMediator, engineMediator);
   }
 };
 // #endregion

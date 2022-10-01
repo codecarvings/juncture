@@ -8,12 +8,12 @@
 
 /* eslint-disable max-len */
 
+import { BaseDriver } from '../base-driver';
 import { createSchema } from '../design/descriptors/schema';
-import { JunctureSchema } from '../design/schema';
-import { Driver } from '../driver';
 import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
 import { Juncture } from '../juncture';
+import { JunctureSchema } from '../schema';
 
 describe('ForgeableDriver', () => {
   class MyDriver extends ForgeableDriver {
@@ -21,11 +21,13 @@ describe('ForgeableDriver', () => {
 
     test = 21;
 
-    len = this.FORGE.selector(({ select }) => select().value);
+    'selector.len' = this.FORGE.selector(
+      ({ select }): number => select().value.length
+    );
   }
 
-  test('should be a subclass of Driver', () => {
-    expect(ForgeableDriver.prototype).toBeInstanceOf(Driver);
+  test('should be a subclass of BaseDriver', () => {
+    expect(ForgeableDriver.prototype).toBeInstanceOf(BaseDriver);
   });
 
   test('should be a class instantiable without arguments', () => {

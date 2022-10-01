@@ -67,6 +67,8 @@ importers:
       '@babel/core': ^7.0.0-0
       '@babel/plugin-syntax-flow': ^7.14.5
       '@babel/plugin-transform-react-jsx': ^7.14.9
+      '@codecarvings/juncture': workspace:*
+      '@codecarvings/react-juncture': workspace:*
       '@testing-library/dom': '>=7.21.4'
       '@testing-library/jest-dom': ^5.16.4
       '@testing-library/react': ^13.3.0
@@ -84,6 +86,8 @@ importers:
       '@babel/core': 7.18.2
       '@babel/plugin-syntax-flow': 7.18.6_@babel+core@7.18.2
       '@babel/plugin-transform-react-jsx': 7.18.6_@babel+core@7.18.2
+      '@codecarvings/juncture': link:../juncture
+      '@codecarvings/react-juncture': link:../react-juncture
       '@testing-library/dom': 8.14.0
       '@testing-library/jest-dom': 5.16.4
       '@testing-library/react': 13.3.0_biqbaboplfbrettd7655fr4n2y
@@ -8701,6 +8705,12 @@ packages:
   /react-dev-utils/12.0.1_tk65viuvszamevs34t2pxq3rwe:
     resolution: {integrity: sha512-84Ivxmr17KjUupyqzFode6xKhjwuEJDROWKJy/BthkL7Wn6NJ8h4WE6k/exAv6ImS+0oZLRRW5j/aINMHyeGeQ==}
     engines: {node: '>=14'}
+    peerDependencies:
+      typescript: '>=2.7'
+      webpack: '>=4'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
     dependencies:
       '@babel/code-frame': 7.16.7
       address: 1.2.0
@@ -8726,12 +8736,12 @@ packages:
       shell-quote: 1.7.3
       strip-ansi: 6.0.1
       text-table: 0.2.0
+      typescript: 4.7.4
+      webpack: 5.73.0
     transitivePeerDependencies:
       - eslint
       - supports-color
-      - typescript
       - vue-template-compiler
-      - webpack
     dev: false
 
   /react-dom/18.2.0_react@18.2.0:

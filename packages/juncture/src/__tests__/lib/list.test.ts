@@ -6,67 +6,79 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Private } from '../../access';
 import { Engine } from '../../engine';
-import { $Bit } from '../../lib/bit';
-import { $List, ListValue } from '../../lib/list';
-import { $Struct } from '../../lib/struct';
+import { BIT } from '../../lib/bit';
+import { LIST, ListValue } from '../../lib/list';
+import { STRUCT } from '../../lib/struct';
+import { Private } from '../../private-juncture';
 
 test('tmp test', () => {
-  class Person extends $Struct.Of({
-    name: $Bit.settable.String,
-    age: $Bit.settable.Number
+  class Person extends STRUCT.of({
+    name: BIT.settable.string,
+    age: BIT.settable.number
   }) { }
 
-  class App extends $Struct.Of({
-    list: $List.Of(Person)
+  class App extends STRUCT.of({
+    list: LIST.of(Person)
   }) {
-    setListValue = this.FORGE.reactor(() => (value: ListValue<typeof Person>) => ({
-      list: value
-    }));
+    'reactor.setListValue' = this.FORGE.reactor(
+      () => (value: ListValue<typeof Person>) => ({
+        list: value
+      })
+    );
   }
 
-  const engine = new Engine(App);
-  const { _, select, dispatch } = engine.frame;
+  const engine = new Engine();
+  engine.mountBranch({ juncture: App });
+  const { _, select, dispatch } = engine.createFrame({
+    app: App
+  });
 
-  expect(select(_.list).length).toBe(0);
-  dispatch().setListValue([{
+  expect(select(_.app.list).length).toBe(0);
+  dispatch(_.app).setListValue([{
     name: 'sergio',
     age: 47
   }]);
-  expect(select(_.list).length).toBe(1);
-  expect(select(_.list.item(0).age).value).toBe(47);
+  expect(select(_.app.list).length).toBe(1);
+  expect(select(_.app.list.item(0).age).value).toBe(47);
 
   engine.stop();
 });
 
 test('tmp test 2', () => {
-  class Person extends $Struct.Of({
-    name: $Bit.settable.String,
-    age: $Bit.settable.Number
+  class Person extends STRUCT.of({
+    name: BIT.settable.string,
+    age: BIT.settable.number
   }) { }
 
-  class App extends $Struct.Of({
-    list: class extends $List.Of(Private(Person)) {
-      firstName = this.FORGE.selector(({ value, _ }) => value(_.item(0).name));
+  class App extends STRUCT.of({
+    list: class extends LIST.of(Private(Person)) {
+      'selector.firstName' = this.FORGE.selector(
+        ({ value, _ }) => value(_.item(0).name)
+      );
     }
   }) {
-    setListValue = this.FORGE.reactor(() => (value: ListValue<typeof Person>) => ({
-      list: value
-    }));
+    'reactor.setListValue' = this.FORGE.reactor(
+      () => (value: ListValue<typeof Person>) => ({
+        list: value
+      })
+    );
   }
 
-  const engine = new Engine(App);
-  const { _, select, dispatch } = engine.frame;
+  const engine = new Engine();
+  engine.mountBranch({ juncture: App });
+  const { _, select, dispatch } = engine.createFrame({
+    app: App
+  });
 
-  expect(select(_.list).length).toBe(0);
+  expect(select(_.app.list).length).toBe(0);
 
-  dispatch().setListValue([{
+  dispatch(_.app).setListValue([{
     name: 'sergio',
     age: 47
   }]);
-  expect(select(_.list).length).toBe(1);
-  expect(select(_.list).firstName).toBe('sergio');
+  expect(select(_.app.list).length).toBe(1);
+  expect(select(_.app.list).firstName).toBe('sergio');
 
   engine.stop();
 });

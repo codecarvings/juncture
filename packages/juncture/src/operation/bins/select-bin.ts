@@ -6,16 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../access';
-import { Descriptor, getFilteredDescriptorKeys } from '../../design/descriptor';
-import {
-  DescriptorType, descriptorTypeFamilies, NotSuitableType
-} from '../../design/descriptor-type';
+import { AccessModifier } from '../../access-modifier';
+import { DescriptorKeyPrefix, DescriptorType } from '../../design/descriptor-type';
 import { GenericParamSelector } from '../../design/descriptors/param-selector';
 import { GenericSelector } from '../../design/descriptors/selector';
 import { Driver } from '../../driver';
-import { jSymbols } from '../../symbols';
-import { defineLazyProperty } from '../../tool/object';
+import { junctureSymbols } from '../../juncture-symbols';
+import { defineLazyProperty } from '../../utilities/object';
 import { DefaultFrameHost } from '../frames/frame';
 import { Realm } from '../realm';
 
@@ -23,23 +20,24 @@ import { Realm } from '../realm';
 type SelectBinItem<L> =
   L extends GenericSelector<infer B, any> ? B
     : L extends GenericParamSelector<infer B, any> ? B
-      : NotSuitableType;
+      : never;
 
-function createSelectBinBase<D extends Driver>(realm: Realm, frameHost: DefaultFrameHost<D>, outerFilter: boolean) {
-  const { driver } = realm;
-  const keys = getFilteredDescriptorKeys(driver, descriptorTypeFamilies.selectable, outerFilter);
+function createSelectBinBase<D extends Driver>(realm: Realm, frameHost: DefaultFrameHost<D>, isXp: boolean) {
+  const { map } = realm.setup.selectors;
+  const keys = isXp ? realm.setup.selectors.xpKeys : realm.setup.selectors.keys;
   const bin: any = {};
   keys.forEach(key => {
-    const desc: Descriptor<any, any, any> = (driver as any)[key];
+    const desc = map[key];
     if (desc.type === DescriptorType.selector) {
       Object.defineProperty(bin, key, {
-        get: () => desc[jSymbols.payload](frameHost.default)
+        get: () => desc[junctureSymbols.payload](frameHost.default)
       });
     } else {
+      // ParamSelector
       defineLazyProperty(
         bin,
         key,
-        () => (...args: any) => desc[jSymbols.payload](frameHost.default)(...args)
+        () => (...args: any) => desc[junctureSymbols.payload](frameHost.default)(...args)
       );
     }
   });
@@ -48,10 +46,8 @@ function createSelectBinBase<D extends Driver>(realm: Realm, frameHost: DefaultF
 // #endregion
 
 // #region SelectBin
-// Conditional type required as a workoaround for problems with key remapping
 export type SelectBin<D> = D extends any ? {
-  // readonly [K in keyof D as D[K] extends Selector<any, any> ? K : never]: SelectBinItem<D[K]>;
-  readonly [K in keyof D as K extends string ? K : never]: SelectBinItem<D[K]>;
+  readonly [K in keyof D as K extends `${DescriptorKeyPrefix.selector}.${infer W}` ? W : never] : SelectBinItem<D[K]>;
 } : never;
 
 export interface SelectBinHost<D> {
@@ -63,19 +59,21 @@ export function createSelectBin<D extends Driver>(realm: Realm, frameHost: Defau
 }
 // #endregion
 
-// #region OuterSelectBin
-export type OuterSelectBin<D> = {
-  readonly [K in keyof D as
-  D[K] extends GenericSelector<any, AccessModifier.public> ? K
-    : D[K] extends GenericParamSelector<any, AccessModifier.public> ? K
-      : never
-  ]: SelectBinItem<D[K]>;
+// #region XpSelectBin
+type XpSelectBinKey<L, K> =
+  L extends GenericSelector<any, AccessModifier.public> ? K
+    : L extends GenericParamSelector<any, AccessModifier.public> ? K
+      : never;
+
+export type XpSelectBin<D> = {
+  readonly [K in keyof D as K extends `${DescriptorKeyPrefix.selector}.${infer W}` ?
+    XpSelectBinKey<D[K], W> : never]: SelectBinItem<D[K]>;
 };
 
-export function createOuterSelectBin<D extends Driver>(
+export function createXpSelectBin<D extends Driver>(
   realm: Realm,
   frameHost: DefaultFrameHost<D>
-): OuterSelectBin<D> {
+): XpSelectBin<D> {
   return createSelectBinBase(realm, frameHost, true);
 }
 // #endregion

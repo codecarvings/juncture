@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { jSymbols } from '../symbols';
+import { junctureSymbols } from '../juncture-symbols';
 
 export type PathFragment = string | number | bigint | Symbol | boolean;
 export interface Path extends ReadonlyArray<PathFragment> { }
 
-// Just an usual Path, but bust be provided by a PersistentPathManager to guarantee persistence over time
+// Just an usual Path, but must be provided by a PersistentPathManager to guarantee persistence over time
 export interface PersistentPath extends Path {
-  [jSymbols.persistent]: undefined;
+  [junctureSymbols.persistent]: undefined;
 }
 
 function escapePathFragmentString(fragment: string): string {

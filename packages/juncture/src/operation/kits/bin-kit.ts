@@ -7,21 +7,21 @@
  */
 
 import { Driver } from '../../driver';
-import { defineLazyProperty } from '../../tool/object';
+import { defineLazyProperty } from '../../utilities/object';
 import { Dispatcher } from '../action';
 import {
-  ApplyBin, createApplyBin, createOuterApplyBin, OuterApplyBin
+  ApplyBin, createApplyBin, createXpApplyBin, XpApplyBin
 } from '../bins/apply-bin';
 import {
-  createDispatchBin, createOuterDispatchBin, DispatchBin, OuterDispatchBin
+  createDispatchBin, createXpDispatchBin, DispatchBin, XpDispatchBin
 } from '../bins/dispatch-bin';
+import { createEmitBin, EmitBin } from '../bins/emit-bin';
 import {
-  createEmitBin, createOuterEmitBin, EmitBin, OuterEmitBin
-} from '../bins/emit-bin';
+  createExecBin, createXpExecBin, ExecBin, XpExecBin
+} from '../bins/exec-bin';
 import {
-  createOuterSelectBin, createSelectBin, OuterSelectBin, SelectBin
+  createSelectBin, createXpSelectBin, SelectBin, XpSelectBin
 } from '../bins/select-bin';
-import { createOuterTriggerBin, OuterTriggerBin, TriggerBin } from '../bins/trigger-bin';
 import { Realm } from '../realm';
 import { FrameKit } from './frame-kit';
 
@@ -31,7 +31,7 @@ export interface BinKit<D extends Driver = Driver> {
   readonly apply: ApplyBin<D>;
   readonly dispatch: DispatchBin<D>;
   readonly emit: EmitBin<D>;
-  readonly trigger: TriggerBin<D>;
+  readonly exec: ExecBin<D>;
 }
 
 export function prepareBinKit(bins: any, realm: Realm, frames: FrameKit, dispatcher: Dispatcher) {
@@ -39,24 +39,22 @@ export function prepareBinKit(bins: any, realm: Realm, frames: FrameKit, dispatc
   defineLazyProperty(bins, 'apply', () => createApplyBin(realm));
   defineLazyProperty(bins, 'dispatch', () => createDispatchBin(realm, dispatcher));
   defineLazyProperty(bins, 'emit', () => createEmitBin(realm, frames));
-  defineLazyProperty(bins, 'trigger', () => createOuterTriggerBin(realm));
+  defineLazyProperty(bins, 'exec', () => createExecBin(realm));
 }
 // #endregion
 
-// #region OuterBinKit
-export interface OuterBinKit<D extends Driver = Driver> {
-  readonly select: OuterSelectBin<D>;
-  readonly apply: OuterApplyBin<D>;
-  readonly dispatch: OuterDispatchBin<D>;
-  readonly emit: OuterEmitBin<D>;
-  readonly trigger: OuterTriggerBin<D>;
+// #region XpBinKit
+export interface XpBinKit<D extends Driver = Driver> {
+  readonly select: XpSelectBin<D>;
+  readonly apply: XpApplyBin<D>;
+  readonly dispatch: XpDispatchBin<D>;
+  readonly exec: XpExecBin<D>;
 }
 
-export function prepareOuterBinKit(bins: any, realm: Realm, frames: FrameKit, dispatcher: Dispatcher) {
-  defineLazyProperty(bins, 'select', () => createOuterSelectBin(realm, frames));
-  defineLazyProperty(bins, 'apply', () => createOuterApplyBin(realm));
-  defineLazyProperty(bins, 'dispatch', () => createOuterDispatchBin(realm, dispatcher));
-  defineLazyProperty(bins, 'emit', () => createOuterEmitBin(realm, frames));
-  defineLazyProperty(bins, 'trigger', () => createOuterTriggerBin(realm));
+export function prepareXpBinKit(bins: any, realm: Realm, frames: FrameKit, dispatcher: Dispatcher) {
+  defineLazyProperty(bins, 'select', () => createXpSelectBin(realm, frames));
+  defineLazyProperty(bins, 'apply', () => createXpApplyBin(realm));
+  defineLazyProperty(bins, 'dispatch', () => createXpDispatchBin(realm, dispatcher));
+  defineLazyProperty(bins, 'exec', () => createXpExecBin(realm));
 }
 // #endregion

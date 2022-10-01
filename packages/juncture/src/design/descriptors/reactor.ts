@@ -6,11 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../access';
+import { AccessModifier } from '../../access-modifier';
 import { FrameConsumer } from '../../operation/frames/frame';
-import {
-  createDescriptor, Descriptor
-} from '../descriptor';
+import { createDescriptor, Descriptor } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
 export interface GenericReactor<B extends (...args: any) => any, A extends AccessModifier>

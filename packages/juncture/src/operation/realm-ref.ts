@@ -6,13 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { jSymbols } from '../symbols';
+import { junctureSymbols } from '../juncture-symbols';
 import { Path } from './path';
 import { Realm } from './realm';
 import { addRealmLink } from './realm-host';
 
 export interface RealmRef extends Path {
-  [jSymbols.realm]: Realm;
+  [junctureSymbols.realm]: Realm;
 }
 
 export function createRealmRef(realm: Realm): RealmRef {

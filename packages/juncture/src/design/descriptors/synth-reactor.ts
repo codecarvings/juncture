@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../access';
+import { AccessModifier } from '../../access-modifier';
 import { FrameConsumer } from '../../operation/frames/frame';
 import { Instruction } from '../../operation/instruction';
 import { createDescriptor, Descriptor } from '../descriptor';

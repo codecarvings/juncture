@@ -6,12 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../access';
-import {
-  createDescriptor, Descriptor
-} from '../descriptor';
+import { AccessModifier } from '../../access-modifier';
+import { JunctureSchema } from '../../schema';
+import { createDescriptor, Descriptor } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
-import { JunctureSchema } from '../schema';
 
 export type Schema<B extends JunctureSchema> =
   Descriptor<DescriptorType.schema, () => B, AccessModifier.public>;

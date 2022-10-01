@@ -8,16 +8,16 @@
 
 /* eslint-disable max-len */
 
+import { BaseDriver } from '../base-driver';
 import { createSchema } from '../design/descriptors/schema';
-import { JunctureSchema } from '../design/schema';
-import { Driver } from '../driver';
 import { EngineRealmMediator } from '../engine';
 import { Juncture } from '../juncture';
+import { junctureSymbols } from '../juncture-symbols';
 import { Realm, RealmLayout, RealmMediator } from '../operation/realm';
-import { jSymbols } from '../symbols';
+import { JunctureSchema } from '../schema';
 
 describe('Juncture', () => {
-  class MyDriver extends Driver {
+  class MyDriver extends BaseDriver {
     schema = createSchema(() => new JunctureSchema('dv'));
   }
 
@@ -53,8 +53,8 @@ describe('Juncture', () => {
     test('should invoke the [jSymbols.init] method of the driver when the instance is created', () => {
       let totCalls = 0;
       class MyDriver2 extends MyDriver {
-        [jSymbols.init]() {
-          super[jSymbols.init]();
+        [junctureSymbols.init]() {
+          super[junctureSymbols.init]();
           totCalls += 1;
         }
       }
@@ -86,11 +86,11 @@ describe('Juncture', () => {
       });
 
       test('should invoke the factory contained in the Schema of the "schema" property', () => {
-        class MyDriver2 extends Driver {
+        class MyDriver2 extends BaseDriver {
           schema = createSchema(jest.fn(() => new JunctureSchema('')));
         }
         const driver2 = Juncture.getDriver(MyDriver2);
-        const fn = driver2.schema[jSymbols.payload] as unknown as jest.Mock<JunctureSchema<string>, []>;
+        const fn = driver2.schema[junctureSymbols.payload] as unknown as jest.Mock<JunctureSchema<string>, []>;
         expect(fn).toHaveBeenCalledTimes(0);
         Juncture.getSchema(MyDriver2);
         expect(fn).toHaveBeenCalledTimes(1);
@@ -115,11 +115,11 @@ describe('Juncture', () => {
       });
 
       test('should invoke the factory contained in the Schema of the "schema" property', () => {
-        class MyDriver2 extends Driver {
+        class MyDriver2 extends BaseDriver {
           schema = createSchema(jest.fn(() => new JunctureSchema('')));
         }
         const driver2 = Juncture.getDriver(MyDriver2);
-        const fn = driver2.schema[jSymbols.payload] as unknown as jest.Mock<JunctureSchema<string>, []>;
+        const fn = driver2.schema[junctureSymbols.payload] as unknown as jest.Mock<JunctureSchema<string>, []>;
         expect(fn).toHaveBeenCalledTimes(0);
         Juncture.getSchema(driver2);
         expect(fn).toHaveBeenCalledTimes(1);
@@ -171,9 +171,9 @@ describe('Juncture', () => {
 
     test('should invoke the instance method [jSymbols.createRealm]', () => {
       const driver = Juncture.getDriver(MyDriver);
-      const originalFactory = driver[jSymbols.createRealm].bind(driver);
+      const originalFactory = driver[junctureSymbols.createRealm].bind(driver);
       const factory = jest.fn(originalFactory);
-      (driver as any)[jSymbols.createRealm] = factory;
+      (driver as any)[junctureSymbols.createRealm] = factory;
 
       expect(factory).toHaveBeenCalledTimes(0);
       Juncture.createRealm(MyDriver, layout, realmMediator, engineMediator);

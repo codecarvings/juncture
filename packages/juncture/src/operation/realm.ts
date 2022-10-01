@@ -8,22 +8,20 @@
 
 /* eslint-disable max-len */
 
-import { Descriptor } from '../design/descriptor';
 import { DescriptorType } from '../design/descriptor-type';
-import { JunctureSchema } from '../design/schema';
 import { Driver } from '../driver';
 import { EngineRealmMediator } from '../engine';
 import { Juncture } from '../juncture';
-import { jSymbols } from '../symbols';
-import { defineLazyProperty } from '../tool/object';
+import { junctureSymbols } from '../juncture-symbols';
+import { JunctureSchema } from '../schema';
+import { Setup } from '../setup';
+import { defineLazyProperty } from '../utilities/object';
 import { Core } from './core';
 import { Cursor } from './frame-equipment/cursor';
-import { OuterFrame } from './frames/outer-frame';
 import { Instruction } from './instruction';
-import { OuterBinKit } from './kits/bin-kit';
+import { XpBinKit } from './kits/bin-kit';
 import {
-  comparePaths,
-  Path, PathFragment, pathFragmentToString, pathToString, PersistentPath
+  comparePaths, PathFragment, pathFragmentToString, pathToString, PersistentPath
 } from './path';
 import { createRealmRef, RealmRef } from './realm-ref';
 
@@ -71,6 +69,8 @@ export class Realm {
 
   readonly schema: JunctureSchema;
 
+  readonly setup: Setup;
+
   constructor(
     readonly driver: Driver,
     readonly layout: RealmLayout,
@@ -80,6 +80,7 @@ export class Realm {
     defineLazyProperty(this, 'ref', () => createRealmRef(this));
 
     this.schema = Juncture.getSchema(driver);
+    this.setup = Juncture.getSetup(driver);
 
     const { registerValueUsage } = engineMediator.selection;
     const { path } = layout;
@@ -93,9 +94,8 @@ export class Realm {
     });
 
     this.core = this.createCore();
-    defineLazyProperty(this, 'outerCursor', () => this.core.outerCursor, revocablePropOptions);
-    defineLazyProperty(this, 'outerFrame', () => this.core.outerFrame, revocablePropOptions);
-    defineLazyProperty(this, 'outerBins', () => this.core.outerBins, revocablePropOptions);
+    defineLazyProperty(this, 'xpCursor', () => this.core.xpCursor, revocablePropOptions);
+    defineLazyProperty(this, 'xpBins', () => this.core.xpBins, revocablePropOptions);
 
     engineMediator.realm.enroll(this.createManagedRealm());
   }
@@ -107,11 +107,9 @@ export class Realm {
     return new Core(this, this.engineMediator.reaction);
   }
 
-  readonly outerCursor!: Cursor;
+  readonly xpCursor!: Cursor;
 
-  readonly outerFrame!: OuterFrame;
-
-  readonly outerBins!: OuterBinKit;
+  readonly xpBins!: XpBinKit;
   // #endregion
 
   // #region Value stuff
@@ -147,15 +145,16 @@ export class Realm {
       this.realmMediator.setValue(value);
       this.detectValueChange();
     } else {
-      const desc: Descriptor<any, any, any> = (this.driver as any)[key];
+      const desc = this.setup.reactors.map[key];
       if (desc) {
         if (desc.type === DescriptorType.reactor) {
-          const value = this.getHarmonizedValue(desc[jSymbols.payload](this.core.frames.default)(...payload));
+          const value = this.getHarmonizedValue(desc[junctureSymbols.payload](this.core.frames.default)(...payload));
           this.realmMediator.setValue(value);
           this.detectValueChange();
-        } else if (desc.type === DescriptorType.synthReactor) {
+        } else {
+          // SyntReactor
           // eslint-disable-next-line @typescript-eslint/naming-convention
-          const instruction_or_instructions = desc[jSymbols.payload](this.core.frames.synthReactor)(...payload);
+          const instruction_or_instructions = desc[junctureSymbols.payload](this.core.frames.synthReactor)(...payload);
           if (Array.isArray(instruction_or_instructions)) {
             (instruction_or_instructions as Instruction[]).forEach(instruction => {
               if (comparePaths(this.layout.path, instruction.target.layout.path) < 0) {
@@ -170,8 +169,6 @@ export class Realm {
             }
             instruction.target.excuteInstruction(instruction.key, instruction.payload);
           }
-        } else {
-          throw Error(`Unable to execute action "${key}": wrong type (${desc.type})`);
         }
       } else {
         throw Error(`Unable to execute action "${key}": not a reactor`);
@@ -190,17 +187,7 @@ export class Realm {
   // #endregion
 
   // #region Children stuff
-  resolve(path: Path): Realm {
-    if (path.length === 0) {
-      return this;
-    }
-
-    const [fragment, ...next] = path;
-    const child = this.resolveFragment(fragment);
-    return child.resolve(next);
-  }
-
-  resolveFragment(fragment: PathFragment): Realm {
+  getChildRealm(fragment: PathFragment): Realm {
     throw Error(`Realm ${pathToString(this.layout.path)} cannot resolve path fragment: ${pathFragmentToString(fragment)}`);
   }
   // #endregion
@@ -252,9 +239,8 @@ export class Realm {
     });
 
     defineLazyProperty(this, 'value', getRevoked('value'));
-    defineLazyProperty(this, 'outerCursor', getRevoked('outerCursor'));
-    defineLazyProperty(this, 'outerFrame', getRevoked('outerFrame'));
-    defineLazyProperty(this, 'outerBins', getRevoked('outerBins'));
+    defineLazyProperty(this, 'xpCursor', getRevoked('xpCursor'));
+    defineLazyProperty(this, 'xpBins', getRevoked('xpBins'));
   }
   // #endregion
 }

@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../../access';
+import { AccessModifier } from '../../../access-modifier';
 import { isDescriptor } from '../../../design/descriptor';
 import { DescriptorType } from '../../../design/descriptor-type';
 import { createSelector } from '../../../design/descriptors/selector';
-import { jSymbols } from '../../../symbols';
+import { junctureSymbols } from '../../../juncture-symbols';
 
 describe('createSelector', () => {
   test('should create a Selector by passing a selector function only', () => {
@@ -18,7 +18,7 @@ describe('createSelector', () => {
     const desc = createSelector(mySelector);
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.selector);
-    expect(desc[jSymbols.payload]).toBe(mySelector);
+    expect(desc[junctureSymbols.payload]).toBe(mySelector);
     expect(desc.access).toBe(AccessModifier.public);
   });
 
@@ -28,7 +28,7 @@ describe('createSelector', () => {
     const desc = createSelector(mySelector, myAccess);
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.selector);
-    expect(desc[jSymbols.payload]).toBe(mySelector);
+    expect(desc[junctureSymbols.payload]).toBe(mySelector);
     expect(desc.access).toBe(myAccess);
   });
 });

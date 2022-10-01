@@ -7,29 +7,36 @@
  */
 
 import { Engine } from '../../engine';
-import { $Bit } from '../../lib/bit';
-import { $Facade } from '../../lib/facade';
-import { $Struct } from '../../lib/struct';
+import { BIT } from '../../lib/bit';
+import { FACADE } from '../../lib/facade';
+import { STRUCT } from '../../lib/struct';
 
 test('tmp test', () => {
-  class Person extends $Struct.Of({
-    name: $Bit.settable.String,
-    age: $Bit.settable.Number
+  class Person extends STRUCT.of({
+    name: BIT.settable.string,
+    age: BIT.settable.number
   }) { }
 
-  class SecretPerson extends $Facade.Of(Person) {
-    data = this.FORGE.selector(({ select, _ }) => `${select(_.inner.name).value} ${select(_.inner).value.age}`);
+  class SecretPerson extends FACADE.of(Person) {
+    'selector.data' = this.FORGE.selector(
+      ({ select, _ }) => `${select(_.inner.name).value} ${select(_.inner).value.age}`
+    );
   }
 
-  class Group extends $Struct.Of({
+  class Group extends STRUCT.of({
     p1: Person,
     p2: SecretPerson
   }) { }
 
-  const engine = new Engine(Group);
-  const { _, select } = engine.frame;
+  const engine = new Engine();
+  engine.mountBranch({ juncture: Group });
+  const { _, select } = engine.createFrame({
+    group: Group
+  });
 
-  expect(select(_.p1.name).value).toBe('');
-  expect(select(_.p2).data).toBe(' 0');
-  expect(select(_.p2).value).toEqual({ name: '', age: 0 });
+  expect(select(_.group.p1.name).value).toBe('');
+  expect(select(_.group.p2).data).toBe(' 0');
+  expect(select(_.group.p2).value).toEqual({ name: '', age: 0 });
+
+  engine.stop();
 });

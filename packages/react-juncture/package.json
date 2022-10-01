@@ -9,6 +9,7 @@
   "homepage": "https://codecarvings.com",
   "keywords": [
     "composable",
+    "reactive",
     "state",
     "management",
     "react"

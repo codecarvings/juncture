@@ -7,20 +7,21 @@
  */
 
 import { CursorOf, Driver, ValueOf } from '../../driver';
-import { defineLazyProperty } from '../../tool/object';
-import { OuterSelectBin, SelectBin } from '../bins/select-bin';
+import { defineLazyProperty } from '../../utilities/object';
+import { DepsBin } from '../bins/deps-bin';
+import { SelectBin, XpSelectBin } from '../bins/select-bin';
 import {
   Cursor, CursorHost, DriverOfCursor, ValueOfCursor
 } from '../frame-equipment/cursor';
-import { ValueHandlerHost } from '../frame-equipment/value-handler';
-import { AccessorKit } from '../kits/accessor-kit';
+import { ValueAccessorHost } from '../frame-equipment/value-accessor';
+import { PickerKit } from '../kits/picker-kit';
 
-// #region Symbols
+// #region Private Symbols
 const frameSymbol = Symbol('frame');
-interface FrameSymbols {
+interface PrvSymbols {
   readonly frame: typeof frameSymbol;
 }
-const frameSymbols: FrameSymbols = {
+const prvSymbols: PrvSymbols = {
   frame: frameSymbol
 };
 // #endregion
@@ -30,18 +31,20 @@ export interface FrameConsumer<B> {
 }
 
 interface FrameMark {
-  readonly [frameSymbols.frame]: true;
+  readonly [prvSymbols.frame]: true;
 }
 
 export interface Frame<D extends Driver> extends FrameMark {
-  readonly _ : CursorOf<D>;
+  readonly _: CursorOf<D>;
+
+  readonly $: DepsBin<D>;
 
   value(): ValueOf<D>;
   value<C extends Cursor>(_: C): ValueOfCursor<C>;
 
   select(): SelectBin<D>;
-  select(_: this['_']): SelectBin<D>;
-  select<C extends Cursor>(_: C): OuterSelectBin<DriverOfCursor<C>>;
+  select(_: CursorOf<D>): SelectBin<D>;
+  select<C extends Cursor>(_: C): XpSelectBin<DriverOfCursor<C>>;
 }
 
 export interface DefaultFrameHost<D extends Driver> {
@@ -50,13 +53,13 @@ export interface DefaultFrameHost<D extends Driver> {
 
 export function createFrame<D extends Driver>(
   cursorHost: CursorHost<D>,
-  valueHandlerHost: ValueHandlerHost<D>,
-  accessors: AccessorKit<D>
+  valueAccessorHost: ValueAccessorHost<D>,
+  pickers: PickerKit<D>
 ): Frame<D> {
   const frame: any = { };
   defineLazyProperty(frame, '_', () => cursorHost.cursor);
-  defineLazyProperty(frame, 'value', () => valueHandlerHost.value.get);
-  defineLazyProperty(frame, 'select', () => accessors.select);
+  defineLazyProperty(frame, 'value', () => valueAccessorHost.value.get);
+  defineLazyProperty(frame, 'select', () => pickers.select);
   return frame;
 }
 

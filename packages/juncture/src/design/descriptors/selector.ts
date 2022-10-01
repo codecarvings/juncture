@@ -6,12 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Observable } from 'rxjs';
-import { AccessModifier } from '../../access';
+import { AccessModifier } from '../../access-modifier';
 import { FrameConsumer } from '../../operation/frames/frame';
-import {
-  createDescriptor, Descriptor
-} from '../descriptor';
+import { createDescriptor, Descriptor } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
 export interface GenericSelector<B, A extends AccessModifier>
@@ -34,9 +31,3 @@ export function createSelector<B>(selectorFn: FrameConsumer<B>, access: AccessMo
 // ---  Derivations
 export type BodyOfSelector<L extends GenericSelector<any, any>>
   = L extends GenericSelector<infer B, any> ? B : never;
-
-// #region Observables
-export interface SelectorObservables<B> {
-  readonly change: Observable<B>;
-}
-// #endregion

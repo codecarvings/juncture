@@ -6,31 +6,30 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Driver } from '../../driver';
-import { Juncture } from '../../juncture';
-import { defineLazyProperty } from '../../tool/object';
-import { DispatchBin, OuterDispatchBin } from '../bins/dispatch-bin';
-import { EmitBin, OuterEmitBin } from '../bins/emit-bin';
-import { OuterTriggerBin, TriggerBin } from '../bins/trigger-bin';
+import { CursorOf, Driver } from '../../driver';
+import { defineLazyProperty } from '../../utilities/object';
+import { DispatchBin, XpDispatchBin } from '../bins/dispatch-bin';
+import { EmitBin } from '../bins/emit-bin';
+import { ExecBin, XpExecBin } from '../bins/exec-bin';
 import { Cursor, CursorHost, DriverOfCursor } from '../frame-equipment/cursor';
-import { ValueHandlerHost } from '../frame-equipment/value-handler';
-import { AccessorKit } from '../kits/accessor-kit';
+import { DetectPack } from '../frame-equipment/detect-pack';
+import { ValueAccessorHost } from '../frame-equipment/value-accessor';
+import { PickerKit } from '../kits/picker-kit';
 import { createFrame, Frame } from './frame';
 
 export interface BehaviorFrame<D extends Driver> extends Frame<D> {
+  readonly detect: DetectPack<D>;
+
   dispatch(): DispatchBin<D>;
-  dispatch(_: this['_']): DispatchBin<D>;
-  dispatch<C extends Cursor>(_: C): OuterDispatchBin<DriverOfCursor<C>>;
+  dispatch(_: CursorOf<D>): DispatchBin<D>;
+  dispatch<C extends Cursor>(_: C): XpDispatchBin<DriverOfCursor<C>>;
 
   emit(): EmitBin<D>;
-  emit(_: this['_']): EmitBin<D>;
-  emit<C extends Cursor>(_: C): OuterEmitBin<DriverOfCursor<C>>;
+  emit(_: CursorOf<D>): EmitBin<D>;
 
-  trigger(): TriggerBin<D>;
-  trigger(_: this['_']): TriggerBin<D>;
-  trigger<C extends Cursor>(_: C): OuterTriggerBin<DriverOfCursor<C>>;
-  trigger<J extends Juncture>(Juncture: J): OuterTriggerBin<InstanceType<J>>;
-  trigger<C extends Cursor, J extends Juncture>(_: C, Juncture: J): OuterTriggerBin<InstanceType<J>>;
+  exec(): ExecBin<D>;
+  exec(_: CursorOf<D>): ExecBin<D>;
+  exec<C extends Cursor>(_: C): XpExecBin<DriverOfCursor<C>>;
 }
 
 export interface BehaviorFrameHost<D extends Driver> {
@@ -39,13 +38,13 @@ export interface BehaviorFrameHost<D extends Driver> {
 
 export function createBehaviorFrame<D extends Driver>(
   cursorHost: CursorHost<D>,
-  valueHandlerHost: ValueHandlerHost<D>,
-  accessors: AccessorKit<D>
+  valueAccessorHost: ValueAccessorHost<D>,
+  pickers: PickerKit<D>
 ): BehaviorFrame<D> {
-  const frame: any = createFrame(cursorHost, valueHandlerHost, accessors);
-  defineLazyProperty(frame, 'dispatch', () => accessors.dispatch);
-  defineLazyProperty(frame, 'emit', () => accessors.emit);
-  defineLazyProperty(frame, 'trigger', () => accessors.trigger);
+  const frame: any = createFrame(cursorHost, valueAccessorHost, pickers);
+  defineLazyProperty(frame, 'dispatch', () => pickers.dispatch);
+  defineLazyProperty(frame, 'emit', () => pickers.emit);
+  defineLazyProperty(frame, 'exec', () => pickers.exec);
   return frame;
 }
 

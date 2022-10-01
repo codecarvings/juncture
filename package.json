@@ -1,7 +1,7 @@
 {
   "name": "juncture-monorepo",
   "version": "0.1.0",
-  "description": "Composable State Management for JS Apps",
+  "description": "Composable & Reactive State Management for JS Apps",
   "private": true,
   "author": {
     "name": "Sergio Turolla",

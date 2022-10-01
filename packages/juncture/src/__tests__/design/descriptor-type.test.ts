@@ -13,6 +13,18 @@ describe('DescriptorType', () => {
     expect(DescriptorType.schema).toBe('schema');
   });
 
+  test('should contain the dependency type', () => {
+    expect(DescriptorType.dependency).toBe('dependency');
+  });
+
+  test('should contain the optDependency type', () => {
+    expect(DescriptorType.optDependency).toBe('optDependency');
+  });
+
+  test('should contain the resolver type', () => {
+    expect(DescriptorType.resolver).toBe('resolver');
+  });
+
   test('should contain the selector type', () => {
     expect(DescriptorType.selector).toBe('selector');
   });
@@ -21,23 +33,23 @@ describe('DescriptorType', () => {
     expect(DescriptorType.paramSelector).toBe('paramSelector');
   });
 
-  test('should contain the synthReactor type', () => {
-    expect(DescriptorType.synthReactor).toBe('synthReactor');
-  });
-
   test('should contain the reactor type', () => {
     expect(DescriptorType.reactor).toBe('reactor');
   });
 
-  test('should contain the behavior type', () => {
-    expect(DescriptorType.behavior).toBe('behavior');
+  test('should contain the synthReactor type', () => {
+    expect(DescriptorType.synthReactor).toBe('synthReactor');
   });
 
   test('should contain the channel type', () => {
     expect(DescriptorType.channel).toBe('channel');
   });
 
-  test('should contain the openChannel type', () => {
-    expect(DescriptorType.openChannel).toBe('openChannel');
+  test('should contain the procedure type', () => {
+    expect(DescriptorType.procedure).toBe('procedure');
+  });
+
+  test('should contain the behavior type', () => {
+    expect(DescriptorType.behavior).toBe('behavior');
   });
 });

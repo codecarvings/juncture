@@ -6,10 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../access';
-import {
-  createDescriptor, Descriptor
-} from '../descriptor';
+import { AccessModifier } from '../../access-modifier';
+import { createDescriptor, Descriptor } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
 export interface GenericChannel<B, A extends AccessModifier>

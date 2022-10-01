@@ -7,13 +7,13 @@
  */
 
 import { Driver } from '../../driver';
-import { defineLazyProperty } from '../../tool/object';
+import { defineLazyProperty } from '../../utilities/object';
 import { CursorHost } from '../frame-equipment/cursor';
-import { ValueHandlerHost } from '../frame-equipment/value-handler';
+import { ValueAccessorHost } from '../frame-equipment/value-accessor';
 import { BehaviorFrame, createBehaviorFrame } from '../frames/behavior-frame';
 import { createFrame, Frame } from '../frames/frame';
 import { createSynthReactorFrame, SynthReactorFrame } from '../frames/synth-reactor-frame';
-import { AccessorKit } from './accessor-kit';
+import { PickerKit } from './picker-kit';
 
 // #region FrameKit
 export interface FrameKit<D extends Driver = Driver> {
@@ -25,11 +25,11 @@ export interface FrameKit<D extends Driver = Driver> {
 export function prepareFrameKit<D extends Driver>(
   frames: any,
   cursorHost: CursorHost<D>,
-  valueHandlerHost: ValueHandlerHost<D>,
-  accessors: AccessorKit<D>
+  valueAccessorHost: ValueAccessorHost<D>,
+  pickers: PickerKit<D>
 ) {
-  defineLazyProperty(frames, 'default', () => createFrame(cursorHost, valueHandlerHost, accessors));
-  defineLazyProperty(frames, 'synthReactor', () => createSynthReactorFrame(cursorHost, valueHandlerHost, accessors));
-  defineLazyProperty(frames, 'behavior', () => createBehaviorFrame(cursorHost, valueHandlerHost, accessors));
+  defineLazyProperty(frames, 'default', () => createFrame(cursorHost, valueAccessorHost, pickers));
+  defineLazyProperty(frames, 'synthReactor', () => createSynthReactorFrame(cursorHost, valueAccessorHost, pickers));
+  defineLazyProperty(frames, 'behavior', () => createBehaviorFrame(cursorHost, valueAccessorHost, pickers));
 }
 // #endregion

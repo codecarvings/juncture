@@ -6,13 +6,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Observable } from 'rxjs';
-import { AccessModifier } from '../../access';
+import { AccessModifier } from '../../access-modifier';
 import { FrameConsumer } from '../../operation/frames/frame';
-import { OverloadParameters, OverloadReturnType } from '../../tool/overload-types';
-import {
-  createDescriptor, Descriptor
-} from '../descriptor';
+import { createDescriptor, Descriptor } from '../descriptor';
 import { DescriptorType } from '../descriptor-type';
 
 export interface GenericParamSelector<B extends (...args: any) => any, A extends AccessModifier>
@@ -38,9 +34,3 @@ export function createParamSelector<B extends (...args: any) => any>(
 // ---  Derivations
 export type BodyOfParamSelector<L extends GenericParamSelector<any, any>>
   = L extends GenericParamSelector<infer B, any> ? B : never;
-
-// #region Observables
-export interface ParamSelectorObservables<B extends (...args: any) => any> {
-  change(...args : OverloadParameters<B>): Observable<OverloadReturnType<B>>
-}
-// #endregion

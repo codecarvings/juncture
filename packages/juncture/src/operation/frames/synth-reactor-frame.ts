@@ -6,15 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Driver, ValueOf } from '../../driver';
-import { defineLazyProperty } from '../../tool/object';
-import { ApplyBin, OuterApplyBin } from '../bins/apply-bin';
+import { CursorOf, Driver, ValueOf } from '../../driver';
+import { defineLazyProperty } from '../../utilities/object';
+import { ApplyBin, XpApplyBin } from '../bins/apply-bin';
 import {
-  Cursor, CursorHost, DriverOfCursor, ValueOfCursor
+    Cursor, CursorHost, DriverOfCursor, ValueOfCursor
 } from '../frame-equipment/cursor';
-import { ValueHandlerHost } from '../frame-equipment/value-handler';
+import { ValueAccessorHost } from '../frame-equipment/value-accessor';
 import { Instruction } from '../instruction';
-import { AccessorKit } from '../kits/accessor-kit';
+import { PickerKit } from '../kits/picker-kit';
 import { createFrame, Frame } from './frame';
 
 export interface SynthReactorFrame<D extends Driver> extends Frame<D> {
@@ -22,8 +22,8 @@ export interface SynthReactorFrame<D extends Driver> extends Frame<D> {
   set<C extends Cursor>(_: C, value: ValueOfCursor<C>): Instruction;
 
   apply(): ApplyBin<D>;
-  apply(_: this['_']): ApplyBin<D>;
-  apply<C extends Cursor>(_: C): OuterApplyBin<DriverOfCursor<C>>;
+  apply(_: CursorOf<D>): ApplyBin<D>;
+  apply<C extends Cursor>(_: C): XpApplyBin<DriverOfCursor<C>>;
 }
 
 export interface SynthReactorFrameHost<D extends Driver> {
@@ -32,12 +32,12 @@ export interface SynthReactorFrameHost<D extends Driver> {
 
 export function createSynthReactorFrame<D extends Driver>(
   cursorHost: CursorHost<D>,
-  valueHandlerHost: ValueHandlerHost<D>,
-  accessors: AccessorKit<D>
+  valueAccessorHost: ValueAccessorHost<D>,
+  pickers: PickerKit<D>
 ): Frame<D> {
-  const frame: any = createFrame(cursorHost, valueHandlerHost, accessors);
-  defineLazyProperty(frame, 'set', () => valueHandlerHost.value.set);
-  defineLazyProperty(frame, 'apply', () => accessors.apply);
+  const frame: any = createFrame(cursorHost, valueAccessorHost, pickers);
+  defineLazyProperty(frame, 'set', () => valueAccessorHost.value.set);
+  defineLazyProperty(frame, 'apply', () => pickers.apply);
   return frame;
 }
 

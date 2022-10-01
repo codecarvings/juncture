@@ -7,22 +7,25 @@
  */
 
 import { Observable } from 'rxjs';
-import { Juncture, ValueOfJuncture } from './juncture';
+import { BranchConfig, BranchManager } from './engine-parts/branch-manager';
+import { PersistentPathManager } from './engine-parts/persistent-path-manager';
+import { RealmManager } from './engine-parts/realm-manager';
+import { SelectorCatalyst } from './engine-parts/selector-catalyst';
+import { TransactionManager } from './engine-parts/transaction-manager';
+import { ValueUsageMonitor } from './engine-parts/value-usage-monitor';
+import { Juncture } from './juncture';
 import { Action } from './operation/action';
-import { OuterFrame } from './operation/frames/outer-frame';
-import { Path, PersistentPath } from './operation/path';
-import { PersistentPathManager } from './operation/persistent-path-manager';
+import { QueryFrame } from './operation/frames/query-frame';
+import { createUnbindedFrame } from './operation/frames/unbinded-frame';
+import { Path, pathToString, PersistentPath } from './operation/path';
 import {
-  ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
+    ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
 } from './operation/realm';
 import { getRealm, isRealmHost } from './operation/realm-host';
-import { RealmManager } from './operation/realm-manager';
-import { SelectorCatalyst } from './operation/selector-catalyst';
-import { TransactionManager } from './operation/transaction-manager';
-import { ValueUsageMonitor } from './operation/value-usage-monitor';
+import { Query, QueryItem } from './queries/query';
+import { mappedAssign } from './utilities/object';
 
 export enum EngineStatus {
-  initializing = 'initializing',
   running = 'running',
   stopped = 'stopped'
 }
@@ -35,7 +38,7 @@ export interface EngineRealmMediator {
 
   readonly realm: {
     enroll(managedRealm: ManagedRealm): void
-    createControlled(Juncture: Juncture, layout: RealmLayout, realmMediator: RealmMediator): ControlledRealm;
+    createControlled(juncture: Juncture, layout: RealmLayout, realmMediator: RealmMediator): ControlledRealm;
   };
 
   readonly selection: {
@@ -48,48 +51,19 @@ export interface EngineRealmMediator {
   };
 }
 
-export class Engine<J extends Juncture> {
-  constructor(readonly Juncture: J, value?: ValueOfJuncture<J>) {
+export class Engine {
+  constructor() {
     this.dispatch = this.dispatch.bind(this);
 
-    this._value = this.getInitialValue(value);
-
     this.persistentPathManager = this.createPersistentPathManager();
-
     this.realmManager = this.createRealmManger();
-
     this.valueUsageMonitor = this.createValueUsageMonitor();
-
     this.transactionManager = this.createTransactionManager();
-
+    this.branchManager = this.createBranchManager();
     this.selectorCatalyst = this.craeteSelectorCatalyst();
-
-    this.realm = this.createRealm();
-
-    this.realmManager.sync();
-
-    this.frame = this.realm.outerFrame as any;
   }
 
-  // #region Value stuff
-  protected _value: ValueOfJuncture<J>;
-
-  get value(): ValueOfJuncture<J> {
-    return this._value;
-  }
-
-  protected getInitialValue(value?: ValueOfJuncture<J>) {
-    const schema = Juncture.getSchema(this.Juncture);
-    return value === undefined ? schema.defaultValue : value;
-  }
-
-  startSelectorAudit(): () => Observable<void> {
-    return this.selectorCatalyst.startAudit();
-  }
-  // #endregion
-
-  // #region Realm stuff
-
+  // #region Engine Parts
   protected readonly persistentPathManager: PersistentPathManager;
 
   // eslint-disable-next-line class-methods-use-this
@@ -117,37 +91,10 @@ export class Engine<J extends Juncture> {
     return new TransactionManager(this.realmManager.sync);
   }
 
-  protected readonly selectorCatalyst: SelectorCatalyst;
+  protected readonly branchManager: BranchManager;
 
-  protected craeteSelectorCatalyst(): SelectorCatalyst {
-    return new SelectorCatalyst({
-      valueUsageMonitor: {
-        start: this.valueUsageMonitor.start,
-        stop: this.valueUsageMonitor.stop as () => PersistentPath[]
-      },
-      persistentPathManager: {
-        registerRequirement: this.persistentPathManager.registerRequirement,
-        releaseRequirement: this.persistentPathManager.releaseRequirement
-      }
-    });
-  }
-
-  protected readonly realm: Realm;
-
-  protected createRealm(): Realm {
-    const layout: RealmLayout = {
-      path: this.persistentPathManager.getPersistentPath([]),
-      parent: null,
-      isUnivocal: true,
-      isDivergent: false
-    };
-    const realmMediator: RealmMediator = {
-      getValue: () => this._value,
-      setValue: newValue => {
-        this._value = newValue;
-      }
-    };
-    const engineMediator: EngineRealmMediator = {
+  protected createBranchManager(): BranchManager {
+    const engineRealmMediator: EngineRealmMediator = {
       persistentPath: {
         get: this.persistentPathManager.getPersistentPath,
         release: this.persistentPathManager.releaseRequirement
@@ -155,7 +102,7 @@ export class Engine<J extends Juncture> {
       realm: {
         enroll: this.realmManager.enroll,
         createControlled: (Juncture2, layout2, realmMediator2) => {
-          const realm = Juncture.createRealm(Juncture2, layout2, realmMediator2, engineMediator);
+          const realm = Juncture.createRealm(Juncture2, layout2, realmMediator2, engineRealmMediator);
           return {
             realm,
             scheduleUnmount: () => {
@@ -173,18 +120,22 @@ export class Engine<J extends Juncture> {
       }
     };
 
-    return Juncture.createRealm(this.Juncture, layout, realmMediator, engineMediator);
+    return new BranchManager(engineRealmMediator, this.realmManager, this.state);
   }
 
+  protected readonly selectorCatalyst: SelectorCatalyst;
+
+  protected craeteSelectorCatalyst(): SelectorCatalyst {
+    return new SelectorCatalyst(this.valueUsageMonitor, this.persistentPathManager);
+  }
+
+  // #endregion
+
+  // #region Status stuff
+  protected _status = EngineStatus.running;
+
   get status(): EngineStatus {
-    switch (this.realm.mountStatus) {
-      case RealmMountStatus.mounted:
-        return EngineStatus.running;
-      case RealmMountStatus.unmounted:
-        return EngineStatus.stopped;
-      default:
-        return EngineStatus.initializing;
-    }
+    return this._status;
   }
 
   stop() {
@@ -192,29 +143,20 @@ export class Engine<J extends Juncture> {
       throw Error('Engine already stopped');
     }
 
-    this.realmManager.dismiss(this.realm);
-    this.realmManager.sync();
-  }
-
-  protected resolve(path: Path) {
-    let result: Realm;
-    if (isRealmHost(path)) {
-      // RealmRef
-      result = getRealm(path);
-      if (result.mountStatus === RealmMountStatus.unmounted) {
-        // Aready unmounted, try to resolve the path
-        result = this.realm.resolve(path);
-      }
-    } else {
-      result = this.realm.resolve(path);
-    }
-    return result;
+    this.branchManager.unmountAllBranches();
+    this._status = EngineStatus.stopped;
   }
   // #endregion
 
-  // #region Frame stuff
+  // #region Value stuff
+  readonly state: any = {};
+
+  startSelectorAudit(): () => Observable<void> {
+    return this.selectorCatalyst.startAudit();
+  }
+
   dispatch(action: Action) {
-    const target = this.resolve(action.target);
+    const target = this.getRealm(action.target);
 
     this.transactionManager.begin();
     target.executeAction(action.key, action.payload);
@@ -224,8 +166,79 @@ export class Engine<J extends Juncture> {
       action.callback();
     }
   }
+  // #endregion
 
-  // TODO: Implement getFrame and remove static frame...
-  readonly frame: OuterFrame<InstanceType<J>>;
+  // #region Branch stuff
+  mountBranch<J extends Juncture>(juncture: J): string;
+  mountBranch<J extends Juncture>(config: BranchConfig<J>): string;
+  mountBranch(juncture_or_config: Juncture | BranchConfig) {
+    let config: BranchConfig;
+    if (typeof juncture_or_config === 'function') {
+      config = { juncture: juncture_or_config };
+    } else {
+      config = juncture_or_config;
+    }
+    return this.branchManager.mountBranches([config])[0];
+  }
+
+  mountBranches(configs: BranchConfig[]): string[] {
+    return this.branchManager.mountBranches(configs);
+  }
+
+  unmountBranch(key: string) {
+    this.branchManager.unmountBranches([key]);
+  }
+
+  unmountBranches(keys: string[]) {
+    this.branchManager.unmountBranches(keys);
+  }
+
+  protected getRealm(path: Path): Realm {
+    if (isRealmHost(path)) {
+      const result = getRealm(path);
+      if (result.mountStatus !== RealmMountStatus.unmounted) {
+        return result;
+      }
+    }
+
+    const pathLen = path.length;
+    if (pathLen === 0) {
+      throw Error('Cannot resolve empty path []');
+    }
+    const branchKey = path[0];
+    if (typeof branchKey !== 'string') {
+      // eslint-disable-next-line max-len
+      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid branch key type (${typeof branchKey}), must be a string`);
+    }
+    const realm = this.branchManager.getBranch(path[0] as string);
+    if (realm === undefined) {
+      throw Error(`Cannot resolve path ${pathToString(path)}: Branch "${typeof branchKey}" not mounted`);
+    }
+    let result = realm;
+    for (let i = 1; i < pathLen; i += 1) {
+      result = result.getChildRealm(path[i]);
+    }
+    return result;
+  }
+
+  // TODO: Implement this
+  protected getRealmFromQueryItem(item: QueryItem): Realm {
+    const juncture = typeof item === 'function' ? item : item.juncture;
+    const keys = this.branchManager.branchKeys;
+    for (let i = 0; i < keys.length; i += 1) {
+      const realm = this.branchManager.getBranch(keys[i]);
+      if (realm?.driver.constructor === juncture) {
+        return realm;
+      }
+    }
+
+    throw Error('Unable to find a frame for the specified QueryItem');
+  }
+
+  createFrame<Q extends Query>(query: Q): QueryFrame<Q> {
+    const keys = Object.keys(query);
+    const cursor = mappedAssign({}, keys, key => this.getRealmFromQueryItem(query[key]).xpCursor);
+    return createUnbindedFrame(cursor);
+  }
   // #endregion
 }

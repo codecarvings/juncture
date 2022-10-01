@@ -8,31 +8,51 @@
 
 export enum DescriptorType {
   schema = 'schema',
+  dependency = 'dependency',
+  optDependency = 'optDependency',
+  resolver = 'resolver',
   selector = 'selector',
   paramSelector = 'paramSelector',
   reactor = 'reactor',
   synthReactor = 'synthReactor',
-  behavior = 'behavior',
   channel = 'channel',
-  openChannel = 'openChannel'
+  procedure = 'procedure',
+  behavior = 'behavior'
 }
 
-export type NotSuitableType = '\u26A0 ERROR: NOT SUITABLE TYPE';
-
-interface DescriptorTypeFamilies {
-  readonly selectable: [DescriptorType.selector, DescriptorType.paramSelector];
-  readonly reactable: [DescriptorType.reactor, DescriptorType.synthReactor];
-  readonly emittable: [DescriptorType.channel, DescriptorType.openChannel];
-  readonly outerEmittable: [DescriptorType.openChannel];
-  readonly observable: [DescriptorType.channel, DescriptorType.openChannel,
-    DescriptorType.selector, DescriptorType.paramSelector];
+export enum DescriptorKeyPrefix {
+  schema = '',
+  dependency = 'dependency',
+  resolver = 'resolver',
+  selector = 'selector',
+  reactor = 'reactor',
+  channel = 'channel',
+  procedure = 'procedure',
+  behavior = 'behavior'
 }
 
-export const descriptorTypeFamilies: DescriptorTypeFamilies = {
-  selectable: [DescriptorType.selector, DescriptorType.paramSelector],
-  reactable: [DescriptorType.reactor, DescriptorType.synthReactor],
-  emittable: [DescriptorType.channel, DescriptorType.openChannel],
-  outerEmittable: [DescriptorType.openChannel],
-  observable: [DescriptorType.channel, DescriptorType.openChannel,
-    DescriptorType.selector, DescriptorType.paramSelector]
-};
+export function getDescriptorKeyPrefix(type: DescriptorType) {
+  switch (type) {
+    case DescriptorType.schema:
+      return DescriptorKeyPrefix.schema;
+    case DescriptorType.dependency:
+    case DescriptorType.optDependency:
+      return DescriptorKeyPrefix.dependency;
+    case DescriptorType.resolver:
+      return DescriptorKeyPrefix.resolver;
+    case DescriptorType.selector:
+    case DescriptorType.paramSelector:
+      return DescriptorKeyPrefix.selector;
+    case DescriptorType.reactor:
+    case DescriptorType.synthReactor:
+      return DescriptorKeyPrefix.reactor;
+    case DescriptorType.channel:
+      return DescriptorKeyPrefix.channel;
+    case DescriptorType.procedure:
+      return DescriptorKeyPrefix.procedure;
+    case DescriptorType.behavior:
+      return DescriptorKeyPrefix.behavior;
+    default:
+      throw Error(`Unable to find prefix for DescriptorType '${type}'`);
+  }
+}

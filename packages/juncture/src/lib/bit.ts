@@ -8,13 +8,15 @@
 
 import { DescriptorType } from '../design/descriptor-type';
 import { BodyOfSchema, createSchema, Schema } from '../design/descriptors/schema';
-import { JunctureSchema, ValueOfSchema } from '../design/schema';
 import { ValueOf } from '../driver';
 import { ForgeableDriver } from '../forgeable-driver';
 import { CreateDescriptorForOverrideArgs, Forger } from '../forger';
 import { AlterablePartialJuncture, Juncture } from '../juncture';
+import { junctureSymbols } from '../juncture-symbols';
+import { Cursor } from '../operation/frame-equipment/cursor';
 import { OverrideSchemaFrame } from '../operation/frames/schema-frame';
-import { jSymbols } from '../symbols';
+import { Realm } from '../operation/realm';
+import { JunctureSchema, ValueOfSchema } from '../schema';
 
 // #region Value & Schema
 export class BitSchema<V = any> extends JunctureSchema<V> {
@@ -39,7 +41,7 @@ export class BitForger<D extends BitDriver> extends Forger<D> {
     if (args.parent.type === DescriptorType.schema) {
       if (args.fnName === 'setDefaultValue') {
         return createSchema(() => {
-          const parent = args.parent[jSymbols.payload]();
+          const parent = args.parent[junctureSymbols.payload]();
           const frame2 = { parent };
           const defaultValue2 = args.fnArgs[0](frame2);
           return createBitSchema(defaultValue2);
@@ -60,12 +62,25 @@ export class BitForger<D extends BitDriver> extends Forger<D> {
 }
 // #endregion
 
+// #region Operation
+export type BitCursor<D extends BitDriver> = Cursor<D>;
+export type BitXpCursor<D extends BitDriver> = Cursor<D>;
+// #endregion
+
 // #region Driver
 export abstract class BitDriver extends ForgeableDriver {
   abstract readonly schema: Schema<BitSchema>;
 
-  protected [jSymbols.createForger](): BitForger<this> {
+  protected [junctureSymbols.createForger](): BitForger<this> {
     return new BitForger(this);
+  }
+
+  [junctureSymbols.createCursor](realm: Realm): BitCursor<this> {
+    return super[junctureSymbols.createCursor](realm);
+  }
+
+  [junctureSymbols.createXpCursor](realm: Realm): BitXpCursor<this> {
+    return super[junctureSymbols.createXpCursor](realm);
   }
 
   protected readonly FORGE!: BitForger<this>;
@@ -74,9 +89,13 @@ export abstract class BitDriver extends ForgeableDriver {
 
 // #region Specializations
 export abstract class SettableBitDriver extends BitDriver {
-  reset = this.FORGE.reactor(({ select }) => () => select().defaultValue);
+  'reactor.reset' = this.FORGE.reactor(
+    ({ select }) => (): ValueOf<this> => select().defaultValue
+  );
 
-  set = this.FORGE.reactor(() => (value: ValueOf<this>) => value);
+  'reactor.set' = this.FORGE.reactor(
+    () => (value: ValueOf<this>) => value
+  );
 }
 
 export abstract class SettableStringBitDriver extends SettableBitDriver {
@@ -86,17 +105,25 @@ export abstract class SettableStringBitDriver extends SettableBitDriver {
 export abstract class SettableNumberBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<number>>;
 
-  add = this.FORGE.reactor(({ value }) => (num: number) => value() + num);
+  'reactor.add' = this.FORGE.reactor(
+    ({ value }) => (num: number) => value() + num
+  );
 
-  inc = this.FORGE.reactor(({ value }) => () => value() + 1);
+  'reactor.inc' = this.FORGE.reactor(
+    ({ value }) => () => value() + 1
+  );
 
-  dec = this.FORGE.reactor(({ value }) => () => value() - 1);
+  'reactor.dec' = this.FORGE.reactor(
+    ({ value }) => () => value() - 1
+  );
 }
 
 export abstract class SettableBooleanBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<boolean>>;
 
-  switch = this.FORGE.reactor(({ value }) => () => !value());
+  'reactor.switch' = this.FORGE.reactor(
+    ({ value }) => () => !value()
+  );
 }
 
 export abstract class SettableSymbolBitDriver extends SettableBitDriver {
@@ -151,8 +178,8 @@ interface SettableSymbolBitJuncture extends Juncture<SettableSymbolBit> { }
 // #endregion
 
 // #region Builder
-function createBitJuncture<J extends AlterablePartialJuncture<BitDriver>>(BaseJuncture: J, defaultValue: any) {
-  abstract class Bit extends BaseJuncture {
+function createBitJuncture<J extends AlterablePartialJuncture<BitDriver>>(baseJuncture: J, defaultValue: any) {
+  abstract class Bit extends baseJuncture {
     schema = createSchema(() => createBitSchema(defaultValue));
   }
   return Bit;
@@ -161,7 +188,7 @@ function createBitJuncture<J extends AlterablePartialJuncture<BitDriver>>(BaseJu
 const defaultStringValue = '';
 const defaultNumberValue = 0;
 const defaultBooleanValue = false;
-const defaultSymbolValue = jSymbols.bitDefault;
+const defaultSymbolValue = junctureSymbols.bitDefault;
 
 class DefaultStringBit extends createBitJuncture(BitDriver, defaultStringValue) { }
 class DefaultNumberBit extends createBitJuncture(BitDriver, defaultNumberValue) { }
@@ -174,11 +201,11 @@ class DefaultSettableBooleanBit extends createBitJuncture(SettableBooleanBitDriv
 class DefaultSettableSymbolBit extends createBitJuncture(SettableSymbolBitDriver, defaultSymbolValue) { }
 
 interface BitJunctureBuilder {
-  readonly String: StringBitJuncture;
-  readonly Number: NumberBitJuncture;
-  readonly Boolean: BooleanBitJuncture;
-  readonly Symbol: SymbolBitJuncture;
-  readonly Of: {
+  readonly string: StringBitJuncture;
+  readonly number: NumberBitJuncture;
+  readonly boolean: BooleanBitJuncture;
+  readonly symbol: SymbolBitJuncture;
+  readonly of: {
     (defaultValue: string): StringBitJuncture;
     (defaultValue: number): NumberBitJuncture;
     (defaultValue: boolean): BooleanBitJuncture;
@@ -187,11 +214,11 @@ interface BitJunctureBuilder {
   };
 
   readonly settable: {
-    readonly String: SettableStringBitJuncture;
-    readonly Number: SettableNumberBitJuncture;
-    readonly Boolean: SettableBooleanBitJuncture;
-    readonly Symbol: SettableSymbolBitJuncture;
-    readonly Of: {
+    readonly string: SettableStringBitJuncture;
+    readonly number: SettableNumberBitJuncture;
+    readonly boolean: SettableBooleanBitJuncture;
+    readonly symbol: SettableSymbolBitJuncture;
+    readonly of: {
       (defaultValue: string): SettableStringBitJuncture;
       (defaultValue: number): SettableNumberBitJuncture;
       (defaultValue: boolean): SettableBooleanBitJuncture;
@@ -201,12 +228,12 @@ interface BitJunctureBuilder {
   }
 }
 
-export const $Bit: BitJunctureBuilder = {
-  String: DefaultStringBit,
-  Number: DefaultNumberBit,
-  Boolean: DefaultBooleanBit,
-  Symbol: DefaultSymbolBit,
-  Of: <V>(defaultValue: V) => {
+export const BIT: BitJunctureBuilder = {
+  string: DefaultStringBit,
+  number: DefaultNumberBit,
+  boolean: DefaultBooleanBit,
+  symbol: DefaultSymbolBit,
+  of<V>(defaultValue: V) {
     if (defaultValue as any === defaultStringValue) {
       return DefaultStringBit;
     }
@@ -224,11 +251,11 @@ export const $Bit: BitJunctureBuilder = {
   },
 
   settable: {
-    String: DefaultSettableStringBit,
-    Number: DefaultSettableNumberBit,
-    Boolean: DefaultSettableBooleanBit,
-    Symbol: DefaultSettableSymbolBit,
-    Of: <V>(defaultValue: V) => {
+    string: DefaultSettableStringBit,
+    number: DefaultSettableNumberBit,
+    boolean: DefaultSettableBooleanBit,
+    symbol: DefaultSettableSymbolBit,
+    of<V>(defaultValue: V) {
       if (defaultValue as any === defaultStringValue) {
         return DefaultSettableStringBit;
       }
@@ -243,25 +270,25 @@ export const $Bit: BitJunctureBuilder = {
       }
 
       const type = typeof defaultValue;
-      let Juncture: any;
+      let juncture: any;
       switch (type) {
         case 'string':
-          Juncture = SettableStringBitDriver;
+          juncture = SettableStringBitDriver;
           break;
         case 'number':
-          Juncture = SettableNumberBitDriver;
+          juncture = SettableNumberBitDriver;
           break;
         case 'boolean':
-          Juncture = SettableBooleanBitDriver;
+          juncture = SettableBooleanBitDriver;
           break;
         case 'symbol':
-          Juncture = SettableSymbolBitDriver;
+          juncture = SettableSymbolBitDriver;
           break;
         default:
-          Juncture = SettableBitDriver;
+          juncture = SettableBitDriver;
           break;
       }
-      return createBitJuncture(Juncture, defaultValue);
+      return createBitJuncture(juncture, defaultValue);
     }
   }
 };

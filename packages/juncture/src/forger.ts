@@ -8,7 +8,7 @@
 
 /* eslint-disable max-len */
 
-import { AccessModifier } from './access';
+import { AccessModifier } from './access-modifier';
 import {
   Descriptor, isDescriptor
 } from './design/descriptor';
@@ -17,65 +17,39 @@ import {
   Behavior, BodyOfBehavior, createBehavior, DisposableBehavior, SafeBehavior
 } from './design/descriptors/behavior';
 import { Channel, createChannel, PrivateChannel } from './design/descriptors/channel';
-import { createOpenChannel, OpenChannel } from './design/descriptors/open-channel';
+import { createDependency, Dependency } from './design/descriptors/dependency';
+import { createOptDependency, OptDependency } from './design/descriptors/opt-dependency';
 import {
   BodyOfParamSelector, createParamSelector, GenericParamSelector, ParamSelector, PrivateParamSelector
 } from './design/descriptors/param-selector';
+import { createProcedure, PrivateProcedure, Procedure } from './design/descriptors/procedure';
 import {
   BodyOfReactor, createReactor, GenericReactor, PrivateReactor, Reactor
 } from './design/descriptors/reactor';
+import { createResolver, Resolver } from './design/descriptors/resolver';
 import {
   BodyOfSelector, createSelector, GenericSelector, PrivateSelector, Selector
 } from './design/descriptors/selector';
 import {
   BodyOfSynthReactor, createSynthReactor, GenericSynthReactor, PrivateSynthReactor, SynthReactor
 } from './design/descriptors/synth-reactor';
+import { DependencyKey, DependencyType } from './di/dependency';
 import { Driver, ValueOf } from './driver';
+import { junctureSymbols } from './juncture-symbols';
 import { BehaviorFrame, OverrideBehaviorFrame } from './operation/frames/behavior-frame';
 import { Frame, OverrideFrame } from './operation/frames/frame';
+import { ProcedureFrame } from './operation/frames/procedure-frame';
 import { OverrideSynthReactorFrame, SynthReactorFrame } from './operation/frames/synth-reactor-frame';
 import { Instruction } from './operation/instruction';
-import { jSymbols } from './symbols';
-import { OverloadParameters } from './tool/overload-types';
-import { PropertyAssembler } from './tool/property-assembler';
+import { OverloadParameters } from './utilities/overload-types';
+import { PropertyAssembler } from './utilities/property-assembler';
 
 export interface CreateDescriptorForOverrideArgs {
   readonly key: string;
-  readonly parent: Descriptor<any, any, any>;
+  readonly parent: Descriptor;
   readonly fnName: string;
   readonly fnArgs: any[]
 }
-
-// #region PrivateForger
-export class PrivateForger<D extends Driver> {
-  constructor(protected readonly assembler: PropertyAssembler) { }
-
-  selector<F extends (frame: Frame<D>) => any>(selectorFn: F): PrivateSelector<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createSelector(selectorFn as any, AccessModifier.private));
-  }
-
-  paramSelector<F extends (frame: Frame<D>) => (...args: any) => any>(
-    selectorFn: F): PrivateParamSelector<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any, AccessModifier.private));
-  }
-
-  reactor<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
-    reactorFn: F): PrivateReactor<ReturnType<F>> {
-    return this.assembler.registerStaticProperty(createReactor(reactorFn as any, AccessModifier.private));
-  }
-
-  synthReactor<F extends (frame: SynthReactorFrame<D>) => (...args: any) => Instruction | Instruction[]>(
-    reactorFn: F): PrivateSynthReactor<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
-    return this.assembler.registerStaticProperty(createSynthReactor(reactorFn as any, AccessModifier.private));
-  }
-
-  channel(): PrivateChannel<void>;
-  channel<V>(): PrivateChannel<V>;
-  channel() {
-    return this.assembler.registerStaticProperty(createChannel(AccessModifier.private));
-  }
-}
-// #endregion
 
 // #region Forger
 export class Forger<D extends Driver> {
@@ -86,13 +60,25 @@ export class Forger<D extends Driver> {
   constructor(assembler: PropertyAssembler);
   constructor(driver: D);
   constructor(assembler_or_driver: PropertyAssembler | D) {
-    if (assembler_or_driver instanceof Driver) {
-      this.assembler = PropertyAssembler.get(assembler_or_driver);
-    } else {
+    if (assembler_or_driver instanceof PropertyAssembler) {
       this.assembler = assembler_or_driver;
+    } else {
+      this.assembler = PropertyAssembler.get(assembler_or_driver);
     }
 
     this.private = this.createPrivateForger();
+  }
+
+  dependency<K extends DependencyKey>(key: K): Dependency<K> {
+    return this.assembler.registerStaticProperty(createDependency(key));
+  }
+
+  optDependency<K extends DependencyKey>(key: K): OptDependency<K> {
+    return this.assembler.registerStaticProperty(createOptDependency(key));
+  }
+
+  resolver<K extends DependencyKey, F extends (frame: Frame<D>) => DependencyType<K>>(key: K, resolverFn: F): Resolver<K> {
+    return this.assembler.registerStaticProperty(createResolver(key, resolverFn as any));
   }
 
   selector<F extends (frame: Frame<D>) => any>(selectorFn: F): Selector<ReturnType<F>> {
@@ -114,25 +100,25 @@ export class Forger<D extends Driver> {
     return this.assembler.registerStaticProperty(createSynthReactor(reactorFn as any));
   }
 
-  behavior<F extends (frame: BehaviorFrame<D>) => (() => void) | void>(behaviorFn: F):
-  ReturnType<F> extends void ? SafeBehavior : DisposableBehavior {
-    return this.assembler.registerStaticProperty(createBehavior(behaviorFn as any)) as any;
-  }
-
   channel(): Channel<void>;
   channel<V>(): Channel<V>;
   channel() {
     return this.assembler.registerStaticProperty(createChannel());
   }
 
-  openChannel(): OpenChannel<void>;
-  openChannel<V>(): OpenChannel<V>;
-  openChannel() {
-    return this.assembler.registerStaticProperty(createOpenChannel());
+  procedure<F extends (frame: ProcedureFrame<D>) => (...args: any) => void>(
+    procedureFn: F): Procedure<(...args : OverloadParameters<ReturnType<F>>) => void> {
+    return this.assembler.registerStaticProperty(createProcedure(procedureFn as any));
+  }
+
+  behavior<F extends (frame: BehaviorFrame<D>) => (() => void) | void>(behaviorFn: F):
+  ReturnType<F> extends void ? SafeBehavior : DisposableBehavior {
+    return this.assembler.registerStaticProperty(createBehavior(behaviorFn as any)) as any;
   }
 
   // #region Override
   protected createPrivateForger() {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new PrivateForger(this.assembler);
   }
 
@@ -173,12 +159,12 @@ export class Forger<D extends Driver> {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected createDescriptorForOverride(args: CreateDescriptorForOverrideArgs): Descriptor<any, any, any> {
+  protected createDescriptorForOverride(args: CreateDescriptorForOverrideArgs): Descriptor {
     switch (args.parent.type) {
       case DescriptorType.selector:
         if (args.fnName === 'selector') {
           return createSelector(frame => {
-            const parent = args.parent[jSymbols.payload](frame);
+            const parent = args.parent[junctureSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
           }, args.parent.access);
@@ -187,7 +173,7 @@ export class Forger<D extends Driver> {
       case DescriptorType.paramSelector:
         if (args.fnName === 'paramSelector') {
           return createParamSelector(frame => {
-            const parent = args.parent[jSymbols.payload](frame);
+            const parent = args.parent[junctureSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
           }, args.parent.access);
@@ -196,7 +182,7 @@ export class Forger<D extends Driver> {
       case DescriptorType.reactor:
         if (args.fnName === 'reactor') {
           return createReactor(frame => {
-            const parent = args.parent[jSymbols.payload](frame);
+            const parent = args.parent[junctureSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
           }, args.parent.access);
@@ -205,7 +191,7 @@ export class Forger<D extends Driver> {
       case DescriptorType.synthReactor:
         if (args.fnName === 'synthReactor') {
           return createSynthReactor(frame => {
-            const parent = args.parent[jSymbols.payload](frame);
+            const parent = args.parent[junctureSymbols.payload](frame);
             const frame2 = { ...frame, parent };
             return args.fnArgs[0](frame2);
           }, args.parent.access);
@@ -251,5 +237,41 @@ export class Forger<D extends Driver> {
     };
   } = this.createOverrideProxy;
   // #endregion
+}
+// #endregion
+
+// #region PrivateForger
+export class PrivateForger<D extends Driver> {
+  constructor(protected readonly assembler: PropertyAssembler) { }
+
+  selector<F extends (frame: Frame<D>) => any>(selectorFn: F): PrivateSelector<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createSelector(selectorFn as any, AccessModifier.private));
+  }
+
+  paramSelector<F extends (frame: Frame<D>) => (...args: any) => any>(
+    selectorFn: F): PrivateParamSelector<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createParamSelector(selectorFn as any, AccessModifier.private));
+  }
+
+  reactor<F extends (frame: Frame<D>) => (...args: any) => ValueOf<D>>(
+    reactorFn: F): PrivateReactor<ReturnType<F>> {
+    return this.assembler.registerStaticProperty(createReactor(reactorFn as any, AccessModifier.private));
+  }
+
+  synthReactor<F extends (frame: SynthReactorFrame<D>) => (...args: any) => Instruction | Instruction[]>(
+    reactorFn: F): PrivateSynthReactor<(...args : OverloadParameters<ReturnType<F>>) => Instruction[]> {
+    return this.assembler.registerStaticProperty(createSynthReactor(reactorFn as any, AccessModifier.private));
+  }
+
+  procedure<F extends (frame: ProcedureFrame<D>) => (...args: any) => void>(
+    procedureFn: F): PrivateProcedure<(...args : OverloadParameters<ReturnType<F>>) => void> {
+    return this.assembler.registerStaticProperty(createProcedure(procedureFn as any, AccessModifier.private));
+  }
+
+  channel(): PrivateChannel<void>;
+  channel<V>(): PrivateChannel<V>;
+  channel() {
+    return this.assembler.registerStaticProperty(createChannel(AccessModifier.private));
+  }
 }
 // #endregion

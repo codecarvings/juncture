@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../../access';
+import { AccessModifier } from '../../../access-modifier';
 import { isDescriptor } from '../../../design/descriptor';
 import { DescriptorType } from '../../../design/descriptor-type';
 import { createReactor } from '../../../design/descriptors/reactor';
-import { jSymbols } from '../../../symbols';
+import { junctureSymbols } from '../../../juncture-symbols';
 
 describe('createReactor', () => {
   test('should create a Reactor by passing a reactor function only', () => {
@@ -18,7 +18,7 @@ describe('createReactor', () => {
     const desc = createReactor(myReactor);
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.reactor);
-    expect(desc[jSymbols.payload]).toBe(myReactor);
+    expect(desc[junctureSymbols.payload]).toBe(myReactor);
     expect(desc.access).toBe(AccessModifier.public);
   });
 
@@ -28,7 +28,7 @@ describe('createReactor', () => {
     const desc = createReactor(myReactor, myAccess);
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.reactor);
-    expect(desc[jSymbols.payload]).toBe(myReactor);
+    expect(desc[junctureSymbols.payload]).toBe(myReactor);
     expect(desc.access).toBe(myAccess);
   });
 });

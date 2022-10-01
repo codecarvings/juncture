@@ -6,37 +6,38 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier, PrivateJunctureAnnex } from '../access';
+import { AccessModifier } from '../access-modifier';
 import { createSchema, Schema } from '../design/descriptors/schema';
-import { SingleChildSchema } from '../design/schema';
 import { SchemaOf } from '../driver';
 import { EngineRealmMediator } from '../engine';
 import { ForgeableDriver } from '../forgeable-driver';
 import { Forger } from '../forger';
 import {
-  AlterablePartialJuncture, Juncture, OuterCursorOfJuncture, ValueOfJuncture
+  AlterablePartialJuncture, Juncture, ValueOfJuncture, XpCursorOf
 } from '../juncture';
+import { junctureSymbols } from '../juncture-symbols';
 import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
 import { PathFragment } from '../operation/path';
 import {
   ControlledRealm, Realm, RealmLayout, RealmMediator
 } from '../operation/realm';
-import { jSymbols } from '../symbols';
+import { PrivateJunctureAnnex } from '../private-juncture';
+import { SingleChildSchema } from '../schema';
 
 // #region Value & Schema
 export type ListValue<J extends Juncture> = ReadonlyArray<ValueOfJuncture<J>>;
 
-export class ListSchema<J extends Juncture = any> extends SingleChildSchema<J, ListValue<J>> {
-  protected constructor(Child: J, defaultValue?: ListValue<J>) {
-    super(Child, defaultValue !== undefined ? defaultValue : []);
+export class ListSchema<J extends Juncture = Juncture> extends SingleChildSchema<J, ListValue<J>> {
+  protected constructor(child: J, defaultValue?: ListValue<J>) {
+    super(child, defaultValue !== undefined ? defaultValue : []);
   }
 }
 
 function createListSchema<J extends Juncture>(
-  Child: J,
+  child: J,
   defaultValue?: ListValue<J>
 ): ListSchema<J> {
-  return new (ListSchema as any)(Child, defaultValue);
+  return new (ListSchema as any)(child, defaultValue);
 }
 // #endregion
 
@@ -75,7 +76,7 @@ export class ListRealm extends Realm {
       }
     };
 
-    return this.engineMediator.realm.createControlled(this.schema.Child, layout, realmMediator);
+    return this.engineMediator.realm.createControlled(this.schema.child, layout, realmMediator);
   }
 
   protected createChildren(): ControlledRealm[] {
@@ -102,35 +103,35 @@ export class ListRealm extends Realm {
     }
   }
 
-  resolveFragment(fragment: PathFragment): Realm {
+  getChildRealm(fragment: PathFragment): Realm {
     if (typeof fragment === 'number') {
       if (fragment >= 0 && fragment < this.children.length) {
         return this.children[fragment].realm;
       }
     }
-    return super.resolveFragment(fragment);
+    return super.getChildRealm(fragment);
   }
   // #endregion
 }
 
 export type ListCursor<D extends ListDriver> = Cursor<D> & {
-  item(index: number): OuterCursorOfJuncture<ChildOf<D>>;
+  item(index: number): XpCursorOf<ChildOf<D>>;
 };
 
-export type OuterListCursor<D extends ListDriver> = Cursor<D> &
+export type ListXpCursor<D extends ListDriver> = Cursor<D> &
 (ChildOf<D> extends PrivateJunctureAnnex ? { } : {
-  item(index: number): OuterCursorOfJuncture<ChildOf<D>>;
+  item(index: number): XpCursorOf<ChildOf<D>>;
 });
 
 // #endregion
 
 // #region Driver
 export abstract class ListDriver extends ForgeableDriver {
-  protected [jSymbols.createForger](): ListForger<this> {
+  protected [junctureSymbols.createForger](): ListForger<this> {
     return new ListForger(this);
   }
 
-  [jSymbols.createRealm](
+  [junctureSymbols.createRealm](
     layout: RealmLayout,
     realmMediator: RealmMediator,
     engineMediator: EngineRealmMediator
@@ -139,17 +140,17 @@ export abstract class ListDriver extends ForgeableDriver {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createCursor](realm: ListRealm): ListCursor<this> {
+  [junctureSymbols.createCursor](realm: ListRealm): ListCursor<this> {
     const _: any = createCursor(realm);
-    _.item = (index: number) => realm.resolveFragment(index).outerCursor;
+    _.item = (index: number) => realm.getChildRealm(index).xpCursor;
     return _;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  [jSymbols.createOuterCursor](realm: ListRealm): OuterListCursor<this> {
+  [junctureSymbols.createXpCursor](realm: ListRealm): ListXpCursor<this> {
     const _: any = createCursor(realm);
     if (realm.schema.childAccess === AccessModifier.public) {
-      _.item = (index: number) => realm.resolveFragment(index).outerCursor;
+      _.item = (index: number) => realm.getChildRealm(index).xpCursor;
     }
     return _;
   }
@@ -158,11 +159,13 @@ export abstract class ListDriver extends ForgeableDriver {
 
   abstract readonly schema: Schema<ListSchema>;
 
-  length = this.FORGE.selector(({ value }) => value().length);
+  'selector.length' = this.FORGE.selector(
+    ({ value }) => value().length
+  );
 }
 
 // ---  Derivations
-export type ChildOf<D extends ListDriver> = SchemaOf<D>['Child'];
+export type ChildOf<D extends ListDriver> = SchemaOf<D>['child'];
 // #endregion
 
 // #region Juncture
@@ -175,21 +178,24 @@ interface ListJuncture<J extends Juncture> extends Juncture<List<J>> { }
 
 // #region Builder
 function createListJuncture<J extends AlterablePartialJuncture<ListDriver>,
-   J2 extends Juncture>(BaseJuncture: J, Child: J2, defaultValue?: ListValue<J2>) {
-  abstract class List extends BaseJuncture {
-    schema = createSchema(() => createListSchema(Child, defaultValue));
+   J2 extends Juncture>(baseJuncture: J, child: J2, defaultValue?: ListValue<J2>) {
+  abstract class List extends baseJuncture {
+    schema = createSchema(() => createListSchema(child, defaultValue));
   }
   return List;
 }
 
 interface ListJunctureBuilder {
-  Of<J extends Juncture>(Child: J, defaultValue?: ListValue<J>): ListJuncture<J>;
+  of<J extends Juncture>(child: J, defaultValue?: ListValue<J>): ListJuncture<J>;
 }
 
-export const $List: ListJunctureBuilder = {
-  Of: <J extends Juncture>(
-    Child: J,
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LIST: ListJunctureBuilder = {
+  of<J extends Juncture>(
+    child: J,
     defaultValue?: ListValue<J>
-  ) => createListJuncture(ListDriver, Child, defaultValue) as any
+  ) {
+    return createListJuncture(ListDriver, child, defaultValue) as any;
+  }
 };
 // #endregion

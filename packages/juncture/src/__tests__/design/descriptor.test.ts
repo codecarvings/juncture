@@ -6,12 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../access';
-import {
-  createDescriptor, isDescriptor
-} from '../../design/descriptor';
+import { AccessModifier } from '../../access-modifier';
+import { createDescriptor, isDescriptor } from '../../design/descriptor';
 import { DescriptorType } from '../../design/descriptor-type';
-import { jSymbols } from '../../symbols';
+import { junctureSymbols } from '../../juncture-symbols';
 
 describe('createDescriptor', () => {
   test('should create a Descriptor by passing type, a payload and an access specifier', () => {
@@ -20,7 +18,7 @@ describe('createDescriptor', () => {
     const access = AccessModifier.public;
     const desc = createDescriptor(type, payload, access);
     expect(desc.type).toBe(type);
-    expect(desc[jSymbols.payload]).toBe(payload);
+    expect(desc[junctureSymbols.payload]).toBe(payload);
     expect(desc.access).toBe(access);
   });
 });

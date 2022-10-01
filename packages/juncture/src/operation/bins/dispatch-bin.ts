@@ -6,14 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AccessModifier } from '../../access';
-import { getFilteredDescriptorKeys } from '../../design/descriptor';
-import { descriptorTypeFamilies, NotSuitableType } from '../../design/descriptor-type';
+import { AccessModifier } from '../../access-modifier';
+import { DescriptorKeyPrefix } from '../../design/descriptor-type';
 import { GenericReactor } from '../../design/descriptors/reactor';
 import { GenericSynthReactor } from '../../design/descriptors/synth-reactor';
 import { Driver } from '../../driver';
-import { defineLazyProperty } from '../../tool/object';
-import { OverloadParameters } from '../../tool/overload-types';
+import { defineLazyProperty } from '../../utilities/object';
+import { OverloadParameters } from '../../utilities/overload-types';
 import { Dispatcher } from '../action';
 import { Realm } from '../realm';
 
@@ -21,11 +20,10 @@ import { Realm } from '../realm';
 type DispatchBinItem<L> =
   L extends GenericReactor<infer B, any> ? (...args : OverloadParameters<B>) => void
     : L extends GenericSynthReactor<infer B, any> ? (...args : OverloadParameters<B>) => void
-      : NotSuitableType;
+      : never;
 
-function createDispatchBinBase(realm: Realm, dispatcher: Dispatcher, outerFilter: boolean) {
-  const { driver } = realm;
-  const keys = getFilteredDescriptorKeys(driver, descriptorTypeFamilies.reactable, outerFilter);
+function createDispatchBinBase(realm: Realm, dispatcher: Dispatcher, isXp: boolean) {
+  const keys = isXp ? realm.setup.reactors.xpKeys : realm.setup.reactors.keys;
   const bin: any = {};
   keys.forEach(key => {
     defineLazyProperty(
@@ -43,9 +41,8 @@ function createDispatchBinBase(realm: Realm, dispatcher: Dispatcher, outerFilter
 // #endregion
 
 // #region DispatchBin
-// Conditional type required as a workoaround for problems with key remapping
 export type DispatchBin<D> = D extends any ? {
-  readonly [K in keyof D as K extends string ? K : never]: DispatchBinItem<D[K]>;
+  readonly [K in keyof D as K extends `${DescriptorKeyPrefix.reactor}.${infer W}` ? W : never] : DispatchBinItem<D[K]>;
 } : never;
 
 export interface DispatchBinHost<D> {
@@ -57,16 +54,18 @@ export function createDispatchBin<D extends Driver>(realm: Realm, dispatcher: Di
 }
 // #endregion
 
-// #region OuterDispatchBin
-export type OuterDispatchBin<D> = {
-  readonly [K in keyof D as
-  D[K] extends GenericReactor<any, AccessModifier.public> ? K
-    : D[K] extends GenericSynthReactor<any, AccessModifier.public> ? K
-      : never
-  ]: DispatchBinItem<D[K]>;
+// #region XpDispatchBin
+type XpDispatchBinKey<L, K> =
+  L extends GenericReactor<any, AccessModifier.public> ? K
+    : L extends GenericSynthReactor<any, AccessModifier.public> ? K
+      : never;
+
+export type XpDispatchBin<D> = {
+  readonly [K in keyof D as K extends `${DescriptorKeyPrefix.reactor}.${infer W}` ?
+    XpDispatchBinKey<D[K], W> : never]: DispatchBinItem<D[K]>;
 };
 
-export function createOuterDispatchBin<D extends Driver>(realm: Realm, dispatcher: Dispatcher): OuterDispatchBin<D> {
+export function createXpDispatchBin<D extends Driver>(realm: Realm, dispatcher: Dispatcher): XpDispatchBin<D> {
   return createDispatchBinBase(realm, dispatcher, true);
 }
 // #endregion
