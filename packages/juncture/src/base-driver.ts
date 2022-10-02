@@ -23,6 +23,8 @@ import { Setup } from './setup';
 import { PropertyAssembler } from './utilities/property-assembler';
 
 export abstract class BaseDriver implements Driver {
+  static readonly [junctureSymbols.juncture] = true;
+
   // #region Operation stuff
   [junctureSymbols.createPropertyAssembler](): PropertyAssembler {
     return new PropertyAssembler(this);

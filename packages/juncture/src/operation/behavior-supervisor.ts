@@ -19,7 +19,7 @@ interface TeardownMap {
   readonly [key: string]: () => void | undefined;
 }
 
-export class BehaviorHandler {
+export class BehaviorSupervisor {
   constructor(protected readonly realm: Realm, protected readonly behaviorFrameHost: BehaviorFrameHost<Driver>) { }
 
   protected teardowns: TeardownMap | undefined;

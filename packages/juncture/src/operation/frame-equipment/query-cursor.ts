@@ -7,13 +7,16 @@
  */
 
 import { Juncture, XpCursorOf } from '../../juncture';
-import { Query, QueryItem, QueryJunctureRequest } from '../../queries/query';
+import {
+  Query, QueryExplicitRequest, QueryItem, QueryJunctureRequest
+} from '../../queries/query';
 
 type QueryCursorItem<I extends QueryItem> =
   I extends Juncture ? XpCursorOf<I> :
     I extends QueryJunctureRequest<infer J> ?
       (I extends { optional : true } ? XpCursorOf<J> | undefined : XpCursorOf<J>) :
-      never;
+      I extends QueryExplicitRequest ? any :
+        never;
 
 export type QueryCursor<Q extends Query> = {
   readonly [K in keyof Q]: QueryCursorItem<Q[K]>;

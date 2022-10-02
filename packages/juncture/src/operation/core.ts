@@ -11,7 +11,7 @@
 import { junctureSymbols } from '../juncture-symbols';
 import { defineLazyProperty } from '../utilities/object';
 import { Dispatcher } from './action';
-import { BehaviorHandler } from './behavior-handler';
+import { BehaviorSupervisor } from './behavior-supervisor';
 import { Cursor } from './frame-equipment/cursor';
 import { createValueAccessor, ValueAccessor } from './frame-equipment/value-accessor';
 import {
@@ -52,13 +52,13 @@ export class Core {
     prepareXpBinKit(this.xpBins, realm, this.frames, dispatcher);
     prepareXpPickerKit(this.xpPickers, realm);
 
-    this.behaviors = this.createBehaviorHandler();
+    this.behaviors = this.createBehaviorSupervisor();
   }
 
-  readonly behaviors: BehaviorHandler;
+  readonly behaviors: BehaviorSupervisor;
 
-  protected createBehaviorHandler(): BehaviorHandler {
-    return new BehaviorHandler(this.realm, this.frames);
+  protected createBehaviorSupervisor(): BehaviorSupervisor {
+    return new BehaviorSupervisor(this.realm, this.frames);
   }
 
   // #endregion

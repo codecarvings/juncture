@@ -31,11 +31,15 @@ const prvSymbols: PrvSymbols = {
 };
 // #endregion
 
-// #region Juncture
-export interface Juncture<D extends Driver = Driver> {
-  new(): D;
+interface JunctureDecorations {
+  readonly [junctureSymbols.juncture]: true;
 
-  access?: AccessModifier;
+  readonly access?: AccessModifier;
+}
+
+// #region Juncture
+export interface Juncture<D extends Driver = Driver> extends JunctureDecorations {
+  new(): D;
 }
 
 // ---  Derivations
@@ -44,15 +48,27 @@ export type ValueOfJuncture<J extends Juncture> = ValueOf<InstanceType<J>>;
 
 export type CursorOfJuncture<J extends Juncture> = CursorOf<InstanceType<J>>;
 export type XpCursorOf<J extends Juncture> = XpCursorOfDriver<InstanceType<J>>;
+
+export function isJuncture(obj: any): obj is Juncture {
+  if (typeof obj !== 'function') {
+    return false;
+  }
+  if (obj[junctureSymbols.juncture] !== true) {
+    return false;
+  }
+
+  return true;
+}
 // #endregion
 
 // #region Additional juncture types
+export interface AlterableJuncture<D extends Driver = Driver> extends JunctureDecorations {
+  new (...args: any): D
+}
 
-export type AlterableJuncture<D extends Driver = Driver> = new (...args: any) => D;
-
-export type PartialJuncture<D extends Driver = Driver> = abstract new () => D;
-export type AlterablePartialJuncture<D extends Driver = Driver> = abstract new (...args: any) => D;
-
+export type PartialJuncture<D extends Driver = Driver> = (abstract new () => D) & JunctureDecorations;
+export type AlterablePartialJuncture<D extends Driver = Driver> =
+(abstract new (...args: any) => D) & JunctureDecorations;
 // #endregion
 
 // #region JunctureMap
