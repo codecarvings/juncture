@@ -6,10 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Query } from '../../query/query';
-import { QueryCursor } from '../frame-equipment/query-cursor';
+import { ActiveQuery } from '../../query/active-query';
+import { ActiveQueryCursor } from '../frame-equipment/active-query-cursor';
 import { UnboundFrame } from './unbound-frame';
 
-export interface QueryFrame<Q extends Query> extends UnboundFrame {
-  readonly _: QueryCursor<Q>;
+export interface ActiveQueryFrame<Q extends ActiveQuery> extends UnboundFrame {
+  readonly _: ActiveQueryCursor<Q>;
 }

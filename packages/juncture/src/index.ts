@@ -12,9 +12,9 @@ export { BIT } from './lib/bit';
 export { FACADE } from './lib/facade';
 export { LIST } from './lib/list';
 export { STRUCT } from './lib/struct';
-export { DynamicQueryFrame } from './operation/frames/dynamic-query-frame';
+export { ActiveQueryFrame } from './operation/frames/active-query-frame';
 export { QueryFrame } from './operation/frames/query-frame';
-export { DynamicQuery } from './queries/dynamic-query';
-export { Query } from './queries/query';
+export { ActiveQuery } from './query/active-query';
+export { Query } from './query/query';
 
 // Dont' delete this line (problem with Eslint - Too many blank lines...)

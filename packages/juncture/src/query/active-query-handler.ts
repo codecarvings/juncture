@@ -13,32 +13,32 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable default-case */
 
-import { EngineDynamicQueryHandlerMediator } from '../engine';
+import { EngineActiveQueryHandlerMediator } from '../engine';
 import { BranchConfig } from '../engine-parts/branch-manager';
 import { Juncture } from '../juncture';
 import { Cursor } from '../operation/frame-equipment/cursor';
 import { comparePaths, Path, PathComparisonResult } from '../operation/path';
 import {
-  DynamicQuery, DynamicQueryItem, DynamicQueryItemType, DynamicQueryJunctureRequest, DynamicQueryTemporaryJunctureRequest, getDynamicQueryItemType
-} from './dynamic-query';
-import { getQueryItemSourceType, QueryItemSourceType } from './query';
+  ActiveQuery, ActiveQueryItem, ActiveQueryItemType, ActiveQueryRequest, ActiveQueryRunRequest, getActiveQueryItemType
+} from './active-query';
+import { getQuerySourceType, QuerySourceType } from './query-source';
 
 interface Data {
-  item: DynamicQueryItem;
-  type: DynamicQueryItemType,
+  item: ActiveQueryItem;
+  type: ActiveQueryItemType,
   _: Cursor | undefined | null; // Undefined for optional dependencies, null => must recalculate
   tempMountIndex: number | undefined;
   tempBranchKey: string | undefined;
 }
 
-export class DynamicQueryHandler {
+export class ActiveQueryHandler {
   readonly cursor: any = {};
 
   protected datas = new Map<string, Data>();
 
   protected _isActive = true;
 
-  constructor(protected readonly mediator: EngineDynamicQueryHandlerMediator) {}
+  constructor(protected readonly mediator: EngineActiveQueryHandlerMediator) {}
 
   get isActive() {
     return this._isActive;
@@ -46,15 +46,15 @@ export class DynamicQueryHandler {
 
   protected checkActive() {
     if (!this.isActive) {
-      throw Error('DynamicQueryHandler already dismissed');
+      throw Error('ActiveQueryHandler already dismissed');
     }
   }
 
   protected isTemporaryJunctureRequestChanged(
-    oldItem: DynamicQueryTemporaryJunctureRequest,
-    newItem: DynamicQueryTemporaryJunctureRequest
+    oldItem: ActiveQueryRunRequest,
+    newItem: ActiveQueryRunRequest
   ): boolean {
-    if (newItem.temporaryJuncture !== oldItem.temporaryJuncture) {
+    if (newItem.run !== oldItem.run) {
       return true;
     }
     if (newItem.branchKey !== oldItem.branchKey) {
@@ -64,30 +64,30 @@ export class DynamicQueryHandler {
   }
 
   protected isJunctureRequestChanged(
-    oldItem: DynamicQueryJunctureRequest,
-    newItem: DynamicQueryJunctureRequest
+    oldItem: ActiveQueryRequest,
+    newItem: ActiveQueryRequest
   ): boolean {
-    if (newItem.juncture !== oldItem.juncture) {
+    if (newItem.take !== oldItem.take) {
       return true;
     }
     if (newItem.optional !== oldItem.optional) {
       return true;
     }
 
-    const oldItemSourceType = oldItem.source !== undefined ? getQueryItemSourceType(oldItem.source) : undefined;
-    const newItemSourceType = newItem.source !== undefined ? getQueryItemSourceType(newItem.source) : undefined;
+    const oldItemSourceType = oldItem.from !== undefined ? getQuerySourceType(oldItem.from) : undefined;
+    const newItemSourceType = newItem.from !== undefined ? getQuerySourceType(newItem.from) : undefined;
     if (oldItemSourceType !== newItemSourceType) {
       return true;
     }
     switch (newItemSourceType) {
-      case QueryItemSourceType.string:
-      case QueryItemSourceType.cursor:
-        if (newItem.source !== oldItem.source) {
+      case QuerySourceType.branchKey:
+      case QuerySourceType.cursor:
+        if (newItem.from !== oldItem.from) {
           return true;
         }
         break;
-      case QueryItemSourceType.path:
-        if (comparePaths(newItem.source as Path, oldItem.source as Path) !== PathComparisonResult.equal) {
+      case QuerySourceType.path:
+        if (comparePaths(newItem.from as Path, oldItem.from as Path) !== PathComparisonResult.equal) {
           return true;
         }
     }
@@ -100,7 +100,7 @@ export class DynamicQueryHandler {
 
   protected configsToMount: BranchConfig[] = [];
 
-  update<Q extends DynamicQuery>(query: Q) {
+  update<Q extends ActiveQuery>(query: Q) {
     this.checkActive();
     const { datas, cursor } = this;
     const keys = Object.keys(query);
@@ -112,35 +112,35 @@ export class DynamicQueryHandler {
       if (index !== -1) {
         // Old key present in new query
         const newItem = query[key];
-        const newType = getDynamicQueryItemType(newItem);
+        const newType = getActiveQueryItemType(newItem);
         if (newType === data.type) {
           // Same type
           switch (data.type) {
-            case DynamicQueryItemType.juncture:
+            case ActiveQueryItemType.juncture:
               if (newItem !== data.item) {
                 // Juncture changed
                 data._ = null;
               }
               break;
-            case DynamicQueryItemType.temporaryJunctureRequest:
+            case ActiveQueryItemType.runRequest:
               if (this.isTemporaryJunctureRequestChanged(
-                data.item as DynamicQueryTemporaryJunctureRequest,
-                newItem as DynamicQueryTemporaryJunctureRequest
+                data.item as ActiveQueryRunRequest,
+                newItem as ActiveQueryRunRequest
               )) {
                 // Change detected, remount required
                 data._ = null;
                 keysToUnmount.push(data.tempBranchKey!);
                 data.tempMountIndex = configsToMount.push({
-                  juncture: (newItem as DynamicQueryTemporaryJunctureRequest).temporaryJuncture,
-                  key: (newItem as DynamicQueryTemporaryJunctureRequest).branchKey,
-                  initialValue: (newItem as DynamicQueryTemporaryJunctureRequest).initialValue
+                  juncture: (newItem as ActiveQueryRunRequest).run,
+                  key: (newItem as ActiveQueryRunRequest).branchKey,
+                  initialValue: (newItem as ActiveQueryRunRequest).initialValue
                 });
               }
               break;
-            case DynamicQueryItemType.junctureRequest:
+            case ActiveQueryItemType.request:
               if (this.isJunctureRequestChanged(
-                data.item as DynamicQueryJunctureRequest,
-                newItem as DynamicQueryJunctureRequest
+                data.item as ActiveQueryRequest,
+                newItem as ActiveQueryRequest
               )) {
                 // Change detected
                 data._ = null;
@@ -150,15 +150,15 @@ export class DynamicQueryHandler {
         } else {
           // Type changed
           data._ = null;
-          if (data.type === DynamicQueryItemType.temporaryJunctureRequest) {
+          if (data.type === ActiveQueryItemType.runRequest) {
             keysToUnmount.push(data.tempBranchKey!);
             data.tempBranchKey = undefined;
           }
-          if (newType === DynamicQueryItemType.temporaryJunctureRequest) {
+          if (newType === ActiveQueryItemType.runRequest) {
             data.tempMountIndex = configsToMount.push({
-              juncture: (newItem as DynamicQueryTemporaryJunctureRequest).temporaryJuncture,
-              key: (newItem as DynamicQueryTemporaryJunctureRequest).branchKey,
-              initialValue: (newItem as DynamicQueryTemporaryJunctureRequest).initialValue
+              juncture: (newItem as ActiveQueryRunRequest).run,
+              key: (newItem as ActiveQueryRunRequest).branchKey,
+              initialValue: (newItem as ActiveQueryRunRequest).initialValue
             });
           }
         }
@@ -169,7 +169,7 @@ export class DynamicQueryHandler {
         // Old key not present in new query
         keysToRemove.push(key);
         delete cursor[key];
-        if (data.type === DynamicQueryItemType.temporaryJunctureRequest) {
+        if (data.type === ActiveQueryItemType.runRequest) {
           keysToUnmount.push(data.tempBranchKey!);
         }
       }
@@ -178,13 +178,13 @@ export class DynamicQueryHandler {
     keys.forEach(key => {
       if (!datas.has(key)) {
         const item = query[key];
-        const type = getDynamicQueryItemType(item);
+        const type = getActiveQueryItemType(item);
         let tempMountIndex: number | undefined;
-        if (type === DynamicQueryItemType.temporaryJunctureRequest) {
+        if (type === ActiveQueryItemType.runRequest) {
           tempMountIndex = configsToMount.push({
-            juncture: (item as DynamicQueryTemporaryJunctureRequest).temporaryJuncture,
-            key: (item as DynamicQueryTemporaryJunctureRequest).branchKey,
-            initialValue: (item as DynamicQueryTemporaryJunctureRequest).initialValue
+            juncture: (item as ActiveQueryRunRequest).run,
+            key: (item as ActiveQueryRunRequest).branchKey,
+            initialValue: (item as ActiveQueryRunRequest).initialValue
           });
         }
         const data: Data = {
@@ -214,21 +214,21 @@ export class DynamicQueryHandler {
         return;
       }
       switch (data.type) {
-        case DynamicQueryItemType.juncture:
+        case ActiveQueryItemType.juncture:
           data._ = this.mediator.getXpCursorFromQueryItem({
-            juncture: data.item as Juncture
+            take: data.item as Juncture
           });
           break;
-        case DynamicQueryItemType.temporaryJunctureRequest:
+        case ActiveQueryItemType.runRequest:
           data._ = this.mediator.getXpCursorFromQueryItem({
-            source: data.tempBranchKey!
+            take: data.tempBranchKey!
           });
           break;
-        case DynamicQueryItemType.junctureRequest:
+        case ActiveQueryItemType.request:
           data._ = this.mediator.getXpCursorFromQueryItem({
-            juncture: (data.item as DynamicQueryJunctureRequest).juncture,
-            source: (data.item as DynamicQueryJunctureRequest).source,
-            optional: (data.item as DynamicQueryJunctureRequest).optional
+            take: (data.item as ActiveQueryRequest).take,
+            from: (data.item as ActiveQueryRequest).from,
+            optional: (data.item as ActiveQueryRequest).optional
           });
           break;
       }

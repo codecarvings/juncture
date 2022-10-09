@@ -22,6 +22,8 @@ import { Initializable } from './utilities/initializable';
 import { PropertyAssemblerHost } from './utilities/property-assembler';
 
 export interface Driver extends PropertyAssemblerHost, Initializable {
+  readonly [junctureSymbols.driver]: true;
+
   [junctureSymbols.createSetup](): Setup;
 
   [junctureSymbols.createRealm](
@@ -47,6 +49,13 @@ export interface Driver extends PropertyAssemblerHost, Initializable {
   readonly 'selector.value': Selector<ValueOf<this>>;
 
   readonly 'selector.juncture': Selector<Juncture<this>>;
+}
+
+export function isDriver(obj: any): obj is Driver {
+  if (!obj) {
+    return false;
+  }
+  return obj[junctureSymbols.driver] === true;
 }
 
 // ---  Derivations

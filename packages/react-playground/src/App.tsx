@@ -1,36 +1,35 @@
-import { BIT, STRUCT } from '@codecarvings/juncture';
-import { useTransientJuncture } from '@codecarvings/react-juncture';
-import { Primary } from './state/primary';
-import { useJuncture2 } from './temp';
+/* eslint-disable react/jsx-props-no-spreading */
+import {
+  BIT, STRUCT
+} from '@codecarvings/juncture';
+import { useState } from 'react';
+import { useJuncture } from './use-juncture';
 
-class AppState extends STRUCT.of({
+class AppDriver extends STRUCT.of({
   title: BIT.of('My transient title')
 }) { }
 
 function App() {
-  useTransientJuncture(AppState);
-  const { value, select, _ } = useJuncture2({
-    Primary,
-    AppState: { juncture: AppState }
+  const { _ } = useJuncture({
+    myState: { run: AppDriver }
   });
+  const [counter, setCounter] = useState(0);
+  console.log(_);
 
   return (
-    <>
+    <div>
       <div>
-        Juncture says:
-        { value(_.Primary.name) }
-        <br />
-        My branch is:
-        { select(_.Primary).branchKey }
+        AppState:
       </div>
       <div>
-        Transient juncture:
-        { value(_.AppState).title }
-        <br />
-        transient branch is:
-        { select(_.AppState).branchKey }
+        Counter:
+        {' '}
+        { counter }
       </div>
-    </>
+      <div>
+        <button type="button" onClick={() => setCounter(counter + 1)}>Add</button>
+      </div>
+    </div>
   );
 }
 

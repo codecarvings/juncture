@@ -7,17 +7,15 @@
  */
 
 import { Juncture, XpCursorOf } from '../../juncture';
-import {
-  Query, QueryExplicitRequest, QueryItem, QueryRequest
-} from '../../query/query';
+import { ActiveQuery, ActiveQueryRequest, ActiveQueryRunRequest } from '../../query/active-query';
 
-type QueryCursorItem<I extends QueryItem> =
+type ActiveCursorItem<I> =
   I extends Juncture ? XpCursorOf<I> :
-    I extends QueryRequest<infer J> ?
+    I extends ActiveQueryRequest<infer J> ?
       (I extends { optional : true } ? XpCursorOf<J> | undefined : XpCursorOf<J>) :
-      I extends QueryExplicitRequest ? any :
+      I extends ActiveQueryRunRequest<infer J> ? XpCursorOf<J> :
         never;
 
-export type QueryCursor<Q extends Query> = {
-  readonly [K in keyof Q]: QueryCursorItem<Q[K]>;
+export type ActiveQueryCursor<Q extends ActiveQuery> = {
+  readonly [K in keyof Q]: ActiveCursorItem<Q[K]>;
 };

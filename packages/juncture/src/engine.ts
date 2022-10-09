@@ -7,8 +7,8 @@
  */
 
 import { Observable } from 'rxjs';
+import { ActiveQueryHandlerManager } from './engine-parts/active-query-handler-manager';
 import { BranchConfig, BranchManager } from './engine-parts/branch-manager';
-import { DynamicQueryHandlerManager } from './engine-parts/dynamic-query-handler-manager';
 import { PersistentPathManager } from './engine-parts/persistent-path-manager';
 import { RealmManager } from './engine-parts/realm-manager';
 import { SelectorCatalyst } from './engine-parts/selector-catalyst';
@@ -18,13 +18,14 @@ import { Juncture } from './juncture';
 import { Action } from './operation/action';
 import { Cursor } from './operation/frame-equipment/cursor';
 import { QueryFrame } from './operation/frames/query-frame';
-import { createUnbindedFrame } from './operation/frames/unbinded-frame';
+import { createUnboundFrame } from './operation/frames/unbound-frame';
 import { Path, pathToString, PersistentPath } from './operation/path';
 import {
   ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
 } from './operation/realm';
 import { getRealm, isRealmHost } from './operation/realm-host';
-import { Query, QueryItem } from './queries/query';
+import { ActiveQueryHandler } from './query/active-query-handler';
+import { Query, QueryItem } from './query/query';
 import { mappedAssign } from './utilities/object';
 
 export enum EngineStatus {
@@ -53,7 +54,7 @@ export interface EngineRealmMediator {
   };
 }
 
-export interface EngineDynamicQueryHandlerMediator {
+export interface EngineActiveQueryHandlerMediator {
   syncBranches(keysToUnmount: string[], configsToMount: BranchConfig[]): string[];
   getXpCursorFromQueryItem(item: QueryItem): Cursor | undefined;
 }
@@ -70,7 +71,7 @@ export class Engine {
     this.transactionManager = this.createTransactionManager();
     this.branchManager = this.createBranchManager();
     this.selectorCatalyst = this.craeteSelectorCatalyst();
-    this.dynamicQueryHandlerManager = this.createDynamicQueryHandlerManager();
+    this.activeQueryHandlerManager = this.createActiveQueryHandlerManager();
   }
 
   // #region Engine Parts
@@ -139,14 +140,14 @@ export class Engine {
     return new SelectorCatalyst(this.valueUsageMonitor, this.persistentPathManager);
   }
 
-  protected readonly dynamicQueryHandlerManager: DynamicQueryHandlerManager;
+  protected readonly activeQueryHandlerManager: ActiveQueryHandlerManager;
 
-  protected createDynamicQueryHandlerManager(): DynamicQueryHandlerManager {
-    const engineDynamicQueryHandlerMediator: EngineDynamicQueryHandlerMediator = {
+  protected createActiveQueryHandlerManager(): ActiveQueryHandlerManager {
+    const engineActiveQueryHandlerMediator: EngineActiveQueryHandlerMediator = {
       syncBranches: this.syncBranches,
       getXpCursorFromQueryItem: this.getXpCursorFromQueryItem
     };
-    return new DynamicQueryHandlerManager(engineDynamicQueryHandlerMediator);
+    return new ActiveQueryHandlerManager(engineActiveQueryHandlerMediator);
   }
 
   // #endregion
@@ -239,7 +240,7 @@ export class Engine {
 
   // TODO: Implement this
   protected getXpCursorFromQueryItem(item: QueryItem): Cursor | undefined {
-    const juncture = typeof item === 'function' ? item : item.juncture;
+    const juncture = typeof item === 'function' ? item : item.take;
     if (juncture) {
       const keys = this.branchManager.branchKeys;
       for (let i = 0; i < keys.length; i += 1) {
@@ -256,7 +257,11 @@ export class Engine {
   createFrame<Q extends Query>(query: Q): QueryFrame<Q> {
     const keys = Object.keys(query);
     const cursor = mappedAssign({}, keys, key => this.getXpCursorFromQueryItem(query[key]));
-    return createUnbindedFrame(cursor);
+    return createUnboundFrame(cursor);
+  }
+
+  createHandler(): ActiveQueryHandler {
+    return this.activeQueryHandlerManager.createHandler();
   }
   // #endregion
 }

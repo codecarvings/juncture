@@ -11,8 +11,8 @@ import { Juncture } from '../../../../juncture';
 import { MutationDetectBin, XpMutationDetectBin } from '../../../bins/detect/mutation-detect-bin';
 import { Cursor, DriverOfCursor } from '../../cursor';
 
-// #region UnbindedMutationDetectPicker
-export interface UnbindedMutationDetectPicker {
+// #region UnboundMutationDetectPicker
+export interface UnboundMutationDetectPicker {
   <C extends Cursor>(_: C): XpMutationDetectBin<DriverOfCursor<C>>;
   <J extends Juncture>(juncture: J): XpMutationDetectBin<InstanceType<J>>;
   <C extends Cursor, J extends Juncture>(_: C, juncture: J): XpMutationDetectBin<InstanceType<J>>;
@@ -20,14 +20,14 @@ export interface UnbindedMutationDetectPicker {
 // #endregion
 
 // #region MutationDetectPicker
-export interface MutationDetectPicker<D extends Driver> extends UnbindedMutationDetectPicker {
+export interface MutationDetectPicker<D extends Driver> extends UnboundMutationDetectPicker {
   (): MutationDetectBin<D>;
   (_: CursorOf<D>): MutationDetectBin<D>;
 }
 // #endregion
 
 // #region XpMutationDetectPicker
-export interface XpMutationDetectPicker<D extends Driver> extends UnbindedMutationDetectPicker {
+export interface XpMutationDetectPicker<D extends Driver> extends UnboundMutationDetectPicker {
   (): XpMutationDetectBin<D>;
 }
 // #endregion

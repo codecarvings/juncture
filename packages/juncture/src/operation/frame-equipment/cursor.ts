@@ -7,11 +7,11 @@
  */
 
 import {
-  CursorOf, Driver, ValueOf
+  CursorOf, Driver, isDriver, ValueOf
 } from '../../driver';
 import { junctureSymbols, JunctureSymbols } from '../../juncture-symbols';
 import { Realm } from '../realm';
-import { addRealmLink, RealmHost } from '../realm-host';
+import { addRealmLink, isRealmHost, RealmHost } from '../realm-host';
 
 export interface Cursor<D extends Driver = Driver> extends RealmHost {
   readonly [junctureSymbols.driver]: D; // Preserve type param
@@ -19,6 +19,13 @@ export interface Cursor<D extends Driver = Driver> extends RealmHost {
 
 export function createCursor<D extends Driver>(realm: Realm): Cursor<D> {
   return addRealmLink({}, realm);
+}
+
+export function isCursor(obj: any): obj is Cursor {
+  if (!isRealmHost(obj)) {
+    return false;
+  }
+  return isDriver((obj as any)[junctureSymbols.driver]);
 }
 
 // ---  Derivations

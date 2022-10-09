@@ -23,7 +23,6 @@ export function getRealm(host: RealmHost): Realm {
   return host[junctureSymbols.realm];
 }
 
-// Used in tests
 export function isRealmHost(obj: any): obj is RealmHost {
   if (!obj) {
     return false;

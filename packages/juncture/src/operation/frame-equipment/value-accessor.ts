@@ -36,8 +36,8 @@ export function createValueAccessor<D extends Driver>(realm: Realm): ValueAccess
 }
 // #endregion
 
-// #region unbindedValueGetter
-export function unbindedValueGetter<C extends Cursor>(_: C): ValueOfCursor<C> {
+// #region unboundValueGetter
+export function unboundValueGetter<C extends Cursor>(_: C): ValueOfCursor<C> {
   return getRealm(_).value;
 }
 // #endregion

@@ -42,13 +42,6 @@ export interface Juncture<D extends Driver = Driver> extends JunctureDecorations
   new(): D;
 }
 
-// ---  Derivations
-export type SchemaOfJuncture<J extends Juncture> = SchemaOf<InstanceType<J>>;
-export type ValueOfJuncture<J extends Juncture> = ValueOf<InstanceType<J>>;
-
-export type CursorOfJuncture<J extends Juncture> = CursorOf<InstanceType<J>>;
-export type XpCursorOf<J extends Juncture> = XpCursorOfDriver<InstanceType<J>>;
-
 export function isJuncture(obj: any): obj is Juncture {
   if (typeof obj !== 'function') {
     return false;
@@ -59,6 +52,13 @@ export function isJuncture(obj: any): obj is Juncture {
 
   return true;
 }
+
+// ---  Derivations
+export type SchemaOfJuncture<J extends Juncture> = SchemaOf<InstanceType<J>>;
+export type ValueOfJuncture<J extends Juncture> = ValueOf<InstanceType<J>>;
+
+export type CursorOfJuncture<J extends Juncture> = CursorOf<InstanceType<J>>;
+export type XpCursorOf<J extends Juncture> = XpCursorOfDriver<InstanceType<J>>;
 // #endregion
 
 // #region Additional juncture types

@@ -8,21 +8,21 @@
 
 import { Driver } from '../../driver';
 import {
-  MessageDetectPicker, UnbindedMessageDetectPicker
+  MessageDetectPicker, UnboundMessageDetectPicker
 } from './pickers/detect/message-detect-picker';
 import {
-  MutationDetectPicker, UnbindedMutationDetectPicker
+  MutationDetectPicker, UnboundMutationDetectPicker
 } from './pickers/detect/mutation-detect-picker';
 
-// #region UnbindedDetectPack
-export interface UnbindedDetectPack {
+// #region UnboundDetectPack
+export interface UnboundDetectPack {
   readonly dependencyChange: any;
   readonly anyDependencyChange: any;
-  readonly mutation: UnbindedMutationDetectPicker;
+  readonly mutation: UnboundMutationDetectPicker;
   readonly selection: any;
   readonly reaction: any;
   readonly execution: any;
-  readonly message: UnbindedMessageDetectPicker;
+  readonly message: UnboundMessageDetectPicker;
 }
 // #endregion
 

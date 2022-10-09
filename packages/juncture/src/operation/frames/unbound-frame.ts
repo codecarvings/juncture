@@ -10,18 +10,18 @@ import { XpDispatchBin } from '../bins/dispatch-bin';
 import { XpExecBin } from '../bins/exec-bin';
 import { XpSelectBin } from '../bins/select-bin';
 import {
-    Cursor, DriverOfCursor, ValueOfCursor
+  Cursor, DriverOfCursor, ValueOfCursor
 } from '../frame-equipment/cursor';
-import { UnbindedDetectPack } from '../frame-equipment/detect-pack';
-import { unbindedDispatchPicker } from '../frame-equipment/pickers/dispatch-picker';
-import { unbindedExecPicker } from '../frame-equipment/pickers/exec-picker';
-import { unbindedSelectPicker } from '../frame-equipment/pickers/select-picker';
-import { unbindedValueGetter } from '../frame-equipment/value-accessor';
+import { UnboundDetectPack } from '../frame-equipment/detect-pack';
+import { unboundDispatchPicker } from '../frame-equipment/pickers/dispatch-picker';
+import { unboundExecPicker } from '../frame-equipment/pickers/exec-picker';
+import { unboundSelectPicker } from '../frame-equipment/pickers/select-picker';
+import { unboundValueGetter } from '../frame-equipment/value-accessor';
 
-export interface UnbindedFrame {
+export interface UnboundFrame {
   readonly _: any;
 
-  readonly detect: UnbindedDetectPack;
+  readonly detect: UnboundDetectPack;
 
   value<C extends Cursor>(_: C): ValueOfCursor<C>;
 
@@ -32,13 +32,13 @@ export interface UnbindedFrame {
   exec<C extends Cursor>(_: C): XpExecBin<DriverOfCursor<C>>;
 }
 
-export function createUnbindedFrame(cursor: any): UnbindedFrame {
+export function createUnboundFrame(cursor: any): UnboundFrame {
   return {
     _: cursor,
     detect: undefined!,
-    value: unbindedValueGetter,
-    select: unbindedSelectPicker,
-    dispatch: unbindedDispatchPicker,
-    exec: unbindedExecPicker
+    value: unboundValueGetter,
+    select: unboundSelectPicker,
+    dispatch: unboundDispatchPicker,
+    exec: unboundExecPicker
   };
 }
