@@ -21,7 +21,7 @@ import { QueryFrame } from './operation/frames/query-frame';
 import { createUnboundFrame } from './operation/frames/unbound-frame';
 import { Path, pathToString, PersistentPath } from './operation/path';
 import {
-  ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
+    ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
 } from './operation/realm';
 import { getRealm, isRealmHost } from './operation/realm-host';
 import { ActiveQueryHandler } from './query/active-query-handler';
@@ -240,7 +240,7 @@ export class Engine {
 
   // TODO: Implement this
   protected getXpCursorFromQueryItem(item: QueryItem): Cursor | undefined {
-    const juncture = typeof item === 'function' ? item : item.take;
+    const juncture = typeof item === 'function' ? item : item.get;
     if (juncture) {
       const keys = this.branchManager.branchKeys;
       for (let i = 0; i < keys.length; i += 1) {

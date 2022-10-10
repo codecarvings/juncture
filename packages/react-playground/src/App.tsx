@@ -3,6 +3,7 @@ import {
   BIT, STRUCT
 } from '@codecarvings/juncture';
 import { useState } from 'react';
+import { Primary } from './state/primary';
 import { useJuncture } from './use-juncture';
 
 class AppDriver extends STRUCT.of({
@@ -11,6 +12,7 @@ class AppDriver extends STRUCT.of({
 
 function App() {
   const { _ } = useJuncture({
+    primary: { get: Primary, optional: true },
     myState: { run: AppDriver }
   });
   const [counter, setCounter] = useState(0);

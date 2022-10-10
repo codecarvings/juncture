@@ -123,7 +123,7 @@ test('experiment 2', () => {
   engine.mountBranch({ juncture: App });
   const { select, _ } = engine.createFrame({
     app: App,
-    prova: { take: '' }
+    prova: { get: '' }
   });
   expect(select(_.app.item).description);
   engine.stop();

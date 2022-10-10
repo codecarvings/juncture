@@ -11,7 +11,7 @@ import { isObject } from '../utilities/object';
 import { isQuerySource, QuerySource } from './query-source';
 
 export interface ActiveQueryRequest<J extends Juncture = Juncture> {
-  readonly take: J;
+  readonly get: J;
   readonly from?: QuerySource;
   readonly optional?: boolean;
 
@@ -25,7 +25,7 @@ export function isActiveQueryRequest(obj: any): obj is ActiveQueryRequest {
   if (!isObject(obj)) {
     return false;
   }
-  if (!isJuncture(obj.take)) {
+  if (!isJuncture(obj.get)) {
     return false;
   }
 
@@ -33,7 +33,7 @@ export function isActiveQueryRequest(obj: any): obj is ActiveQueryRequest {
 }
 
 export interface ActiveQueryExplicitRequest {
-  readonly take: QuerySource;
+  readonly get: QuerySource;
 
   // Extra properties required in order to make type inference work
   readonly from?: undefined;
@@ -47,7 +47,7 @@ export function isActiveQueryExplicitRequest(obj: any): obj is ActiveQueryExplic
   if (!isObject(obj)) {
     return false;
   }
-  if (!isQuerySource(obj.take)) {
+  if (!isQuerySource(obj.get)) {
     return false;
   }
 
@@ -60,7 +60,7 @@ export interface ActiveQueryRunRequest<J extends Juncture = Juncture> {
   readonly initialValue?: ValueOfJuncture<J>
 
   // Extra properties required in order to make type inference work
-  readonly take?: undefined;
+  readonly get?: undefined;
   readonly from?: undefined;
   readonly optional?: undefined;
 }

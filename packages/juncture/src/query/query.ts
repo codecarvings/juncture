@@ -10,13 +10,13 @@ import { Juncture } from '../juncture';
 import { QuerySource } from './query-source';
 
 export interface QueryRequest<J extends Juncture = Juncture> {
-  readonly take: J;
+  readonly get: J;
   readonly from?: QuerySource;
   readonly optional?: boolean;
 }
 
 export interface QueryExplicitRequest {
-  readonly take: QuerySource;
+  readonly get: QuerySource;
 
   // Extra properties required in order to make type inference work
   readonly from?: undefined;

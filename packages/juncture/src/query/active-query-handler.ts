@@ -19,7 +19,7 @@ import { Juncture } from '../juncture';
 import { Cursor } from '../operation/frame-equipment/cursor';
 import { comparePaths, Path, PathComparisonResult } from '../operation/path';
 import {
-  ActiveQuery, ActiveQueryItem, ActiveQueryItemType, ActiveQueryRequest, ActiveQueryRunRequest, getActiveQueryItemType
+    ActiveQuery, ActiveQueryItem, ActiveQueryItemType, ActiveQueryRequest, ActiveQueryRunRequest, getActiveQueryItemType
 } from './active-query';
 import { getQuerySourceType, QuerySourceType } from './query-source';
 
@@ -67,7 +67,7 @@ export class ActiveQueryHandler {
     oldItem: ActiveQueryRequest,
     newItem: ActiveQueryRequest
   ): boolean {
-    if (newItem.take !== oldItem.take) {
+    if (newItem.get !== oldItem.get) {
       return true;
     }
     if (newItem.optional !== oldItem.optional) {
@@ -216,17 +216,17 @@ export class ActiveQueryHandler {
       switch (data.type) {
         case ActiveQueryItemType.juncture:
           data._ = this.mediator.getXpCursorFromQueryItem({
-            take: data.item as Juncture
+            get: data.item as Juncture
           });
           break;
         case ActiveQueryItemType.runRequest:
           data._ = this.mediator.getXpCursorFromQueryItem({
-            take: data.tempBranchKey!
+            get: data.tempBranchKey!
           });
           break;
         case ActiveQueryItemType.request:
           data._ = this.mediator.getXpCursorFromQueryItem({
-            take: (data.item as ActiveQueryRequest).take,
+            get: (data.item as ActiveQueryRequest).get,
             from: (data.item as ActiveQueryRequest).from,
             optional: (data.item as ActiveQueryRequest).optional
           });
