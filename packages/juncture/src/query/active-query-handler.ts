@@ -19,7 +19,7 @@ import { Juncture } from '../juncture';
 import { Cursor } from '../operation/frame-equipment/cursor';
 import { comparePaths, Path, PathComparisonResult } from '../operation/path';
 import {
-    ActiveQuery, ActiveQueryItem, ActiveQueryItemType, ActiveQueryRequest, ActiveQueryRunRequest, getActiveQueryItemType
+  ActiveQuery, ActiveQueryItem, ActiveQueryItemType, ActiveQueryRequest, ActiveQueryRunRequest, getActiveQueryItemType
 } from './active-query';
 import { getQuerySourceType, QuerySourceType } from './query-source';
 
