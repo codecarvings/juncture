@@ -24,12 +24,7 @@ export function isQuerySource(obj: any): obj is QuerySource {
   return false;
 }
 
-export enum QuerySourceType {
-  branchKey = 'branchKey',
-  path = 'path',
-  cursor = 'cursor'
-}
-
+/*
 export function getQuerySourceType(source: QuerySource): QuerySourceType {
   if (typeof source === 'string') {
     return QuerySourceType.branchKey;
@@ -43,3 +38,4 @@ export function getQuerySourceType(source: QuerySource): QuerySourceType {
 
   throw Error('Cannot detect type of QuerySource');
 }
+*/

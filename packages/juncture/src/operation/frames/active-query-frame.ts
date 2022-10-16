@@ -13,3 +13,8 @@ import { UnboundFrame } from './unbound-frame';
 export interface ActiveQueryFrame<Q extends ActiveQuery> extends UnboundFrame {
   readonly _: ActiveQueryCursor<Q>;
 }
+
+export interface ControlledActiveQueryFrame<Q extends ActiveQuery = ActiveQuery> {
+  readonly frame: ActiveQueryFrame<Q>;
+  release(): void;
+}

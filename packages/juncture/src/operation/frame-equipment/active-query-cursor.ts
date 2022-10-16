@@ -19,3 +19,8 @@ type ActiveCursorItem<I> =
 export type ActiveQueryCursor<Q extends ActiveQuery> = {
   readonly [K in keyof Q]: ActiveCursorItem<Q[K]>;
 };
+
+export interface ControlledActiveQueryCursor<Q extends ActiveQuery = ActiveQuery> {
+  readonly cursor: ActiveQueryCursor<Q>;
+  release(): void;
+}

@@ -7,24 +7,25 @@
  */
 
 import { Observable } from 'rxjs';
-import { ActiveQueryHandlerManager } from './engine-parts/active-query-handler-manager';
+import { ActiveQueryManager } from './engine-parts/active-query-manager';
 import { BranchConfig, BranchManager } from './engine-parts/branch-manager';
 import { PersistentPathManager } from './engine-parts/persistent-path-manager';
 import { RealmManager } from './engine-parts/realm-manager';
 import { SelectorCatalyst } from './engine-parts/selector-catalyst';
 import { TransactionManager } from './engine-parts/transaction-manager';
 import { ValueUsageMonitor } from './engine-parts/value-usage-monitor';
-import { Juncture } from './juncture';
+import { isJuncture, Juncture } from './juncture';
 import { Action } from './operation/action';
 import { Cursor } from './operation/frame-equipment/cursor';
+import { ControlledActiveQueryFrame } from './operation/frames/active-query-frame';
 import { QueryFrame } from './operation/frames/query-frame';
 import { createUnboundFrame } from './operation/frames/unbound-frame';
 import { Path, pathToString, PersistentPath } from './operation/path';
 import {
-    ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
+  ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
 } from './operation/realm';
 import { getRealm, isRealmHost } from './operation/realm-host';
-import { ActiveQueryHandler } from './query/active-query-handler';
+import { ActiveQuery } from './query/active-query';
 import { Query, QueryItem } from './query/query';
 import { mappedAssign } from './utilities/object';
 
@@ -54,15 +55,11 @@ export interface EngineRealmMediator {
   };
 }
 
-export interface EngineActiveQueryHandlerMediator {
-  syncBranches(keysToUnmount: string[], configsToMount: BranchConfig[]): string[];
-  getXpCursorFromQueryItem(item: QueryItem): Cursor | undefined;
-}
-
 export class Engine {
   constructor() {
     this.dispatch = this.dispatch.bind(this);
-    this.syncBranches = this.syncBranches.bind(this);
+    this.mountBranches = this.mountBranches.bind(this);
+    this.unmountBranches = this.unmountBranches.bind(this);
     this.getXpCursorFromQueryItem = this.getXpCursorFromQueryItem.bind(this);
 
     this.persistentPathManager = this.createPersistentPathManager();
@@ -71,7 +68,7 @@ export class Engine {
     this.transactionManager = this.createTransactionManager();
     this.branchManager = this.createBranchManager();
     this.selectorCatalyst = this.craeteSelectorCatalyst();
-    this.activeQueryHandlerManager = this.createActiveQueryHandlerManager();
+    this.activeQueryManager = this.createActiveQueryManager();
   }
 
   // #region Engine Parts
@@ -140,16 +137,11 @@ export class Engine {
     return new SelectorCatalyst(this.valueUsageMonitor, this.persistentPathManager);
   }
 
-  protected readonly activeQueryHandlerManager: ActiveQueryHandlerManager;
+  protected readonly activeQueryManager: ActiveQueryManager;
 
-  protected createActiveQueryHandlerManager(): ActiveQueryHandlerManager {
-    const engineActiveQueryHandlerMediator: EngineActiveQueryHandlerMediator = {
-      syncBranches: this.syncBranches,
-      getXpCursorFromQueryItem: this.getXpCursorFromQueryItem
-    };
-    return new ActiveQueryHandlerManager(engineActiveQueryHandlerMediator);
+  protected createActiveQueryManager(): ActiveQueryManager {
+    return new ActiveQueryManager(this.mountBranches, this.unmountBranches, this.getXpCursorFromQueryItem);
   }
-
   // #endregion
 
   // #region Status stuff
@@ -164,7 +156,9 @@ export class Engine {
       throw Error('Engine already stopped');
     }
 
-    this.branchManager.syncBranches(this.branchManager.branchKeys, []);
+    this.activeQueryManager.releaseAllCursors();
+    this.branchManager.unmountAllBranches();
+
     this._status = EngineStatus.stopped;
   }
   // #endregion
@@ -190,10 +184,6 @@ export class Engine {
   // #endregion
 
   // #region Branch stuff
-  syncBranches(keysToUnmount: string[], configsToMount: BranchConfig[]): string[] {
-    return this.branchManager.syncBranches(keysToUnmount, configsToMount);
-  }
-
   mountBranch<J extends Juncture>(juncture: J): string;
   mountBranch<J extends Juncture>(config: BranchConfig<J>): string;
   mountBranch(juncture_or_config: Juncture | BranchConfig) {
@@ -203,11 +193,29 @@ export class Engine {
     } else {
       config = juncture_or_config;
     }
-    return this.branchManager.syncBranches([], [config])[0];
+    return this.branchManager.mountBranches([config])[0];
+  }
+
+  mountBranches(junctures: (Juncture | BranchConfig)[]): string[] {
+    const configs = junctures.map(request => {
+      let config: BranchConfig;
+      if (typeof request === 'function') {
+        config = { juncture: request };
+      } else {
+        config = request;
+      }
+      return config;
+    });
+
+    return this.branchManager.mountBranches(configs);
   }
 
   unmountBranch(key: string) {
-    this.branchManager.syncBranches([key], []);
+    this.branchManager.unmountBranches([key]);
+  }
+
+  unmountBranches(keys: string[]) {
+    this.branchManager.unmountBranches(keys);
   }
 
   protected getRealm(path: Path): Realm {
@@ -240,12 +248,20 @@ export class Engine {
 
   // TODO: Implement this
   protected getXpCursorFromQueryItem(item: QueryItem): Cursor | undefined {
-    const juncture = typeof item === 'function' ? item : item.get;
-    if (juncture) {
-      const keys = this.branchManager.branchKeys;
-      for (let i = 0; i < keys.length; i += 1) {
-        const realm = this.branchManager.getBranch(keys[i]);
-        if (realm?.driver.constructor === juncture) {
+    const request = typeof item === 'function' ? item : item.get;
+    if (request) {
+      if (isJuncture(request)) {
+        const keys = this.branchManager.branchKeys;
+        for (let i = 0; i < keys.length; i += 1) {
+          const realm = this.branchManager.getBranch(keys[i]);
+          if (realm?.driver.constructor === request) {
+            return realm.xpCursor;
+          }
+        }
+      }
+      if (typeof request === 'string') {
+        const realm = this.branchManager.getBranch(request);
+        if (realm) {
           return realm.xpCursor;
         }
       }
@@ -260,8 +276,8 @@ export class Engine {
     return createUnboundFrame(cursor);
   }
 
-  createHandler(): ActiveQueryHandler {
-    return this.activeQueryHandlerManager.createHandler();
+  createControlledAciveFrame<Q extends ActiveQuery>(query: Q): ControlledActiveQueryFrame<Q> {
+    return this.activeQueryManager.createControlledFrame(query);
   }
   // #endregion
 }

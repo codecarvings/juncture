@@ -49,16 +49,6 @@ export interface ManagedRealm {
   mount(): void;
   unmount(): void;
 }
-
-export interface ControlledRealm {
-  readonly realm: Realm;
-  scheduleUnmount(): void;
-}
-
-export interface ControlledRealmMap {
-  readonly [key: string]: ControlledRealm;
-}
-
 // #endregion
 
 // #region Realm
@@ -247,5 +237,16 @@ export class Realm {
 
 export interface RealmMap {
   readonly [key: string]: Realm;
+}
+// #endregion
+
+// #region ControlledReealm
+export interface ControlledRealm {
+  readonly realm: Realm;
+  scheduleUnmount(): void;
+}
+
+export interface ControlledRealmMap {
+  readonly [key: string]: ControlledRealm;
 }
 // #endregion

@@ -91,14 +91,17 @@ export class BranchManager {
     delete this.value[key];
   }
 
-  syncBranches(keysToUnmount: string[], configsToMount: BranchConfig[]): string[] {
-    keysToUnmount.forEach(key => {
-      this.dismissBranch(key);
-    });
-
+  mountBranches(configsToMount: BranchConfig[]): string[] {
     const result = configsToMount.map(config => this.createBranch(config));
     this.realmManager.sync();
     return result;
+  }
+
+  unmountBranches(keysToUnmount: string[]) {
+    keysToUnmount.forEach(key => {
+      this.dismissBranch(key);
+    });
+    this.realmManager.sync();
   }
 
   get branchKeys(): string[] {
@@ -111,5 +114,9 @@ export class BranchManager {
 
   has(key: string): boolean {
     return this.breanches.has(key);
+  }
+
+  unmountAllBranches() {
+    this.unmountBranches(this.branchKeys);
   }
 }

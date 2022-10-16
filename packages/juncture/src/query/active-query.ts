@@ -81,28 +81,3 @@ export type ActiveQueryItem = Juncture | ActiveQueryRequest | ActiveQueryExplici
 export interface ActiveQuery {
   readonly [key: string]: ActiveQueryItem;
 }
-
-export enum ActiveQueryItemType {
-  juncture = 'juncture',
-  request = 'request',
-  explicitRequest = 'explicitRequest',
-  runRequest = 'runRequest'
-}
-
-export function getActiveQueryItemType(item: ActiveQueryItem): ActiveQueryItemType {
-  // In frequency order
-  if (isJuncture(item)) {
-    return ActiveQueryItemType.juncture;
-  }
-  if (isActiveQueryRunRequest(item)) {
-    return ActiveQueryItemType.runRequest;
-  }
-  if (isActiveQueryRequest(item)) {
-    return ActiveQueryItemType.request;
-  }
-  if (isActiveQueryExplicitRequest(item)) {
-    return ActiveQueryItemType.explicitRequest;
-  }
-
-  throw Error('Cannot detect type of ActiveQueryItem');
-}

@@ -10,8 +10,7 @@
  */
 
 import { ActiveQuery, ActiveQueryFrame } from '@codecarvings/juncture';
-import { createUnboundFrame } from '@codecarvings/juncture/dist/operation/frames/unbound-frame';
-import { ActiveQueryHandler } from '@codecarvings/juncture/dist/query/active-query-handler';
+import { ControlledActiveQueryFrame } from '@codecarvings/juncture/dist/operation/frames/active-query-frame';
 import { JunctureContext } from '@codecarvings/react-juncture';
 import React, { useContext, useEffect, useRef } from 'react';
 
@@ -41,17 +40,17 @@ function getReactCurrentOwner(): ReactCurrentOwner {
 
 export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q> {
   const engine = useContext(JunctureContext);
-  const handlerRef = useRef<ActiveQueryHandler>(undefined!);
+  const controlledFrameRef = useRef<ControlledActiveQueryFrame>(undefined!);
   const unmountCountRef = useRef(0);
 
-  let handler: ActiveQueryHandler;
-  if (handlerRef.current) {
-    handler = handlerRef.current;
+  let controlledFrame: ControlledActiveQueryFrame<Q>;
+  if (controlledFrameRef.current) {
+    controlledFrame = controlledFrameRef.current as any;
 
     console.log('AAA');
     useEffect(() => () => {
       console.log('UNMOUNTING AFTER');
-      console.dir(handler);
+      console.dir(controlledFrame);
     }, []);
   } else {
     const currentOwner = getReactCurrentOwner();
@@ -65,30 +64,32 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
 
     if (!isSecondRender) {
       console.log('BBB');
-      handler = engine.createHandler();
-      handlerRef.current = handler;
+      controlledFrame = engine.createControlledAciveFrame(query);
+      controlledFrameRef.current = controlledFrame;
       if (isStrictModeOn) {
-        type[lastHandlerSymbol] = handler;
+        type[lastHandlerSymbol] = controlledFrame;
       }
     } else {
       console.log('CCC');
-      handler = type[lastHandlerSymbol];
+      controlledFrame = type[lastHandlerSymbol];
       delete type[lastHandlerSymbol];
-      handlerRef.current = handler;
+      controlledFrameRef.current = controlledFrame;
     }
 
     if (isStrictModeOn) {
       useEffect(() => () => {
         unmountCountRef.current += 1;
         if (unmountCountRef.current === 2) {
+          controlledFrame.release();
           console.log('UNMOUNTING final');
-          console.dir(handler);
+          console.dir(controlledFrame);
         }
       }, []);
     } else {
       useEffect(() => () => {
+        controlledFrame.release();
         console.log('UNMOUNTING');
-        console.dir(handler);
+        console.dir(controlledFrame);
       }, []);
     }
 
@@ -104,6 +105,5 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
   }
 
   // TODO: remove handler.cursor property
-  handler.update(query);
-  return createUnboundFrame(handler.cursor);
+  return controlledFrame.frame;
 }
