@@ -9,15 +9,19 @@
 /* eslint-disable max-len */
 
 import { isJuncture } from '../juncture';
-import { ControlledActiveQueryCursor } from '../operation/frame-equipment/active-query-cursor';
 import { Cursor } from '../operation/frame-equipment/cursor';
-import { ControlledActiveQueryFrame } from '../operation/frames/active-query-frame';
+import { ActiveQueryFrame } from '../operation/frames/active-query-frame';
 import { createUnboundFrame } from '../operation/frames/unbound-frame';
 import {
   ActiveQuery, isActiveQueryExplicitRequest, isActiveQueryRequest, isActiveQueryRunRequest
 } from '../query/active-query';
 import { QueryItem } from '../query/query';
 import { BranchConfig } from './branch-manager';
+
+export interface ActiveQueryFrameHandler<Q extends ActiveQuery = ActiveQuery> {
+  readonly frame: ActiveQueryFrame<Q>;
+  release(): void;
+}
 
 export class ActiveQueryManager {
   constructor(
@@ -26,13 +30,12 @@ export class ActiveQueryManager {
     protected readonly getXpCursorFromQueryItem: (item: QueryItem) => Cursor | undefined
   ) { }
 
-  // List of current cursors
-  protected readonly controlledCursors = new Set<ControlledActiveQueryCursor>();
+  protected readonly handlers = new Map<ActiveQueryFrameHandler, string[]>();
 
-  protected createControlledCursor<Q extends ActiveQuery>(query: Q): ControlledActiveQueryCursor<Q> {
+  createHandler<Q extends ActiveQuery>(query: Q): ActiveQueryFrameHandler<Q> {
     const keys = Object.keys(query);
 
-    // First step: mount temporary branches
+    // Step 1: mount temporary branches
     const configsToMount: BranchConfig[] = [];
     const keysWithMountIndexes = keys.map(key => {
       const item = query[key];
@@ -48,7 +51,7 @@ export class ActiveQueryManager {
     });
     const tempBranchKeys = this.mountBranches(configsToMount);
 
-    // Second step: create cursor
+    // Step 2: create cursor
     const cursor: any = {};
     keysWithMountIndexes.forEach(({ key, index }) => {
       const item = query[key];
@@ -69,32 +72,26 @@ export class ActiveQueryManager {
       cursor[key] = value;
     });
 
-    // Step 3: Create controlled cursor and register it in the current list
-    const controlledCursor: ControlledActiveQueryCursor = {
-      cursor,
+    // Step 3: Create the frame
+    const frame = createUnboundFrame(cursor);
+
+    // Step 4: Create the handler and register it
+    const handler: ActiveQueryFrameHandler = {
+      frame,
       release: () => {
         this.unmountBranches(tempBranchKeys);
-        this.controlledCursors.delete(controlledCursor);
+        this.handlers.delete(handler);
       }
     };
-    this.controlledCursors.add(controlledCursor);
+    this.handlers.set(handler, tempBranchKeys);
 
-    return controlledCursor as any;
+    return handler as any;
   }
 
-  // TODO: implement in a better way
-  releaseAllCursors() {
-    const controlledCursors = Array.from(this.controlledCursors.values());
-    controlledCursors.forEach(controlledCursor => {
-      controlledCursor.release();
-    });
-  }
+  releaseAll() {
+    const tempBranchKeys2 = Array.from(this.handlers.values());
+    const tempBranchKeys = tempBranchKeys2.reduce((acc, val) => acc.concat(val), []);
 
-  createControlledFrame<Q extends ActiveQuery>(query: Q): ControlledActiveQueryFrame<Q> {
-    const controlledCursor = this.createControlledCursor(query);
-    return {
-      frame: createUnboundFrame(controlledCursor.cursor),
-      release: controlledCursor.release
-    };
+    this.unmountBranches(tempBranchKeys);
   }
 }

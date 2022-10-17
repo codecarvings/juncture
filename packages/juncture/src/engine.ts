@@ -156,8 +156,8 @@ export class Engine {
       throw Error('Engine already stopped');
     }
 
-    this.activeQueryManager.releaseAllCursors();
-    this.branchManager.unmountAllBranches();
+    this.activeQueryManager.releaseAll();
+    this.branchManager.unmountAll();
 
     this._status = EngineStatus.stopped;
   }
@@ -276,8 +276,8 @@ export class Engine {
     return createUnboundFrame(cursor);
   }
 
-  createControlledAciveFrame<Q extends ActiveQuery>(query: Q): ControlledActiveQueryFrame<Q> {
-    return this.activeQueryManager.createControlledFrame(query);
+  createAciveFrameHandler<Q extends ActiveQuery>(query: Q): ControlledActiveQueryFrame<Q> {
+    return this.activeQueryManager.createHandler(query);
   }
   // #endregion
 }

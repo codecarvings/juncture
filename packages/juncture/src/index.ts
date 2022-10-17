@@ -7,6 +7,7 @@
  */
 
 export { Engine } from './engine';
+export { ActiveQueryFrameHandler } from './engine-parts/active-query-manager';
 export { Juncture } from './juncture';
 export { BIT } from './lib/bit';
 export { FACADE } from './lib/facade';

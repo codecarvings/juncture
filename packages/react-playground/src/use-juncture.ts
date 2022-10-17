@@ -1,6 +1,3 @@
-/* eslint-disable no-bitwise */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-underscore-dangle */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -9,10 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ActiveQuery, ActiveQueryFrame } from '@codecarvings/juncture';
-import { ControlledActiveQueryFrame } from '@codecarvings/juncture/dist/operation/frames/active-query-frame';
+/* eslint-disable no-bitwise */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-underscore-dangle */
+
+import { ActiveQuery, ActiveQueryFrame, ActiveQueryFrameHandler } from '@codecarvings/juncture';
 import { JunctureContext } from '@codecarvings/react-juncture';
-import React, { useContext, useEffect, useRef } from 'react';
+import React, {
+  useContext, useEffect, useRef
+} from 'react';
 
 const lastHandlerSymbol = Symbol('lastHandler');
 
@@ -35,24 +37,26 @@ function getReactCurrentOwner(): ReactCurrentOwner {
       return ReactCurrentOwnerCache.current;
     }
   }
+
   throw Error(`Unsupported React Version (${React.version})`);
 }
 
+const useEffectEmpyfn = () => () => {};
+const useEffectEmptyDeps: any[] = [];
+
 export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q> {
   const engine = useContext(JunctureContext);
-  const controlledFrameRef = useRef<ControlledActiveQueryFrame>(undefined!);
-  const unmountCountRef = useRef(0);
+  const handlerRef = useRef<ActiveQueryFrameHandler>(undefined!);
+  let handler: ActiveQueryFrameHandler<Q>;
+  const countRef = useRef(0);
+  // const [state, setState] = useState(0);
 
-  let controlledFrame: ControlledActiveQueryFrame<Q>;
-  if (controlledFrameRef.current) {
-    controlledFrame = controlledFrameRef.current as any;
-
-    console.log('AAA');
-    useEffect(() => () => {
-      console.log('UNMOUNTING AFTER');
-      console.dir(controlledFrame);
-    }, []);
+  if (handlerRef.current) {
+    // State update
+    handler = handlerRef.current as any;
+    useEffect(useEffectEmpyfn, useEffectEmptyDeps);
   } else {
+    // Initialization
     const currentOwner = getReactCurrentOwner();
     if (!currentOwner) {
       throw Error(`Unable to access React Current Owner (React version: ${React.version})`);
@@ -63,47 +67,38 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
     const { type } = currentOwner;
 
     if (!isSecondRender) {
-      console.log('BBB');
-      controlledFrame = engine.createControlledAciveFrame(query);
-      controlledFrameRef.current = controlledFrame;
+      // Create the handler
+      handler = engine.createAciveFrameHandler(query);
+      handlerRef.current = handler;
+
       if (isStrictModeOn) {
-        type[lastHandlerSymbol] = controlledFrame;
+        // STRICT MODE: cache the handler to reuse it in the second render
+        type[lastHandlerSymbol] = handler;
       }
     } else {
-      console.log('CCC');
-      controlledFrame = type[lastHandlerSymbol];
+      // STRICT MODE: reuse the handler already created in the first render
+      handler = type[lastHandlerSymbol];
       delete type[lastHandlerSymbol];
-      controlledFrameRef.current = controlledFrame;
+      handlerRef.current = handler;
     }
 
-    if (isStrictModeOn) {
-      useEffect(() => () => {
-        unmountCountRef.current += 1;
-        if (unmountCountRef.current === 2) {
-          controlledFrame.release();
-          console.log('UNMOUNTING final');
-          console.dir(controlledFrame);
-        }
-      }, []);
-    } else {
-      useEffect(() => () => {
-        controlledFrame.release();
-        console.log('UNMOUNTING');
-        console.dir(controlledFrame);
-      }, []);
-    }
+    useEffect(() => {
+      countRef.current += 1;
+      if (isStrictModeOn && countRef.current !== 2) {
+        // STRICT MODE: Ignore the first useEffect
+        return () => {};
+      }
 
-    // useEffect(() => {
-    //   if (isStrictModeOn && !isSecondRender) {
-    //     return undefined;
-    //   }
-    //   return () => {
-    //     console.log('UNMOUNTING');
-    //     console.dir(handler);
-    //   };
-    // }, []);
+      // const intervalId = setInterval(() => {
+      // setState(value => value + 1);
+      // }, 2000);
+
+      return () => {
+        // clearInterval(intervalId);
+        handler.release();
+      };
+    }, []);
   }
 
-  // TODO: remove handler.cursor property
-  return controlledFrame.frame;
+  return handler.frame;
 }

@@ -116,7 +116,7 @@ export class BranchManager {
     return this.breanches.has(key);
   }
 
-  unmountAllBranches() {
+  unmountAll() {
     this.unmountBranches(this.branchKeys);
   }
 }
