@@ -11,7 +11,6 @@ import { DescriptorKeyPrefix } from '../../design/descriptor-type';
 import { GenericReactor } from '../../design/descriptors/reactor';
 import { GenericSynthReactor } from '../../design/descriptors/synth-reactor';
 import { Driver } from '../../driver';
-import { defineLazyProperty } from '../../utilities/object';
 import { OverloadParameters } from '../../utilities/overload-types';
 import { Dispatcher } from '../action';
 import { Realm } from '../realm';
@@ -26,15 +25,11 @@ function createDispatchBinBase(realm: Realm, dispatcher: Dispatcher, isXp: boole
   const keys = isXp ? realm.setup.reactors.xpKeys : realm.setup.reactors.keys;
   const bin: any = {};
   keys.forEach(key => {
-    defineLazyProperty(
-      bin,
-      key,
-      () => (...args: any) => {
-        dispatcher.dispatch({
-          target: realm.ref, key, payload: args
-        });
-      }
-    );
+    bin[key] = (...args: any) => {
+      dispatcher.dispatch({
+        target: realm.ref, key, payload: args
+      });
+    };
   });
   return bin;
 }

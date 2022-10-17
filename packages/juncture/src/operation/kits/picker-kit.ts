@@ -18,7 +18,9 @@ import { EmitPicker } from '../frame-equipment/pickers/emit-picker';
 import {
   createExecPicker, createXpExecPicker, ExecPicker, XpExecPicker
 } from '../frame-equipment/pickers/exec-picker';
-import { createSelectPicker, createXpSelectPicker, SelectPicker, XpSelectPicker } from '../frame-equipment/pickers/select-picker';
+import {
+  createSelectPicker, createXpSelectPicker, SelectPicker, XpSelectPicker
+} from '../frame-equipment/pickers/select-picker';
 import { Realm } from '../realm';
 import { BinKit } from './bin-kit';
 

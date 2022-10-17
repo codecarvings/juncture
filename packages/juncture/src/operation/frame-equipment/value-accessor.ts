@@ -1,5 +1,5 @@
 import { Driver, ValueOf } from '../../driver';
-import { defineLazyProperty } from '../../utilities/object';
+import { ActiveQueryMonitorFn } from '../frames/active-query-frame';
 import { Instruction } from '../instruction';
 import { Realm } from '../realm';
 import { getRealm } from '../realm-host';
@@ -20,18 +20,21 @@ export interface ValueAccessorHost<D extends Driver = Driver> {
 
 export function createValueAccessor<D extends Driver>(realm: Realm): ValueAccessor<D> {
   const valueAccessor: any = { };
-  defineLazyProperty(valueAccessor, 'get', () => (_?: Cursor) => {
+
+  valueAccessor.get = (_?: Cursor) => {
     if (typeof _ !== 'undefined') {
       return getRealm(_).value;
     }
     return realm.value;
-  });
-  defineLazyProperty(valueAccessor, 'set', () => (...args: any) => {
+  };
+
+  valueAccessor.set = (...args: any) => {
     if (args.length > 1) {
       return { target: getRealm(args[0]), payload: args[1] };
     }
     return { target: realm, payload: args[0] };
-  });
+  };
+
   return valueAccessor;
 }
 // #endregion
@@ -39,5 +42,16 @@ export function createValueAccessor<D extends Driver>(realm: Realm): ValueAccess
 // #region unboundValueGetter
 export function unboundValueGetter<C extends Cursor>(_: C): ValueOfCursor<C> {
   return getRealm(_).value;
+}
+
+const valueSelectorKey = 'value';
+export function createActiveQueryValueGetter(monitorFn: ActiveQueryMonitorFn) {
+  return <C extends Cursor>(_: C): ValueOfCursor<C> => {
+    const realm = getRealm(_);
+    monitorFn(realm, valueSelectorKey, true);
+    const result = realm.value;
+    monitorFn(realm, valueSelectorKey, false);
+    return result;
+  };
 }
 // #endregion

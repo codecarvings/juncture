@@ -11,7 +11,6 @@ import { DescriptorKeyPrefix } from '../../design/descriptor-type';
 import { GenericReactor } from '../../design/descriptors/reactor';
 import { GenericSynthReactor } from '../../design/descriptors/synth-reactor';
 import { Driver } from '../../driver';
-import { defineLazyProperty } from '../../utilities/object';
 import { OverloadParameters } from '../../utilities/overload-types';
 import { Instruction } from '../instruction';
 import { Realm } from '../realm';
@@ -26,15 +25,11 @@ function createApplyBinBase(realm: Realm, isXp: boolean) {
   const keys = isXp ? realm.setup.reactors.xpKeys : realm.setup.reactors.keys;
   const bin: any = {};
   keys.forEach(key => {
-    defineLazyProperty(
-      bin,
+    bin[key] = (...args: any) => ({
+      target: realm,
       key,
-      () => (...args: any) => ({
-        target: realm,
-        key,
-        payload: args
-      })
-    );
+      payload: args
+    });
   });
   return bin;
 }

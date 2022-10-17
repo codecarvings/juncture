@@ -10,7 +10,6 @@ import { DescriptorKeyPrefix } from '../../design/descriptor-type';
 import { GenericChannel } from '../../design/descriptors/channel';
 import { Driver } from '../../driver';
 import { junctureSymbols } from '../../juncture-symbols';
-import { defineLazyProperty } from '../../utilities/object';
 import { DefaultFrameHost } from '../frames/frame';
 import { Realm } from '../realm';
 
@@ -31,11 +30,9 @@ export function createEmitBin<D extends Driver>(realm: Realm, frameHost: Default
   const bin: any = {};
   keys.forEach(key => {
     const desc = map[key];
-    defineLazyProperty(
-      bin,
-      key,
-      () => (...args: any) => desc[junctureSymbols.payload](frameHost.default)(...args)
-    );
+    bin[key] = (...args: any) => {
+      desc[junctureSymbols.payload](frameHost.default)(...args);
+    };
   });
   return bin;
 }

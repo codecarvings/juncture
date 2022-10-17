@@ -10,8 +10,9 @@
 
 import { isJuncture } from '../juncture';
 import { Cursor } from '../operation/frame-equipment/cursor';
-import { ActiveQueryFrame } from '../operation/frames/active-query-frame';
-import { createUnboundFrame } from '../operation/frames/unbound-frame';
+import { ActiveQueryFrame, createActiveQueryFrame } from '../operation/frames/active-query-frame';
+import { pathToString } from '../operation/path';
+import { Realm } from '../operation/realm';
 import {
   ActiveQuery, isActiveQueryExplicitRequest, isActiveQueryRequest, isActiveQueryRunRequest
 } from '../query/active-query';
@@ -73,7 +74,14 @@ export class ActiveQueryManager {
     });
 
     // Step 3: Create the frame
-    const frame = createUnboundFrame(cursor);
+    const monitorFn = (realm: Realm, key: string, isStart: boolean) => {
+      if (isStart) {
+        console.log(`SELECT START ${pathToString(realm.layout.path)} - ${key}`);
+      } else {
+        console.log(`SELECT STOP ${pathToString(realm.layout.path)} - ${key}`);
+      }
+    };
+    const frame = createActiveQueryFrame(cursor, monitorFn);
 
     // Step 4: Create the handler and register it
     const handler: ActiveQueryFrameHandler = {

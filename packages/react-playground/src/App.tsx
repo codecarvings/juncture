@@ -9,10 +9,14 @@ import { useJuncture } from './use-juncture';
 class AppDriver extends STRUCT.of({
   title: BIT.of('My transient title'),
   counter: BIT.settable.number
-}) { }
+}) {
+  'selector.titleLen' = this.FORGE.selector(({ value, _ }) => value(_.title).length);
+}
 
 function App() {
-  const { select, dispatch, _ } = useJuncture({
+  const {
+    select, dispatch, value, _
+  } = useJuncture({
     primary: Primary,
     myState: { run: AppDriver }
   });
@@ -28,7 +32,11 @@ function App() {
       <div>
         Transient:
         {' '}
-        { select(_.myState.title).value }
+        { value(_.myState.title) }
+        {' '}
+        (
+        { select(_.myState).titleLen }
+        )
         {' '}
         /
         {' '}

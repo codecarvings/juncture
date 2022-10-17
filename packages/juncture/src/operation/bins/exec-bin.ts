@@ -10,7 +10,6 @@ import { AccessModifier } from '../../access-modifier';
 import { DescriptorKeyPrefix } from '../../design/descriptor-type';
 import { GenericProcedure } from '../../design/descriptors/procedure';
 import { Driver } from '../../driver';
-import { defineLazyProperty } from '../../utilities/object';
 import { OverloadParameters } from '../../utilities/overload-types';
 import { Realm } from '../realm';
 
@@ -23,15 +22,11 @@ function createExecBinBase(realm: Realm, isXp: boolean) {
   const keys = isXp ? realm.setup.procedures.xpKeys : realm.setup.procedures.keys;
   const bin: any = {};
   keys.forEach(key => {
-    defineLazyProperty(
-      bin,
-      key,
-      () => (...args: any) => {
-        // dispatcher.dispatch({
-        //   target: realm.ref, key, payload: args
-        // });
-      }
-    );
+    bin[key] = (...args: any) => {
+      // dispatcher.dispatch({
+      //   target: realm.ref, key, payload: args
+      // });
+    };
   });
   return bin;
 }
