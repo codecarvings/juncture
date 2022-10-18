@@ -74,14 +74,14 @@ export class ActiveQueryManager {
     });
 
     // Step 3: Create the frame
-    const monitorFn = (realm: Realm, key: string, isStart: boolean) => {
+    const inspector = (realm: Realm, key: string, isStart: boolean) => {
       if (isStart) {
         console.log(`SELECT START ${pathToString(realm.layout.path)} - ${key}`);
       } else {
         console.log(`SELECT STOP ${pathToString(realm.layout.path)} - ${key}`);
       }
     };
-    const frame = createActiveQueryFrame(cursor, monitorFn);
+    const frame = createActiveQueryFrame(cursor, inspector);
 
     // Step 4: Create the handler and register it
     const handler: ActiveQueryFrameHandler = {

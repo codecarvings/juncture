@@ -26,15 +26,15 @@ export interface ControlledActiveQueryFrame<Q extends ActiveQuery = ActiveQuery>
   release(): void;
 }
 
-export interface ActiveQueryMonitorFn {
+export interface ActiveQuerySelectionInspector {
   (realm: Realm, key: string, isStart: boolean): void
 }
 
 export function createActiveQueryFrame<Q extends ActiveQuery>(
   cursor: ActiveQueryCursor<Q>,
-  monitorFn: ActiveQueryMonitorFn
+  inspector: ActiveQuerySelectionInspector
 ): ActiveQueryFrame<Q> {
-  const value = createActiveQueryValueGetter(monitorFn);
+  const value = createActiveQueryValueGetter(inspector);
 
   const selectBins = new WeakMap<Cursor, XpSelectBin<any>>();
   const select = (_: Cursor) => {
@@ -42,7 +42,7 @@ export function createActiveQueryFrame<Q extends ActiveQuery>(
     if (result) {
       return result;
     }
-    const selectBin = getRealm(_).xpBins.createActiveQuerySelectBin(monitorFn);
+    const selectBin = getRealm(_).xpBins.createActiveQuerySelectBin(inspector);
     selectBins.set(_, selectBin);
     return selectBin;
   };

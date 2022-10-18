@@ -1,5 +1,5 @@
 import { Driver, ValueOf } from '../../driver';
-import { ActiveQueryMonitorFn } from '../frames/active-query-frame';
+import { ActiveQuerySelectionInspector } from '../frames/active-query-frame';
 import { Instruction } from '../instruction';
 import { Realm } from '../realm';
 import { getRealm } from '../realm-host';
@@ -45,12 +45,12 @@ export function unboundValueGetter<C extends Cursor>(_: C): ValueOfCursor<C> {
 }
 
 const valueSelectorKey = 'value';
-export function createActiveQueryValueGetter(monitorFn: ActiveQueryMonitorFn) {
+export function createActiveQueryValueGetter(inspector: ActiveQuerySelectionInspector) {
   return <C extends Cursor>(_: C): ValueOfCursor<C> => {
     const realm = getRealm(_);
-    monitorFn(realm, valueSelectorKey, true);
+    inspector(realm, valueSelectorKey, true);
     const result = realm.value;
-    monitorFn(realm, valueSelectorKey, false);
+    inspector(realm, valueSelectorKey, false);
     return result;
   };
 }

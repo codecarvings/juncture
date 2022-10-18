@@ -23,7 +23,7 @@ import {
   createActiveQuerySelectBin,
   createSelectBin, createXpSelectBin, SelectBin, XpSelectBin
 } from '../bins/select-bin';
-import { ActiveQueryMonitorFn } from '../frames/active-query-frame';
+import { ActiveQuerySelectionInspector } from '../frames/active-query-frame';
 import { Realm } from '../realm';
 import { FrameKit } from './frame-kit';
 
@@ -52,7 +52,7 @@ export interface XpBinKit<D extends Driver = Driver> {
   readonly dispatch: XpDispatchBin<D>;
   readonly exec: XpExecBin<D>;
 
-  createActiveQuerySelectBin(monitorFn: ActiveQueryMonitorFn): XpSelectBin<D>;
+  createActiveQuerySelectBin(monitorFn: ActiveQuerySelectionInspector): XpSelectBin<D>;
 }
 
 export function prepareXpBinKit(bins: any, realm: Realm, frames: FrameKit, dispatcher: Dispatcher) {
@@ -63,7 +63,7 @@ export function prepareXpBinKit(bins: any, realm: Realm, frames: FrameKit, dispa
 
   // eslint-disable-next-line no-param-reassign
   bins.createActiveQuerySelectBin = (
-    monitorFn: ActiveQueryMonitorFn
-  ) => createActiveQuerySelectBin(realm, frames, monitorFn);
+    inspector: ActiveQuerySelectionInspector
+  ) => createActiveQuerySelectBin(realm, frames, inspector);
 }
 // #endregion
