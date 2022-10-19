@@ -13,7 +13,6 @@ import { Cursor } from '../frame-equipment/cursor';
 import { unboundDispatchPicker } from '../frame-equipment/pickers/dispatch-picker';
 import { unboundExecPicker } from '../frame-equipment/pickers/exec-picker';
 import { createActiveQueryValueGetter } from '../frame-equipment/value-accessor';
-import { Realm } from '../realm';
 import { getRealm } from '../realm-host';
 import { UnboundFrame } from './unbound-frame';
 
@@ -21,13 +20,8 @@ export interface ActiveQueryFrame<Q extends ActiveQuery> extends UnboundFrame {
   readonly _: ActiveQueryCursor<Q>;
 }
 
-export interface ControlledActiveQueryFrame<Q extends ActiveQuery = ActiveQuery> {
-  readonly frame: ActiveQueryFrame<Q>;
-  release(): void;
-}
-
 export interface ActiveQuerySelectionInspector {
-  (realm: Realm, key: string, isStart: boolean): void
+  (isStart: boolean): void
 }
 
 export function createActiveQueryFrame<Q extends ActiveQuery>(

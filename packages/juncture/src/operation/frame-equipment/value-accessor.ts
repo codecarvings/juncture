@@ -44,13 +44,11 @@ export function unboundValueGetter<C extends Cursor>(_: C): ValueOfCursor<C> {
   return getRealm(_).value;
 }
 
-const valueSelectorKey = 'value';
 export function createActiveQueryValueGetter(inspector: ActiveQuerySelectionInspector) {
   return <C extends Cursor>(_: C): ValueOfCursor<C> => {
-    const realm = getRealm(_);
-    inspector(realm, valueSelectorKey, true);
-    const result = realm.value;
-    inspector(realm, valueSelectorKey, false);
+    inspector(true);
+    const result = getRealm(_).value;
+    inspector(false);
     return result;
   };
 }

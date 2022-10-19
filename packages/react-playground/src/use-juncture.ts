@@ -13,7 +13,7 @@
 import { ActiveQuery, ActiveQueryFrame, ActiveQueryFrameHandler } from '@codecarvings/juncture';
 import { JunctureContext } from '@codecarvings/react-juncture';
 import React, {
-  useContext, useEffect, useRef
+  useContext, useEffect, useRef, useState
 } from 'react';
 
 const lastHandlerSymbol = Symbol('lastHandler');
@@ -41,7 +41,7 @@ function getReactCurrentOwner(): ReactCurrentOwner {
   throw Error(`Unsupported React Version (${React.version})`);
 }
 
-const useEffectEmpyfn = () => () => {};
+const useEffectEmpyfn = () => {};
 const useEffectEmptyDeps: any[] = [];
 
 export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q> {
@@ -49,11 +49,12 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
   const handlerRef = useRef<ActiveQueryFrameHandler>(undefined!);
   let handler: ActiveQueryFrameHandler<Q>;
   const countRef = useRef(0);
-  // const [state, setState] = useState(0);
+  const [_state, setState] = useState(false);
 
   if (handlerRef.current) {
     // State update
     handler = handlerRef.current as any;
+    handler.clearValueUsageCassette();
     useEffect(useEffectEmpyfn, useEffectEmptyDeps);
   } else {
     // Initialization
@@ -80,21 +81,26 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
       handler = type[lastHandlerSymbol];
       delete type[lastHandlerSymbol];
       handlerRef.current = handler;
+      handler.clearValueUsageCassette();
     }
 
     useEffect(() => {
       countRef.current += 1;
       if (isStrictModeOn && countRef.current !== 2) {
         // STRICT MODE: Ignore the first useEffect
-        return () => {};
+        return undefined;
       }
 
-      // const intervalId = setInterval(() => {
-      // setState(value => value + 1);
-      // }, 2000);
+      handler.valueMutationAck$.subscribe(() => {
+        // Prevent further events before re-rendering
+        handler.clearValueUsageCassette();
+
+        // console.count('State update');
+        setState(state => !state);
+      });
 
       return () => {
-        // clearInterval(intervalId);
+        // valueMutationAck observable unsubscribed in the release function
         handler.release();
       };
     }, []);

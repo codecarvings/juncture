@@ -11,7 +11,9 @@
 import { Engine } from '../../engine';
 import { JunctureMap } from '../../juncture';
 import { BIT } from '../../lib/bit';
-import { STRUCT, StructPartialValue, StructRealm, StructSchema } from '../../lib/struct';
+import {
+  STRUCT, StructPartialValue, StructRealm, StructSchema
+} from '../../lib/struct';
 import { Realm } from '../../operation/realm';
 import { Private } from '../../private-juncture';
 import { JunctureSchema } from '../../schema';

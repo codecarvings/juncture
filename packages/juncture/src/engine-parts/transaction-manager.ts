@@ -6,9 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { pathToString } from '../operation/path';
+import { Subject } from 'rxjs';
+import { pathToString, PersistentPath } from '../operation/path';
 import { Realm } from '../operation/realm';
 
+// After a reaction:
+//  1) Mount and unmount realms
+//  2) Emits mutation events
 export class TransactionManager {
   constructor(protected readonly syncRealms: () => void) {
     this.begin = this.begin.bind(this);
@@ -25,6 +29,10 @@ export class TransactionManager {
   protected alteredRealms = new Map<Realm, any>();
 
   protected completedRealms = new Set<Realm>();
+
+  protected readonly valueMutationAckSubject = new Subject<PersistentPath>();
+
+  readonly valueMutationAck$ = this.valueMutationAckSubject.asObservable();
 
   begin() {
     if (this._inProgress) {
@@ -44,34 +52,38 @@ export class TransactionManager {
     }
   }
 
+  protected iterateRealmForMutation(realm: Realm) {
+    if (!this.completedRealms.has(realm)) {
+      this.completedRealms.add(realm);
+
+      // TODO: manage value change
+      this.valueMutationAckSubject.next(realm.layout.path);
+
+      if (realm.layout.parent) {
+        // If a child value changes, also the parent has changed
+        this.iterateRealmForMutation(realm.layout.parent);
+      }
+    }
+  }
+
   commit() {
     if (!this._inProgress) {
       throw Error('Cannot commit transaction: no transaction in progress');
     }
 
-    const { completedRealms } = this;
-    const iterateRealm = (realm: Realm) => {
-      if (!completedRealms.has(realm)) {
-        completedRealms.add(realm);
+    // Step 1: Mount and unmount realms
+    this.syncRealms();
 
-        // TODO: manage value change
-
-        if (realm.layout.parent) {
-          iterateRealm(realm.layout.parent);
-        }
-      }
-    };
-
+    // Step 2: emit mutation events
     this.alteredRealms.forEach((initialValue, realm) => {
       if (realm.value !== initialValue) {
-        iterateRealm(realm);
+        this.iterateRealmForMutation(realm);
       }
     });
 
-    completedRealms.clear();
+    // Step 3: Reset status
+    this.completedRealms.clear();
     this.alteredRealms.clear();
     this._inProgress = false;
-
-    this.syncRealms();
   }
 }

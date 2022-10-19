@@ -13,7 +13,7 @@ import { Realm, RealmLayout, RealmMediator } from '../operation/realm';
 import { RealmManager } from './realm-manager';
 
 export interface BranchConfig<J extends Juncture = Juncture> {
-  readonly key?: string;
+  readonly id?: string;
   readonly juncture: J;
   readonly initialValue?: ValueOfJuncture<J>
 }
@@ -24,29 +24,29 @@ export class BranchManager {
   constructor(
     protected readonly engineRealmMediator: EngineRealmMediator,
     protected readonly realmManager: RealmManager,
-    protected readonly value: any
+    protected readonly state: any
   ) { }
 
   protected readonly breanches = new Map<string, Realm>();
 
   protected anonymousSerial = 0;
 
-  protected createAnonymousKey() {
+  protected createAnonymousId() {
     this.anonymousSerial += 1;
     return `${anonymousBranchPrefix}${this.anonymousSerial}`;
   }
 
-  protected createRealm(key: string, juncture: Juncture) {
+  protected createRealm(id: string, juncture: Juncture) {
     const layout: RealmLayout = {
-      path: this.engineRealmMediator.persistentPath.get([key]),
+      path: this.engineRealmMediator.persistentPath.get([id]),
       parent: null,
       isUnivocal: true,
       isDivergent: false
     };
     const realmMediator: RealmMediator = {
-      getValue: () => this.value[key],
+      getValue: () => this.state[id],
       setValue: newValue => {
-        this.value[key] = newValue;
+        this.state[id] = newValue;
       }
     };
 
@@ -54,41 +54,41 @@ export class BranchManager {
   }
 
   protected createBranch(config: BranchConfig): string {
-    let key: string;
-    if (config.key) {
-      key = config.key;
-      if (key.length < 1) {
-        throw Error('Invalid empty branch key');
+    let id: string;
+    if (config.id) {
+      id = config.id;
+      if (id.length < 1) {
+        throw Error('Invalid empty branch id');
       }
-      if (key[0] === anonymousBranchPrefix) {
-        throw Error(`Invalid key "${key}" - A named branch key cannot start with the prefix ${anonymousBranchPrefix}`);
+      if (id[0] === anonymousBranchPrefix) {
+        throw Error(`Invalid id "${id}" - A named branch id cannot start with the prefix ${anonymousBranchPrefix}`);
       }
-      if (this.breanches.has(key)) {
-        throw Error(`Duplicated branch key "${key}".`);
+      if (this.breanches.has(id)) {
+        throw Error(`Duplicated branch id "${id}".`);
       }
     } else {
-      key = this.createAnonymousKey();
+      id = this.createAnonymousId();
     }
 
     if (config.initialValue !== undefined) {
-      this.value[key] = config.initialValue;
+      this.state[id] = config.initialValue;
     } else {
       const schema = Juncture.getSchema(config.juncture);
-      this.value[key] = schema.defaultValue;
+      this.state[id] = schema.defaultValue;
     }
 
-    const realm = this.createRealm(key, config.juncture);
-    this.breanches.set(key, realm);
-    return key;
+    const realm = this.createRealm(id, config.juncture);
+    this.breanches.set(id, realm);
+    return id;
   }
 
-  protected dismissBranch(key: string) {
-    const realm = this.breanches.get(key);
+  protected dismissBranch(id: string) {
+    const realm = this.breanches.get(id);
     if (!realm) {
-      throw Error(`Cannot unmount branch "${key}": not found`);
+      throw Error(`Cannot unmount branch "${id}": not found`);
     }
     this.realmManager.dismiss(realm);
-    delete this.value[key];
+    delete this.state[id];
   }
 
   mountBranches(configsToMount: BranchConfig[]): string[] {
@@ -97,26 +97,26 @@ export class BranchManager {
     return result;
   }
 
-  unmountBranches(keysToUnmount: string[]) {
-    keysToUnmount.forEach(key => {
-      this.dismissBranch(key);
+  unmountBranches(idsToUnmount: string[]) {
+    idsToUnmount.forEach(id => {
+      this.dismissBranch(id);
     });
     this.realmManager.sync();
   }
 
-  get branchKeys(): string[] {
+  get branchIds(): string[] {
     return Array.from(this.breanches.keys());
   }
 
-  getBranch(key: string): Realm | undefined {
-    return this.breanches.get(key);
+  getBranch(id: string): Realm | undefined {
+    return this.breanches.get(id);
   }
 
-  has(key: string): boolean {
-    return this.breanches.has(key);
+  has(id: string): boolean {
+    return this.breanches.has(id);
   }
 
   unmountAll() {
-    this.unmountBranches(this.branchKeys);
+    this.unmountBranches(this.branchIds);
   }
 }

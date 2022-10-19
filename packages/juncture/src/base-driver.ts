@@ -75,7 +75,7 @@ export abstract class BaseDriver implements Driver {
         frame: any
       ) => getRealm(frame._).layout.path));
 
-    this['selector.branchKey'] = assembler
+    this['selector.branchId'] = assembler
       .registerStaticProperty(createSelector((
         frame: any
       ) => getRealm(frame._).layout.path[0] as string));
@@ -101,7 +101,7 @@ export abstract class BaseDriver implements Driver {
 
   readonly 'selector.path': Selector<Path>;
 
-  readonly 'selector.branchKey': Selector<string>;
+  readonly 'selector.branchId': Selector<string>;
 
   readonly 'selector.isMounted': Selector<boolean>;
 

@@ -8,30 +8,41 @@
 
 /* eslint-disable max-len */
 
+import { filter, Observable, takeWhile } from 'rxjs';
 import { isJuncture } from '../juncture';
 import { Cursor } from '../operation/frame-equipment/cursor';
 import { ActiveQueryFrame, createActiveQueryFrame } from '../operation/frames/active-query-frame';
-import { pathToString } from '../operation/path';
-import { Realm } from '../operation/realm';
+import { PersistentPath } from '../operation/path';
 import {
   ActiveQuery, isActiveQueryExplicitRequest, isActiveQueryRequest, isActiveQueryRunRequest
 } from '../query/active-query';
 import { QueryItem } from '../query/query';
 import { BranchConfig } from './branch-manager';
+import { ValueUsageCassette } from './value-usage-recorder';
 
 export interface ActiveQueryFrameHandler<Q extends ActiveQuery = ActiveQuery> {
   readonly frame: ActiveQueryFrame<Q>;
+  readonly valueMutationAck$: Observable<PersistentPath>;
+  clearValueUsageCassette(): void;
   release(): void;
+}
+
+interface ActiveQueryFrameHandlerTearDownData {
+  isActive: boolean,
+  tempBranchIds: string[]
 }
 
 export class ActiveQueryManager {
   constructor(
     protected readonly mountBranches: (configsToMount: BranchConfig[]) => string[],
     protected readonly unmountBranches: (keysToUnmount: string[]) => void,
-    protected readonly getXpCursorFromQueryItem: (item: QueryItem) => Cursor | undefined
+    protected readonly getXpCursorFromQueryItem: (item: QueryItem) => Cursor | undefined,
+    protected readonly useValueUsageCassette: (cassette: ValueUsageCassette) => void,
+    protected readonly ejectValueUsageCassette: () => void,
+    protected readonly valueMutationAck$: Observable<PersistentPath>
   ) { }
 
-  protected readonly handlers = new Map<ActiveQueryFrameHandler, string[]>();
+  protected readonly tearDownDatas = new Map<ActiveQueryFrameHandler, ActiveQueryFrameHandlerTearDownData>();
 
   createHandler<Q extends ActiveQuery>(query: Q): ActiveQueryFrameHandler<Q> {
     const keys = Object.keys(query);
@@ -43,14 +54,14 @@ export class ActiveQueryManager {
       if (isActiveQueryRunRequest(item)) {
         const index = configsToMount.push({
           juncture: item.run,
-          key: item.branchKey,
+          id: item.branchId,
           initialValue: item.initialValue
         }) - 1;
         return { key, index };
       }
       return { key, index: undefined };
     });
-    const tempBranchKeys = this.mountBranches(configsToMount);
+    const tempBranchIds = this.mountBranches(configsToMount);
 
     // Step 2: create cursor
     const cursor: any = {};
@@ -62,7 +73,7 @@ export class ActiveQueryManager {
         value = this.getXpCursorFromQueryItem({ get: item });
       } else if (isActiveQueryRunRequest(item)) {
         value = this.getXpCursorFromQueryItem({
-          get: tempBranchKeys[index!]
+          get: tempBranchIds[index!]
         });
       } else if (isActiveQueryRequest(item) || isActiveQueryExplicitRequest(item)) {
         value = this.getXpCursorFromQueryItem(item);
@@ -73,33 +84,66 @@ export class ActiveQueryManager {
       cursor[key] = value;
     });
 
-    // Step 3: Create the frame
-    const inspector = (realm: Realm, key: string, isStart: boolean) => {
+    // Step 3: Create the value usage cassette
+    const cassette = this.createValueUsageCassette();
+
+    // Step 4: Create the frame
+    const inspector = (isStart: boolean) => {
       if (isStart) {
-        console.log(`SELECT START ${pathToString(realm.layout.path)} - ${key}`);
+        this.useValueUsageCassette(cassette);
       } else {
-        console.log(`SELECT STOP ${pathToString(realm.layout.path)} - ${key}`);
+        this.ejectValueUsageCassette();
       }
     };
     const frame = createActiveQueryFrame(cursor, inspector);
 
-    // Step 4: Create the handler and register it
+    // Step 5: register handler data for tear down
+    const tearDownData: ActiveQueryFrameHandlerTearDownData = {
+      isActive: true,
+      tempBranchIds
+    };
+
+    // Step 6: Create the handler
     const handler: ActiveQueryFrameHandler = {
       frame,
+      valueMutationAck$: this.valueMutationAck$.pipe(
+        takeWhile(() => tearDownData.isActive),
+        filter(path => cassette.has(path))
+      ),
+      clearValueUsageCassette: () => {
+        cassette.clear();
+      },
       release: () => {
-        this.unmountBranches(tempBranchKeys);
-        this.handlers.delete(handler);
+        if (!tearDownData.isActive) {
+          return;
+        }
+        tearDownData.isActive = false;
+        cassette.clear();
+        this.unmountBranches(tempBranchIds);
+        this.tearDownDatas.delete(handler);
       }
     };
-    this.handlers.set(handler, tempBranchKeys);
 
     return handler as any;
   }
 
   releaseAll() {
-    const tempBranchKeys2 = Array.from(this.handlers.values());
-    const tempBranchKeys = tempBranchKeys2.reduce((acc, val) => acc.concat(val), []);
+    const datas = Array.from(this.tearDownDatas.values());
+    // Stop all valueMutationAck$
+    datas.forEach(data => {
+      // eslint-disable-next-line no-param-reassign
+      data.isActive = false;
+    });
 
-    this.unmountBranches(tempBranchKeys);
+    // Unmount all temp branches at the same time
+    const tempBranchIds = datas.reduce((acc, data) => acc.concat(data.tempBranchIds), [] as string[]);
+    this.unmountBranches(tempBranchIds);
+
+    this.tearDownDatas.clear();
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  protected createValueUsageCassette(): ValueUsageCassette {
+    return new Set<PersistentPath>();
   }
 }

@@ -1,62 +1,45 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import {
-  BIT, STRUCT
-} from '@codecarvings/juncture';
-import { useState } from 'react';
-import { Primary } from './state/primary';
-import { useJuncture } from './use-juncture';
 
-class AppDriver extends STRUCT.of({
-  title: BIT.of('My transient title'),
-  counter: BIT.settable.number
-}) {
-  'selector.titleLen' = this.FORGE.selector(({ value, _ }) => value(_.title).length);
-}
+import { JunctureContext } from '@codecarvings/react-juncture';
+import { useContext, useState } from 'react';
+import Comp1 from './Comp1';
+import Comp2 from './Comp2';
 
 function App() {
-  const {
-    select, dispatch, value, _
-  } = useJuncture({
-    primary: Primary,
-    myState: { run: AppDriver }
-  });
-  const [counter, setCounter] = useState(-1);
+  const [state, setState] = useState(0);
+  const [useComp1, setUseComp1] = useState(false);
+
+  const engine = useContext(JunctureContext);
+  console.dir(engine.state);
 
   return (
-    <div>
+    <div style={{ backgroundColor: '#cc00ee', padding: '10px' }}>
+      {useComp1 && <Comp1 /> }
+      <Comp2 />
       <div>
-        Primary:
+        Timestamp App:
         {' '}
-        { select(_.primary.name).value }
+        { new Date().toISOString() }
       </div>
       <div>
-        Transient:
+        State:
         {' '}
-        { value(_.myState.title) }
-        {' '}
-        (
-        { select(_.myState).titleLen }
-        )
-        {' '}
-        /
-        {' '}
-        { select(_.myState.counter).value }
-      </div>
-      <div>
-        Counter:
-        {' '}
-        { counter }
+        { state }
       </div>
       <div>
         <button
           type="button"
-          onClick={() => {
-            setCounter(counter + 1);
-            dispatch(_.myState.counter).inc();
-          }}
+          onClick={() => setState(value => value + 1)}
         >
           Add
-
+        </button>
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => setUseComp1(value => !value)}
+        >
+          Switch Comp 1
         </button>
       </div>
     </div>

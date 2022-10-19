@@ -113,7 +113,7 @@ test('experiment with frames 2', () => {
   jest.useFakeTimers();
   const engine = new Engine();
   engine.mountBranch({
-    key: 'primary',
+    id: 'primary',
     juncture: J1,
     initialValue: {
       name: 'Mirco',
@@ -125,9 +125,7 @@ test('experiment with frames 2', () => {
     j1: J1
   });
 
-  let stop = engine.startSelectorAudit();
   expect(select(_.j1).displayName).toBe('Mirco 47');
-  stop();
 
   expect(select(_.j1).value).toEqual({
     name: 'Mirco',
@@ -135,19 +133,11 @@ test('experiment with frames 2', () => {
     ageChanges: 0
   });
 
-  stop = engine.startSelectorAudit();
   expect(select(_.j1.name).value).toBe('Mirco');
-  stop();
 
-  stop = engine.startSelectorAudit();
   expect(select(_.j1.name).value).toBe('Mirco');
   expect(select(_.j1.age).value).toBe(47);
   // expect(select(_).value).toBeTruthy();
-  stop().subscribe({
-    complete: () => {
-      console.log('Selectors must be recomputed');
-    }
-  });
   // console.dir(paths);
 
   expect(select(_.j1.age).value).toBe(47);

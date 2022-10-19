@@ -23,9 +23,9 @@ export class PersistentPathManager {
     this.releaseRequirement = this.releaseRequirement.bind(this);
   }
 
-  readonly searchableCache = new Map<string, PersistentPathData[]>();
+  protected readonly searchableCache = new Map<string, PersistentPathData[]>();
 
-  readonly cache = new Map<PersistentPath, PersistentPathData>();
+  protected readonly cache = new Map<PersistentPath, PersistentPathData>();
 
   // eslint-disable-next-line class-methods-use-this
   protected getPathKey(path: Path): string {

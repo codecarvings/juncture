@@ -1,6 +1,5 @@
 import { Engine } from '@codecarvings/juncture';
 import { JunctureProvider } from '@codecarvings/react-juncture';
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
@@ -8,17 +7,17 @@ import reportWebVitals from './reportWebVitals';
 import { Primary } from './state/primary';
 
 const engine = new Engine();
-engine.mountBranch({ key: 'primary', juncture: Primary });
+engine.mountBranch({ id: 'primary', juncture: Primary });
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <JunctureProvider engine={engine}>
-      <App />
-    </JunctureProvider>
-  </React.StrictMode>
+  // <React.StrictMode>
+  <JunctureProvider engine={engine}>
+    <App />
+  </JunctureProvider>
+  // </React.StrictMode>
 );
 
 setTimeout(() => {

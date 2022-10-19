@@ -17,7 +17,7 @@ export interface ActiveQueryRequest<J extends Juncture = Juncture> {
 
   // Extra properties required in order to make type inference work
   readonly run?: undefined;
-  readonly branchKey?: undefined;
+  readonly branchId?: undefined;
   readonly initialValue?: undefined;
 }
 
@@ -39,7 +39,7 @@ export interface ActiveQueryExplicitRequest {
   readonly from?: undefined;
   readonly optional?: undefined;
   readonly run?: undefined;
-  readonly branchKey?: undefined;
+  readonly branchId?: undefined;
   readonly initialValue?: undefined;
 }
 
@@ -56,7 +56,7 @@ export function isActiveQueryExplicitRequest(obj: any): obj is ActiveQueryExplic
 
 export interface ActiveQueryRunRequest<J extends Juncture = Juncture> {
   readonly run: J;
-  readonly branchKey?: string;
+  readonly branchId?: string;
   readonly initialValue?: ValueOfJuncture<J>
 
   // Extra properties required in order to make type inference work

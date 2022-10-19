@@ -86,18 +86,18 @@ export function createActiveQuerySelectBin<D extends Driver>(
     if (desc.type === DescriptorType.selector) {
       Object.defineProperty(bin, key, {
         get: () => {
-          inspector(realm, key, true);
+          inspector(true);
           const result = desc[junctureSymbols.payload](frameHost.default);
-          inspector(realm, key, false);
+          inspector(false);
           return result;
         }
       });
     } else {
       // ParamSelector
       bin[key] = (...args: any) => {
-        inspector(realm, key, true);
+        inspector(true);
         const result = desc[junctureSymbols.payload](frameHost.default)(...args);
-        inspector(realm, key, false);
+        inspector(false);
         return result;
       };
     }

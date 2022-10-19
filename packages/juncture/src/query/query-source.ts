@@ -23,19 +23,3 @@ export function isQuerySource(obj: any): obj is QuerySource {
   }
   return false;
 }
-
-/*
-export function getQuerySourceType(source: QuerySource): QuerySourceType {
-  if (typeof source === 'string') {
-    return QuerySourceType.branchKey;
-  }
-  if (Array.isArray(source)) {
-    return QuerySourceType.path;
-  }
-  if (isCursor(source)) {
-    return QuerySourceType.cursor;
-  }
-
-  throw Error('Cannot detect type of QuerySource');
-}
-*/

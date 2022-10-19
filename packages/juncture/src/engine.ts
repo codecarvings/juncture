@@ -6,18 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Observable } from 'rxjs';
-import { ActiveQueryManager } from './engine-parts/active-query-manager';
+import { ActiveQueryFrameHandler, ActiveQueryManager } from './engine-parts/active-query-manager';
 import { BranchConfig, BranchManager } from './engine-parts/branch-manager';
 import { PersistentPathManager } from './engine-parts/persistent-path-manager';
 import { RealmManager } from './engine-parts/realm-manager';
-import { SelectorCatalyst } from './engine-parts/selector-catalyst';
 import { TransactionManager } from './engine-parts/transaction-manager';
-import { ValueUsageMonitor } from './engine-parts/value-usage-monitor';
+import { ValueUsageRecorder } from './engine-parts/value-usage-recorder';
 import { isJuncture, Juncture } from './juncture';
 import { Action } from './operation/action';
 import { Cursor } from './operation/frame-equipment/cursor';
-import { ControlledActiveQueryFrame } from './operation/frames/active-query-frame';
 import { QueryFrame } from './operation/frames/query-frame';
 import { createUnboundFrame } from './operation/frames/unbound-frame';
 import { Path, pathToString, PersistentPath } from './operation/path';
@@ -64,12 +61,13 @@ export class Engine {
 
     this.persistentPathManager = this.createPersistentPathManager();
     this.realmManager = this.createRealmManger();
-    this.valueUsageMonitor = this.createValueUsageMonitor();
+    this.valueUsageRecorder = this.createValueUsageRecorder();
     this.transactionManager = this.createTransactionManager();
     this.branchManager = this.createBranchManager();
-    this.selectorCatalyst = this.craeteSelectorCatalyst();
     this.activeQueryManager = this.createActiveQueryManager();
   }
+
+  readonly state: any = {};
 
   // #region Engine Parts
   protected readonly persistentPathManager: PersistentPathManager;
@@ -86,11 +84,11 @@ export class Engine {
     return new RealmManager();
   }
 
-  protected readonly valueUsageMonitor: ValueUsageMonitor;
+  protected readonly valueUsageRecorder: ValueUsageRecorder;
 
   // eslint-disable-next-line class-methods-use-this
-  protected createValueUsageMonitor(): ValueUsageMonitor {
-    return new ValueUsageMonitor();
+  protected createValueUsageRecorder(): ValueUsageRecorder {
+    return new ValueUsageRecorder();
   }
 
   protected readonly transactionManager: TransactionManager;
@@ -120,7 +118,7 @@ export class Engine {
         }
       },
       selection: {
-        registerValueUsage: this.valueUsageMonitor.registerValueUsage
+        registerValueUsage: this.valueUsageRecorder.registerValueUsage
       },
       reaction: {
         dispatch: this.dispatch,
@@ -131,16 +129,17 @@ export class Engine {
     return new BranchManager(engineRealmMediator, this.realmManager, this.state);
   }
 
-  protected readonly selectorCatalyst: SelectorCatalyst;
-
-  protected craeteSelectorCatalyst(): SelectorCatalyst {
-    return new SelectorCatalyst(this.valueUsageMonitor, this.persistentPathManager);
-  }
-
   protected readonly activeQueryManager: ActiveQueryManager;
 
   protected createActiveQueryManager(): ActiveQueryManager {
-    return new ActiveQueryManager(this.mountBranches, this.unmountBranches, this.getXpCursorFromQueryItem);
+    return new ActiveQueryManager(
+      this.mountBranches,
+      this.unmountBranches,
+      this.getXpCursorFromQueryItem,
+      this.valueUsageRecorder.useCassette,
+      this.valueUsageRecorder.ejectCassette,
+      this.transactionManager.valueMutationAck$
+    );
   }
   // #endregion
 
@@ -163,14 +162,12 @@ export class Engine {
   }
   // #endregion
 
-  // #region Value stuff
-  readonly state: any = {};
+  // #region Dispatch stuff
+  protected isDispatching = false;
 
-  startSelectorAudit(): () => Observable<void> {
-    return this.selectorCatalyst.startAudit();
-  }
+  protected dispatchQueue: Action[] = [];
 
-  dispatch(action: Action) {
+  protected handleAction(action: Action) {
     const target = this.getRealm(action.target);
 
     this.transactionManager.begin();
@@ -179,6 +176,39 @@ export class Engine {
 
     if (action.callback) {
       action.callback();
+    }
+  }
+
+  dispatch(action: Action, nextActions?: Action[]): void {
+    // Enqueue anction and nextActions when needed
+    if (this.isDispatching) {
+      this.dispatchQueue.push(action);
+    }
+    if (nextActions !== undefined && nextActions.length > 0) {
+      this.dispatchQueue.push(...nextActions);
+    }
+    // --------------------------------------------
+
+    if (this.isDispatching) {
+      return;
+    }
+
+    this.isDispatching = true;
+
+    this.handleAction(action);
+
+    while (this.dispatchQueue.length > 0) {
+      const nextAction = this.dispatchQueue.shift()!;
+      this.handleAction(nextAction);
+    }
+
+    this.isDispatching = false;
+  }
+
+  multiDispatch(actions: Action[]): void {
+    if (actions.length > 0) {
+      const [action, ...nextActions] = actions;
+      this.dispatch(action, nextActions);
     }
   }
   // #endregion
@@ -210,12 +240,12 @@ export class Engine {
     return this.branchManager.mountBranches(configs);
   }
 
-  unmountBranch(key: string) {
-    this.branchManager.unmountBranches([key]);
+  unmountBranch(id: string) {
+    this.branchManager.unmountBranches([id]);
   }
 
-  unmountBranches(keys: string[]) {
-    this.branchManager.unmountBranches(keys);
+  unmountBranches(ids: string[]) {
+    this.branchManager.unmountBranches(ids);
   }
 
   protected getRealm(path: Path): Realm {
@@ -230,14 +260,14 @@ export class Engine {
     if (pathLen === 0) {
       throw Error('Cannot resolve empty path []');
     }
-    const branchKey = path[0];
-    if (typeof branchKey !== 'string') {
+    const branchId = path[0];
+    if (typeof branchId !== 'string') {
       // eslint-disable-next-line max-len
-      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid branch key type (${typeof branchKey}), must be a string`);
+      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid branch id type (${typeof branchId}), must be a string`);
     }
     const realm = this.branchManager.getBranch(path[0] as string);
     if (realm === undefined) {
-      throw Error(`Cannot resolve path ${pathToString(path)}: Branch "${typeof branchKey}" not mounted`);
+      throw Error(`Cannot resolve path ${pathToString(path)}: Branch "${typeof branchId}" not mounted`);
     }
     let result = realm;
     for (let i = 1; i < pathLen; i += 1) {
@@ -251,9 +281,9 @@ export class Engine {
     const request = typeof item === 'function' ? item : item.get;
     if (request) {
       if (isJuncture(request)) {
-        const keys = this.branchManager.branchKeys;
-        for (let i = 0; i < keys.length; i += 1) {
-          const realm = this.branchManager.getBranch(keys[i]);
+        const ids = this.branchManager.branchIds;
+        for (let i = 0; i < ids.length; i += 1) {
+          const realm = this.branchManager.getBranch(ids[i]);
           if (realm?.driver.constructor === request) {
             return realm.xpCursor;
           }
@@ -266,6 +296,7 @@ export class Engine {
         }
       }
     }
+
     // throw Error('Unable to find a frame for the specified QueryItem');
     return undefined;
   }
@@ -276,7 +307,7 @@ export class Engine {
     return createUnboundFrame(cursor);
   }
 
-  createAciveFrameHandler<Q extends ActiveQuery>(query: Q): ControlledActiveQueryFrame<Q> {
+  createAciveFrameHandler<Q extends ActiveQuery>(query: Q): ActiveQueryFrameHandler<Q> {
     return this.activeQueryManager.createHandler(query);
   }
   // #endregion

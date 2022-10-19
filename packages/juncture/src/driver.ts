@@ -42,7 +42,7 @@ export interface Driver extends PropertyAssemblerHost, Initializable {
 
   readonly 'selector.path': Selector<Path>;
 
-  readonly 'selector.branchKey': Selector<string>;
+  readonly 'selector.branchId': Selector<string>;
 
   readonly 'selector.isMounted': Selector<boolean>;
 
