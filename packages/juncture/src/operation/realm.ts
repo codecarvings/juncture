@@ -114,7 +114,6 @@ export class Realm {
       return false;
     }
 
-    // Note: old value is catched in the registerAlteredRealm function
     this.engineMediator.reaction.registerAlteredRealm(this);
 
     this._value = value;

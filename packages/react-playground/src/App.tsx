@@ -1,16 +1,12 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { JunctureContext } from '@codecarvings/react-juncture';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import Comp1 from './Comp1';
 import Comp2 from './Comp2';
 
 function App() {
   const [state, setState] = useState(0);
   const [useComp1, setUseComp1] = useState(false);
-
-  const engine = useContext(JunctureContext);
-  console.dir(engine.getState());
 
   return (
     <div style={{ backgroundColor: '#cc00ee', padding: '10px' }}>

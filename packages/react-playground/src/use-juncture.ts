@@ -41,7 +41,7 @@ function getReactCurrentOwner(): ReactCurrentOwner {
   throw Error(`Unsupported React Version (${React.version})`);
 }
 
-const useEffectEmpyfn = () => {};
+const useEffectEmptyfn = () => {};
 const useEffectEmptyDeps: any[] = [];
 
 export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q> {
@@ -55,17 +55,23 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
     // State update
     handler = handlerRef.current as any;
     handler.clearValueUsageCassette();
-    useEffect(useEffectEmpyfn, useEffectEmptyDeps);
+    useEffect(useEffectEmptyfn, useEffectEmptyDeps);
   } else {
     // Initialization
-    const currentOwner = getReactCurrentOwner();
-    if (!currentOwner) {
-      throw Error(`Unable to access React Current Owner (React version: ${React.version})`);
-    }
+    let isStrictModeOn: boolean;
+    let isSecondRender: boolean;
+    let type: any;
 
-    const isStrictModeOn = !!(currentOwner.mode & 8);
-    const isSecondRender = !!(currentOwner.flags & 1);
-    const { type } = currentOwner;
+    const currentOwner = getReactCurrentOwner();
+    if (currentOwner) {
+      isStrictModeOn = !!(currentOwner.mode & 8);
+      isSecondRender = !!(currentOwner.flags & 1);
+      type = currentOwner.type;
+    } else {
+      // Assume no strict mode
+      isStrictModeOn = false;
+      isSecondRender = false;
+    }
 
     if (!isSecondRender) {
       // Create the handler

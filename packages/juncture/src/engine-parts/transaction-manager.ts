@@ -26,7 +26,7 @@ export class TransactionManager {
     return this._inProgress;
   }
 
-  protected alteredRealms = new Map<Realm, any>();
+  protected alteredRealms = new Set<Realm>();
 
   protected completedRealms = new Set<Realm>();
 
@@ -47,9 +47,7 @@ export class TransactionManager {
       throw Error(`Cannot register altered realm ${pathToString(realm.layout.path)} for transaction: no transaction in progress`);
     }
 
-    if (!this.alteredRealms.has(realm)) {
-      this.alteredRealms.set(realm, realm.value);
-    }
+    this.alteredRealms.add(realm);
   }
 
   protected iterateRealmForMutation(realm: Realm) {
@@ -60,7 +58,7 @@ export class TransactionManager {
       this.valueMutationAckSubject.next(realm.layout.path);
 
       if (realm.layout.parent) {
-        // If a child value changes, also the parent has changed
+        // If a child value changes, the parent also has changed
         this.iterateRealmForMutation(realm.layout.parent);
       }
     }
@@ -75,10 +73,8 @@ export class TransactionManager {
     this.syncRealms();
 
     // Step 2: emit mutation events
-    this.alteredRealms.forEach((initialValue, realm) => {
-      if (realm.value !== initialValue) {
-        this.iterateRealmForMutation(realm);
-      }
+    this.alteredRealms.forEach(realm => {
+      this.iterateRealmForMutation(realm);
     });
 
     // Step 3: Reset condition
