@@ -134,15 +134,19 @@ export class Realm {
     if (key === undefined) {
       // Set instruction
       const value = this.getHarmonizedValue(payload);
-      this.realmMediator.setValue(value);
-      this.detectValueChange();
+      if (value !== this._value) {
+        this.realmMediator.setValue(value);
+        this.detectValueChange();
+      }
     } else {
       const desc = this.setup.reactors.map[key];
       if (desc) {
         if (desc.type === DescriptorType.reactor) {
           const value = this.getHarmonizedValue(desc[junctureSymbols.payload](this.core.frames.default)(...payload));
-          this.realmMediator.setValue(value);
-          this.detectValueChange();
+          if (value !== this._value) {
+            this.realmMediator.setValue(value);
+            this.detectValueChange();
+          }
         } else {
           // SyntReactor
           // eslint-disable-next-line @typescript-eslint/naming-convention

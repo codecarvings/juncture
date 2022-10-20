@@ -95,6 +95,8 @@ export class StructRealm extends Realm {
 
   // #region Children stuff
   protected createChildren(): RealmMap {
+    const { setValue } = this.realmMediator;
+
     return mappedAssign(
       {},
       this.schema.childKeys,
@@ -108,7 +110,11 @@ export class StructRealm extends Realm {
         const realmMediator: RealmMediator = {
           getValue: () => this._value[key],
           setValue: childValue => {
-            this._value[key] = childValue;
+            this._value = {
+              ...this._value,
+              [key]: childValue
+            };
+            setValue(this._value);
           }
         };
         return Juncture.createRealm(this.schema.children[key], layout, realmMediator, this.engineMediator);

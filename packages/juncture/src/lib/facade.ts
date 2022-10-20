@@ -56,6 +56,8 @@ export class FacadeRealm extends Realm {
 
   // #region Children stuff
   protected createChild(): Realm {
+    const { setValue } = this.realmMediator;
+
     const layout: RealmLayout = {
       path: this.engineMediator.persistentPath.get([...this.layout.path, childKey]),
       parent: this,
@@ -66,8 +68,7 @@ export class FacadeRealm extends Realm {
       getValue: () => this._value,
       setValue: childValue => {
         this._value = childValue;
-        // Not a container...
-        this.realmMediator.setValue(this._value);
+        setValue(this._value);
       }
     };
     return Juncture.createRealm(this.schema.child, layout, realmMediator, this.engineMediator);

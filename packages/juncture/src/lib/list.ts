@@ -51,7 +51,7 @@ export class ListRealm extends Realm {
   readonly schema!: ListSchema;
 
   // #region Value stuff
-  readonly _value!: any[];
+  _value!: any[];
 
   protected valueDidUpdate() {
     this.reconcileChildren();
@@ -63,6 +63,8 @@ export class ListRealm extends Realm {
 
   // #region Children stuff
   protected createChild(index: number): ControlledRealm {
+    const { setValue } = this.realmMediator;
+
     const layout: RealmLayout = {
       path: this.engineMediator.persistentPath.get([...this.layout.path, index]),
       parent: this,
@@ -72,7 +74,9 @@ export class ListRealm extends Realm {
     const realmMediator: RealmMediator = {
       getValue: () => this._value[index],
       setValue: childValue => {
+        this._value = this._value.slice();
         this._value[index] = childValue;
+        setValue(this._value);
       }
     };
 
