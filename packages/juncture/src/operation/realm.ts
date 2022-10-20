@@ -38,7 +38,7 @@ export interface RealmMediator {
   setValue(newValue: any): void;
 }
 
-export enum RealmMountStatus {
+export enum RealmMountCondition {
   pending = 'pending',
   mounted = 'mounted',
   unmounted = 'unmounted'
@@ -189,26 +189,26 @@ export class Realm {
     return {
       realm: this,
       mount: () => {
-        if (this._mountStatus !== RealmMountStatus.pending) {
-          throw Error(`Cannot mount Realm ${pathToString(this.layout.path)}: current mount status: ${this._mountStatus}`);
+        if (this._mountCondition !== RealmMountCondition.pending) {
+          throw Error(`Cannot mount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}`);
         }
-        this._mountStatus = RealmMountStatus.mounted;
+        this._mountCondition = RealmMountCondition.mounted;
         this.realmDidMount();
       },
       unmount: () => {
-        if (this._mountStatus !== RealmMountStatus.mounted && this._mountStatus !== RealmMountStatus.pending) {
-          throw Error(`Cannot unmount Realm ${pathToString(this.layout.path)}: current mount status: ${this._mountStatus}`);
+        if (this._mountCondition !== RealmMountCondition.mounted && this._mountCondition !== RealmMountCondition.pending) {
+          throw Error(`Cannot unmount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}`);
         }
         this.realmWillUnmount();
-        this._mountStatus = RealmMountStatus.unmounted;
+        this._mountCondition = RealmMountCondition.unmounted;
       }
     };
   }
 
-  protected _mountStatus: RealmMountStatus = RealmMountStatus.pending;
+  protected _mountCondition: RealmMountCondition = RealmMountCondition.pending;
 
-  get mountStatus(): RealmMountStatus {
-    return this._mountStatus;
+  get mountCondition(): RealmMountCondition {
+    return this._mountCondition;
   }
 
   protected realmDidMount(): void {

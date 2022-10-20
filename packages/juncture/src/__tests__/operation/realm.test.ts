@@ -14,7 +14,7 @@ import { RealmManager } from '../../engine-parts/realm-manager';
 import { Juncture } from '../../juncture';
 import { junctureSymbols } from '../../juncture-symbols';
 import {
-  Realm, RealmLayout, RealmMediator, RealmMountStatus
+  Realm, RealmLayout, RealmMediator, RealmMountCondition
 } from '../../operation/realm';
 import { getRealm, isRealmHost } from '../../operation/realm-host';
 import { JunctureSchema } from '../../schema';
@@ -118,8 +118,8 @@ describe('Realm', () => {
       expect(realm.layout).toBe(layout);
     });
 
-    test('should have a "mountStatus" initially set to "pending"', () => {
-      expect(realm.mountStatus).toBe(RealmMountStatus.pending);
+    test('should have a "mountCondition" initially set to "pending"', () => {
+      expect(realm.mountCondition).toBe(RealmMountCondition.pending);
     });
 
     describe('xpCursor property', () => {
@@ -144,8 +144,8 @@ describe('Realm', () => {
         realmManager.sync();
       });
 
-      test('should have a "mountStatus" set to "mouted"', () => {
-        expect(realm.mountStatus).toBe(RealmMountStatus.mounted);
+      test('should have a "mountCondition" set to "mouted"', () => {
+        expect(realm.mountCondition).toBe(RealmMountCondition.mounted);
       });
     });
 
@@ -156,8 +156,8 @@ describe('Realm', () => {
         realmManager.sync();
       });
 
-      test('should have property "mountStatus" set to "unmounted"', () => {
-        expect(realm.mountStatus).toBe(RealmMountStatus.unmounted);
+      test('should have property "mountCondition" set to "unmounted"', () => {
+        expect(realm.mountCondition).toBe(RealmMountCondition.unmounted);
       });
 
       test('should throw error if tryng to access the value property', () => {

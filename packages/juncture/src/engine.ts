@@ -19,14 +19,14 @@ import { QueryFrame } from './operation/frames/query-frame';
 import { createUnboundFrame } from './operation/frames/unbound-frame';
 import { Path, pathToString, PersistentPath } from './operation/path';
 import {
-  ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountStatus
+  ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountCondition
 } from './operation/realm';
 import { getRealm, isRealmHost } from './operation/realm-host';
 import { ActiveQuery } from './query/active-query';
 import { Query, QueryItem } from './query/query';
 import { mappedAssign } from './utilities/object';
 
-export enum EngineStatus {
+export enum EngineCondition {
   running = 'running',
   stopped = 'stopped'
 }
@@ -67,11 +67,11 @@ export class Engine {
     this.activeQueryManager = this.createActiveQueryManager();
   }
 
-  protected readonly storage = new Map<string, any>();
+  protected readonly state = new Map<string, any>();
 
-  getStorageSnapshot(): any {
+  getState(): any {
     const result: any = {};
-    this.storage.forEach((value, key) => {
+    this.state.forEach((value, key) => {
       result[key] = value;
     });
     return result;
@@ -134,7 +134,7 @@ export class Engine {
       }
     };
 
-    return new BranchManager(engineRealmMediator, this.realmManager, this.storage);
+    return new BranchManager(engineRealmMediator, this.realmManager, this.state);
   }
 
   protected readonly activeQueryManager: ActiveQueryManager;
@@ -151,22 +151,22 @@ export class Engine {
   }
   // #endregion
 
-  // #region Status stuff
-  protected _status = EngineStatus.running;
+  // #region Condition stuff
+  protected _condition = EngineCondition.running;
 
-  get status(): EngineStatus {
-    return this._status;
+  get condition(): EngineCondition {
+    return this._condition;
   }
 
   stop() {
-    if (this.status === EngineStatus.stopped) {
+    if (this.condition === EngineCondition.stopped) {
       throw Error('Engine already stopped');
     }
 
     this.activeQueryManager.releaseAll();
     this.branchManager.unmountAll();
 
-    this._status = EngineStatus.stopped;
+    this._condition = EngineCondition.stopped;
   }
   // #endregion
 
@@ -259,7 +259,7 @@ export class Engine {
   protected getRealm(path: Path): Realm {
     if (isRealmHost(path)) {
       const result = getRealm(path);
-      if (result.mountStatus !== RealmMountStatus.unmounted) {
+      if (result.mountCondition !== RealmMountCondition.unmounted) {
         return result;
       }
     }

@@ -15,7 +15,7 @@ import { junctureSymbols } from './juncture-symbols';
 import { createCursor, Cursor } from './operation/frame-equipment/cursor';
 import { Path } from './operation/path';
 import {
-  Realm, RealmLayout, RealmMediator, RealmMountStatus
+  Realm, RealmLayout, RealmMediator, RealmMountCondition
 } from './operation/realm';
 import { getRealm } from './operation/realm-host';
 import { JunctureSchema } from './schema';
@@ -83,7 +83,7 @@ export abstract class BaseDriver implements Driver {
     this['selector.isMounted'] = assembler
       .registerStaticProperty(createSelector((
         frame: any
-      ) => getRealm(frame._).mountStatus === RealmMountStatus.mounted));
+      ) => getRealm(frame._).mountCondition === RealmMountCondition.mounted));
 
     this['selector.value'] = assembler
       .registerStaticProperty(createSelector((

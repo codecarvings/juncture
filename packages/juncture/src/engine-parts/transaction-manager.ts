@@ -81,7 +81,7 @@ export class TransactionManager {
       }
     });
 
-    // Step 3: Reset status
+    // Step 3: Reset condition
     this.completedRealms.clear();
     this.alteredRealms.clear();
     this._inProgress = false;

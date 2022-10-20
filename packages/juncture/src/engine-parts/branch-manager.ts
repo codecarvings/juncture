@@ -25,7 +25,7 @@ export class BranchManager {
   constructor(
     protected readonly engineRealmMediator: EngineRealmMediator,
     protected readonly realmManager: RealmManager,
-    protected readonly storage: Map<string, any>
+    protected readonly state: Map<string, any>
   ) { }
 
   protected readonly breanches = new Map<string, Realm>();
@@ -45,9 +45,9 @@ export class BranchManager {
       isDivergent: false
     };
     const realmMediator: RealmMediator = {
-      getValue: () => this.storage.get(id),
+      getValue: () => this.state.get(id),
       setValue: newValue => {
-        this.storage.set(id, newValue);
+        this.state.set(id, newValue);
       }
     };
 
@@ -72,10 +72,10 @@ export class BranchManager {
     }
 
     if (config.initialValue !== undefined) {
-      this.storage.set(id, config.initialValue);
+      this.state.set(id, config.initialValue);
     } else {
       const schema = Juncture.getSchema(config.juncture);
-      this.storage.set(id, schema.defaultValue);
+      this.state.set(id, schema.defaultValue);
     }
 
     const realm = this.createRealm(id, config.juncture);
@@ -89,7 +89,7 @@ export class BranchManager {
       throw Error(`Cannot unmount branch "${id}": not found`);
     }
     this.realmManager.dismiss(realm);
-    this.storage.delete(id);
+    this.state.delete(id);
   }
 
   mountBranches(configsToMount: BranchConfig[]): string[] {

@@ -13,7 +13,7 @@ import { junctureSymbols } from '../juncture-symbols';
 import { mappedAssign } from '../utilities/object';
 import { BehaviorFrameHost } from './frames/behavior-frame';
 import { pathToString } from './path';
-import { Realm, RealmMountStatus } from './realm';
+import { Realm, RealmMountCondition } from './realm';
 
 interface TeardownMap {
   readonly [key: string]: () => void | undefined;
@@ -33,7 +33,7 @@ export class BehaviorSupervisor {
       throw Error(`Cannot start behaviors of ${pathToString(this.realm.layout.path)}: already started`);
     }
 
-    if (this.realm.mountStatus !== RealmMountStatus.mounted) {
+    if (this.realm.mountCondition !== RealmMountCondition.mounted) {
       throw Error(`Cannot start behaviors of ${pathToString(this.realm.layout.path)}: realm not mouted`);
     }
 
