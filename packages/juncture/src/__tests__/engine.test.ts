@@ -144,7 +144,8 @@ test('experiment with frames 2', () => {
   dispatch(_.j1.age).set(1001);
   expect(select(_.j1.age).value).toBe(1001);
 
-  expect(engine.state).toEqual({
+  const snapshot = engine.getStorageSnapshot();
+  expect(snapshot).toEqual({
     primary: {
       name: 'Mirco',
       age: 1001,

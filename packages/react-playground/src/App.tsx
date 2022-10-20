@@ -10,7 +10,7 @@ function App() {
   const [useComp1, setUseComp1] = useState(false);
 
   const engine = useContext(JunctureContext);
-  console.dir(engine.state);
+  console.dir(engine.getStorageSnapshot());
 
   return (
     <div style={{ backgroundColor: '#cc00ee', padding: '10px' }}>

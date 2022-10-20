@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 /**
  * @license
  * Copyright (c) Sergio Turolla All Rights Reserved.
@@ -6,6 +5,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
+/* eslint-disable max-len */
 
 import { EngineRealmMediator } from '../engine';
 import { Juncture, ValueOfJuncture } from '../juncture';
@@ -24,7 +25,7 @@ export class BranchManager {
   constructor(
     protected readonly engineRealmMediator: EngineRealmMediator,
     protected readonly realmManager: RealmManager,
-    protected readonly state: any
+    protected readonly storage: Map<string, any>
   ) { }
 
   protected readonly breanches = new Map<string, Realm>();
@@ -44,9 +45,9 @@ export class BranchManager {
       isDivergent: false
     };
     const realmMediator: RealmMediator = {
-      getValue: () => this.state[id],
+      getValue: () => this.storage.get(id),
       setValue: newValue => {
-        this.state[id] = newValue;
+        this.storage.set(id, newValue);
       }
     };
 
@@ -71,10 +72,10 @@ export class BranchManager {
     }
 
     if (config.initialValue !== undefined) {
-      this.state[id] = config.initialValue;
+      this.storage.set(id, config.initialValue);
     } else {
       const schema = Juncture.getSchema(config.juncture);
-      this.state[id] = schema.defaultValue;
+      this.storage.set(id, schema.defaultValue);
     }
 
     const realm = this.createRealm(id, config.juncture);
@@ -88,7 +89,7 @@ export class BranchManager {
       throw Error(`Cannot unmount branch "${id}": not found`);
     }
     this.realmManager.dismiss(realm);
-    delete this.state[id];
+    this.storage.delete(id);
   }
 
   mountBranches(configsToMount: BranchConfig[]): string[] {

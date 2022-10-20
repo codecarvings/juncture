@@ -67,7 +67,15 @@ export class Engine {
     this.activeQueryManager = this.createActiveQueryManager();
   }
 
-  readonly state: any = {};
+  protected readonly storage = new Map<string, any>();
+
+  getStorageSnapshot(): any {
+    const result: any = {};
+    this.storage.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
 
   // #region Engine Parts
   protected readonly persistentPathManager: PersistentPathManager;
@@ -126,7 +134,7 @@ export class Engine {
       }
     };
 
-    return new BranchManager(engineRealmMediator, this.realmManager, this.state);
+    return new BranchManager(engineRealmMediator, this.realmManager, this.storage);
   }
 
   protected readonly activeQueryManager: ActiveQueryManager;
