@@ -38,7 +38,9 @@ export function defineLazyProperty(object: any, key: PropertyKey, factory: () =>
   });
 }
 
-export function mappedAssign(object: any, keys: string[], mapFn: (key: string) => any): any {
+export function mappedAssign(object: any, keys: string[], mapFn: (key: string) => any): any;
+export function mappedAssign(object: any, keys: PropertyKey[], mapFn: (key: PropertyKey) => any): any;
+export function mappedAssign(object: any, keys: any[], mapFn: (key: any) => any) {
   // eslint-disable-next-line no-param-reassign
   keys.forEach(key => { object[key] = mapFn(key); });
   return object;

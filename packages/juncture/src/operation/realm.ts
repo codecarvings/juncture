@@ -243,7 +243,7 @@ export class Realm {
 }
 
 export interface RealmMap {
-  readonly [key: string]: Realm;
+  readonly [key: PropertyKey]: Realm;
 }
 // #endregion
 

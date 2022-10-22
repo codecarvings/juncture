@@ -33,7 +33,7 @@ export type StructPartialValue<JM extends JunctureMap> = {
 };
 export class StructSchema<JM extends JunctureMap = JunctureMap> extends JunctureSchema<StructValue<JM>> {
   protected constructor(readonly children: JM, defaultValue?: StructPartialValue<JM>) {
-    const childKeys = Object.keys(children);
+    const childKeys = Reflect.ownKeys(children);
     const childDefaultValue = mappedAssign(
       { },
       childKeys,
@@ -53,9 +53,9 @@ export class StructSchema<JM extends JunctureMap = JunctureMap> extends Juncture
     });
   }
 
-  readonly childKeys: string[];
+  readonly childKeys: PropertyKey[];
 
-  readonly xpChildKeys: string[];
+  readonly xpChildKeys: PropertyKey[];
 }
 
 function createStructSchema<JM extends JunctureMap>(
