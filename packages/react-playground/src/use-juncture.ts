@@ -106,8 +106,8 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
       });
 
       return () => {
-        // valueMutationAck observable unsubscribed in the release function
-        handler.release();
+        // valueMutationAck observable unsubscribed in the dismiss function
+        handler.dismiss();
       };
     }, []);
   }

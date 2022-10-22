@@ -16,6 +16,7 @@ interface PersistentPathData {
   usageCount: number;
 }
 
+// Persistent paths are required by the detectors
 export class PersistentPathManager {
   constructor() {
     this.getPersistentPath = this.getPersistentPath.bind(this);

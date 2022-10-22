@@ -56,7 +56,7 @@ export class ListRealm extends Realm {
   protected valueDidUpdate() {
     this.reconcileChildren();
     this.children.forEach(child => {
-      (child.realm as ListRealm).detectValueChange();
+      (child.realm as ListRealm).syncValue();
     });
   }
   // #endregion

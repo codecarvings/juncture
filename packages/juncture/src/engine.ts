@@ -7,9 +7,9 @@
  */
 
 import { ActiveQueryFrameHandler, ActiveQueryManager } from './engine-parts/active-query-manager';
-import { BranchConfig, BranchManager } from './engine-parts/branch-manager';
 import { PersistentPathManager } from './engine-parts/persistent-path-manager';
 import { RealmManager } from './engine-parts/realm-manager';
+import { ServiceConfig, ServiceManager } from './engine-parts/service-manager';
 import { TransactionManager } from './engine-parts/transaction-manager';
 import { ValueUsageRecorder } from './engine-parts/value-usage-recorder';
 import { isJuncture, Juncture } from './juncture';
@@ -27,14 +27,19 @@ import { Query, QueryItem } from './query/query';
 import { mappedAssign } from './utilities/object';
 
 export enum EngineCondition {
-  running = 'running',
+  ready = 'ready',
+  stopping = 'stopping',
   stopped = 'stopped'
+}
+
+export interface EngineConditionHolder {
+  readonly current: EngineCondition;
 }
 
 export interface EngineRealmMediator {
   readonly persistentPath: {
     get(path: Path): PersistentPath;
-    release(path: PersistentPath): void;
+    releaseRequirement(path: PersistentPath): void;
   }
 
   readonly realm: {
@@ -55,15 +60,15 @@ export interface EngineRealmMediator {
 export class Engine {
   constructor() {
     this.dispatch = this.dispatch.bind(this);
-    this.mountBranches = this.mountBranches.bind(this);
-    this.unmountBranches = this.unmountBranches.bind(this);
+    this.startServices = this.startServices.bind(this);
+    this.stopServices = this.stopServices.bind(this);
     this.getXpCursorFromQueryItem = this.getXpCursorFromQueryItem.bind(this);
 
     this.persistentPathManager = this.createPersistentPathManager();
     this.realmManager = this.createRealmManger();
     this.valueUsageRecorder = this.createValueUsageRecorder();
     this.transactionManager = this.createTransactionManager();
-    this.branchManager = this.createBranchManager();
+    this.serviceManager = this.createServiceManager();
     this.activeQueryManager = this.createActiveQueryManager();
   }
 
@@ -102,16 +107,16 @@ export class Engine {
   protected readonly transactionManager: TransactionManager;
 
   protected createTransactionManager(): TransactionManager {
-    return new TransactionManager(this.realmManager.sync);
+    return new TransactionManager(this.realmManager.syncMount);
   }
 
-  protected readonly branchManager: BranchManager;
+  protected readonly serviceManager: ServiceManager;
 
-  protected createBranchManager(): BranchManager {
+  protected createServiceManager(): ServiceManager {
     const engineRealmMediator: EngineRealmMediator = {
       persistentPath: {
         get: this.persistentPathManager.getPersistentPath,
-        release: this.persistentPathManager.releaseRequirement
+        releaseRequirement: this.persistentPathManager.releaseRequirement
       },
       realm: {
         enroll: this.realmManager.enroll,
@@ -134,15 +139,15 @@ export class Engine {
       }
     };
 
-    return new BranchManager(engineRealmMediator, this.realmManager, this.state);
+    return new ServiceManager(this.state, this.realmManager.dismiss, this.realmManager.syncMount, engineRealmMediator);
   }
 
   protected readonly activeQueryManager: ActiveQueryManager;
 
   protected createActiveQueryManager(): ActiveQueryManager {
     return new ActiveQueryManager(
-      this.mountBranches,
-      this.unmountBranches,
+      this.startServices,
+      this.stopServices,
       this.getXpCursorFromQueryItem,
       this.valueUsageRecorder.useCassette,
       this.valueUsageRecorder.ejectCassette,
@@ -152,21 +157,28 @@ export class Engine {
   // #endregion
 
   // #region Condition stuff
-  protected _condition = EngineCondition.running;
+  // An holder that can be passed to engine-parts that require it
+  protected _condition = {
+    current: EngineCondition.ready
+  };
 
   get condition(): EngineCondition {
-    return this._condition;
+    return this._condition.current;
   }
 
   stop() {
-    if (this.condition === EngineCondition.stopped) {
-      throw Error('Engine already stopped');
+    if (this.condition !== EngineCondition.ready) {
+      throw Error('Cannot stop engine: not ready');
     }
 
-    this.activeQueryManager.releaseAll();
-    this.branchManager.unmountAll();
+    this._condition.current = EngineCondition.stopping;
 
-    this._condition = EngineCondition.stopped;
+    this.activeQueryManager.stop();
+    this.transactionManager.stop();
+    this.serviceManager.stop();
+    this.realmManager.stop();
+
+    this._condition.current = EngineCondition.stopped;
   }
   // #endregion
 
@@ -221,22 +233,22 @@ export class Engine {
   }
   // #endregion
 
-  // #region Branch stuff
-  mountBranch<J extends Juncture>(juncture: J): string;
-  mountBranch<J extends Juncture>(config: BranchConfig<J>): string;
-  mountBranch(juncture_or_config: Juncture | BranchConfig) {
-    let config: BranchConfig;
+  // #region Service stuff
+  startService<J extends Juncture>(juncture: J): string;
+  startService<J extends Juncture>(config: ServiceConfig<J>): string;
+  startService(juncture_or_config: Juncture | ServiceConfig) {
+    let config: ServiceConfig;
     if (typeof juncture_or_config === 'function') {
       config = { juncture: juncture_or_config };
     } else {
       config = juncture_or_config;
     }
-    return this.branchManager.mountBranches([config])[0];
+    return this.serviceManager.startServices([config])[0];
   }
 
-  mountBranches(junctures: (Juncture | BranchConfig)[]): string[] {
+  startServices(junctures: (Juncture | ServiceConfig)[]): string[] {
     const configs = junctures.map(request => {
-      let config: BranchConfig;
+      let config: ServiceConfig;
       if (typeof request === 'function') {
         config = { juncture: request };
       } else {
@@ -245,15 +257,15 @@ export class Engine {
       return config;
     });
 
-    return this.branchManager.mountBranches(configs);
+    return this.serviceManager.startServices(configs);
   }
 
-  unmountBranch(id: string) {
-    this.branchManager.unmountBranches([id]);
+  stopService(id: string) {
+    this.serviceManager.stopServices([id]);
   }
 
-  unmountBranches(ids: string[]) {
-    this.branchManager.unmountBranches(ids);
+  stopServices(ids: string[]) {
+    this.serviceManager.stopServices(ids);
   }
 
   protected getRealm(path: Path): Realm {
@@ -268,14 +280,14 @@ export class Engine {
     if (pathLen === 0) {
       throw Error('Cannot resolve empty path []');
     }
-    const branchId = path[0];
-    if (typeof branchId !== 'string') {
+    const serviceId = path[0];
+    if (typeof serviceId !== 'string') {
       // eslint-disable-next-line max-len
-      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid branch id type (${typeof branchId}), must be a string`);
+      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid service id type (${typeof serviceId}), must be a string`);
     }
-    const realm = this.branchManager.getBranch(path[0] as string);
+    const realm = this.serviceManager.getService(path[0] as string);
     if (realm === undefined) {
-      throw Error(`Cannot resolve path ${pathToString(path)}: Branch "${typeof branchId}" not mounted`);
+      throw Error(`Cannot resolve path ${pathToString(path)}: Service "${typeof serviceId}" not started`);
     }
     let result = realm;
     for (let i = 1; i < pathLen; i += 1) {
@@ -289,16 +301,16 @@ export class Engine {
     const request = typeof item === 'function' ? item : item.get;
     if (request) {
       if (isJuncture(request)) {
-        const ids = this.branchManager.branchIds;
+        const ids = this.serviceManager.serviceIds;
         for (let i = 0; i < ids.length; i += 1) {
-          const realm = this.branchManager.getBranch(ids[i]);
+          const realm = this.serviceManager.getService(ids[i]);
           if (realm?.driver.constructor === request) {
             return realm.xpCursor;
           }
         }
       }
       if (typeof request === 'string') {
-        const realm = this.branchManager.getBranch(request);
+        const realm = this.serviceManager.getService(request);
         if (realm) {
           return realm.xpCursor;
         }

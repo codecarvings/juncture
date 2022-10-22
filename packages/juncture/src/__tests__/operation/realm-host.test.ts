@@ -32,7 +32,7 @@ const realmMediator: RealmMediator = {
 const engineMediator: EngineRealmMediator = {
   persistentPath: {
     get: () => undefined!,
-    release: () => { }
+    releaseRequirement: () => { }
   },
   realm: {
     enroll: () => { },

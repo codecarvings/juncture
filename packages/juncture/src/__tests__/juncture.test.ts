@@ -143,7 +143,7 @@ describe('Juncture', () => {
     const engineMediator: EngineRealmMediator = {
       persistentPath: {
         get: () => undefined!,
-        release: () => { }
+        releaseRequirement: () => { }
       },
       realm: {
         enroll: () => { },

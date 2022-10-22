@@ -9,6 +9,7 @@
 import { Cursor, isCursor } from '../operation/frame-equipment/cursor';
 import { Path } from '../operation/path';
 
+// String = ServiceId
 export type QuerySource = string | Path | Cursor;
 
 export function isQuerySource(obj: any): obj is QuerySource {

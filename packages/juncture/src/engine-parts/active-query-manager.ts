@@ -17,55 +17,50 @@ import {
   ActiveQuery, isActiveQueryExplicitRequest, isActiveQueryRequest, isActiveQueryRunRequest
 } from '../query/active-query';
 import { QueryItem } from '../query/query';
-import { BranchConfig } from './branch-manager';
+import { ServiceConfig } from './service-manager';
 import { ValueUsageCassette } from './value-usage-recorder';
 
 export interface ActiveQueryFrameHandler<Q extends ActiveQuery = ActiveQuery> {
   readonly frame: ActiveQueryFrame<Q>;
   readonly valueMutationAck$: Observable<PersistentPath>;
   clearValueUsageCassette(): void;
-  release(): void;
-}
-
-interface ActiveQueryFrameHandlerTearDownData {
-  isActive: boolean,
-  tempBranchIds: string[]
+  dismiss(): void;
 }
 
 export class ActiveQueryManager {
   constructor(
-    protected readonly mountBranches: (configsToMount: BranchConfig[]) => string[],
-    protected readonly unmountBranches: (keysToUnmount: string[]) => void,
+    protected readonly startServices: (configs: ServiceConfig[]) => string[],
+    protected readonly stopServices: (ids: string[]) => void,
     protected readonly getXpCursorFromQueryItem: (item: QueryItem) => Cursor | undefined,
     protected readonly useValueUsageCassette: (cassette: ValueUsageCassette) => void,
     protected readonly ejectValueUsageCassette: () => void,
     protected readonly valueMutationAck$: Observable<PersistentPath>
   ) { }
 
-  protected readonly tearDownDatas = new Map<ActiveQueryFrameHandler, ActiveQueryFrameHandlerTearDownData>();
+  protected readonly handlers = new Set<ActiveQueryFrameHandler>();
 
   createHandler<Q extends ActiveQuery>(query: Q): ActiveQueryFrameHandler<Q> {
     const keys = Object.keys(query);
 
-    // Step 1: mount temporary branches
-    const configsToMount: BranchConfig[] = [];
-    const keysWithMountIndexes = keys.map(key => {
+    // Step 1: start temporary services
+    const configsToStart: ServiceConfig[] = [];
+    const keysWithStartIndex = keys.map(key => {
       const item = query[key];
       if (isActiveQueryRunRequest(item)) {
-        const index = configsToMount.push({
+        const index = configsToStart.push({
           juncture: item.run,
-          id: item.branchId,
+          id: item.serviceId,
           initialValue: item.initialValue
         }) - 1;
         return { key, index };
       }
       return { key, index: undefined };
     });
-    const tempBranchIds = this.mountBranches(configsToMount);
+    const tempServiceIds = this.startServices(configsToStart);
 
-    // Step 2: create cursor
+    // Step 2: Get the cursor
     const cursor: any = {};
-    keysWithMountIndexes.forEach(({ key, index }) => {
+    keysWithStartIndex.forEach(({ key, index }) => {
       const item = query[key];
 
       let value: any;
@@ -73,7 +68,7 @@ export class ActiveQueryManager {
         value = this.getXpCursorFromQueryItem({ get: item });
       } else if (isActiveQueryRunRequest(item)) {
         value = this.getXpCursorFromQueryItem({
-          get: tempBranchIds[index!]
+          get: tempServiceIds[index!]
         });
       } else if (isActiveQueryRequest(item) || isActiveQueryExplicitRequest(item)) {
         value = this.getXpCursorFromQueryItem(item);
@@ -97,49 +92,37 @@ export class ActiveQueryManager {
     };
     const frame = createActiveQueryFrame(cursor, inspector);
 
-    // Step 5: register handler data for tear down
-    const tearDownData: ActiveQueryFrameHandlerTearDownData = {
-      isActive: true,
-      tempBranchIds
-    };
-
-    // Step 6: Create the handler
+    // Step 6: Create the handler and register it
+    let isActive = true;
     const handler: ActiveQueryFrameHandler = {
       frame,
       valueMutationAck$: this.valueMutationAck$.pipe(
-        takeWhile(() => tearDownData.isActive),
+        takeWhile(() => isActive),
         filter(path => cassette.has(path))
       ),
       clearValueUsageCassette: () => {
         cassette.clear();
       },
-      release: () => {
-        if (!tearDownData.isActive) {
+      dismiss: () => {
+        if (!isActive) {
           return;
         }
-        tearDownData.isActive = false;
+        isActive = false;
         cassette.clear();
-        this.unmountBranches(tempBranchIds);
-        this.tearDownDatas.delete(handler);
+        this.stopServices(tempServiceIds);
+        this.handlers.delete(handler);
       }
     };
+    this.handlers.add(handler);
 
     return handler as any;
   }
 
-  releaseAll() {
-    const datas = Array.from(this.tearDownDatas.values());
-    // Stop all valueMutationAck$
-    datas.forEach(data => {
-      // eslint-disable-next-line no-param-reassign
-      data.isActive = false;
+  stop() {
+    const handlers = Array.from(this.handlers.values());
+    handlers.forEach(handler => {
+      handler.dismiss();
     });
-
-    // Unmount all temp branches at the same time
-    const tempBranchIds = datas.reduce((acc, data) => acc.concat(data.tempBranchIds), [] as string[]);
-    this.unmountBranches(tempBranchIds);
-
-    this.tearDownDatas.clear();
   }
 
   // eslint-disable-next-line class-methods-use-this

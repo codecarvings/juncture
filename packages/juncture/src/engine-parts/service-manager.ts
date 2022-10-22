@@ -11,30 +11,30 @@
 import { EngineRealmMediator } from '../engine';
 import { Juncture, ValueOfJuncture } from '../juncture';
 import { Realm, RealmLayout, RealmMediator } from '../operation/realm';
-import { RealmManager } from './realm-manager';
 
-export interface BranchConfig<J extends Juncture = Juncture> {
+export interface ServiceConfig<J extends Juncture = Juncture> {
   readonly id?: string;
   readonly juncture: J;
   readonly initialValue?: ValueOfJuncture<J>
 }
 
-const anonymousBranchPrefix = '~';
+const anonymousServicePrefix = '~';
 
-export class BranchManager {
+export class ServiceManager {
   constructor(
-    protected readonly engineRealmMediator: EngineRealmMediator,
-    protected readonly realmManager: RealmManager,
-    protected readonly state: Map<string, any>
+    protected readonly state: Map<string, any>,
+    protected readonly dismissRealm: (realm: Realm) => void,
+    protected readonly syncMount: () => void,
+    protected readonly engineRealmMediator: EngineRealmMediator
   ) { }
 
-  protected readonly breanches = new Map<string, Realm>();
+  protected readonly services = new Map<string, Realm>();
 
   protected anonymousSerial = 0;
 
   protected createAnonymousId() {
     this.anonymousSerial += 1;
-    return `${anonymousBranchPrefix}${this.anonymousSerial}`;
+    return `${anonymousServicePrefix}${this.anonymousSerial}`;
   }
 
   protected createRealm(id: string, juncture: Juncture) {
@@ -54,23 +54,25 @@ export class BranchManager {
     return Juncture.createRealm(juncture, layout, realmMediator, this.engineRealmMediator);
   }
 
-  protected createBranch(config: BranchConfig): string {
+  protected createService(config: ServiceConfig): string {
+    // Step 1: Calculate the service id
     let id: string;
     if (config.id) {
       id = config.id;
       if (id.length < 1) {
-        throw Error('Invalid empty branch id');
+        throw Error('Invalid empty service id');
       }
-      if (id[0] === anonymousBranchPrefix) {
-        throw Error(`Invalid id "${id}" - A named branch id cannot start with the prefix ${anonymousBranchPrefix}`);
+      if (id[0] === anonymousServicePrefix) {
+        throw Error(`Invalid id "${id}" - A named service id cannot start with the prefix ${anonymousServicePrefix}`);
       }
-      if (this.breanches.has(id)) {
-        throw Error(`Duplicated branch id "${id}".`);
+      if (this.services.has(id)) {
+        throw Error(`Duplicated service id "${id}".`);
       }
     } else {
       id = this.createAnonymousId();
     }
 
+    // Step 2: Update state with the new value
     if (config.initialValue !== undefined) {
       this.state.set(id, config.initialValue);
     } else {
@@ -78,46 +80,48 @@ export class BranchManager {
       this.state.set(id, schema.defaultValue);
     }
 
+    // Step 3: Create the realm
     const realm = this.createRealm(id, config.juncture);
-    this.breanches.set(id, realm);
+    this.services.set(id, realm);
+
     return id;
   }
 
-  protected dismissBranch(id: string) {
-    const realm = this.breanches.get(id);
+  protected stopService(id: string) {
+    const realm = this.services.get(id);
     if (!realm) {
-      throw Error(`Cannot unmount branch "${id}": not found`);
+      throw Error(`Cannot stop service "${id}": not found`);
     }
-    this.realmManager.dismiss(realm);
+    this.dismissRealm(realm);
     this.state.delete(id);
   }
 
-  mountBranches(configsToMount: BranchConfig[]): string[] {
-    const result = configsToMount.map(config => this.createBranch(config));
-    this.realmManager.sync();
+  startServices(configsToStart: ServiceConfig[]): string[] {
+    const result = configsToStart.map(config => this.createService(config));
+    this.syncMount();
     return result;
   }
 
-  unmountBranches(idsToUnmount: string[]) {
-    idsToUnmount.forEach(id => {
-      this.dismissBranch(id);
+  stopServices(idsToStop: string[]) {
+    idsToStop.forEach(id => {
+      this.stopService(id);
     });
-    this.realmManager.sync();
+    this.syncMount();
   }
 
-  get branchIds(): string[] {
-    return Array.from(this.breanches.keys());
+  get serviceIds(): string[] {
+    return Array.from(this.services.keys());
   }
 
-  getBranch(id: string): Realm | undefined {
-    return this.breanches.get(id);
+  getService(id: string): Realm | undefined {
+    return this.services.get(id);
   }
 
   has(id: string): boolean {
-    return this.breanches.has(id);
+    return this.services.has(id);
   }
 
-  unmountAll() {
-    this.unmountBranches(this.branchIds);
+  stop() {
+    this.stopServices(this.serviceIds);
   }
 }

@@ -29,7 +29,7 @@ test('tmp test', () => {
   }) { }
 
   const engine = new Engine();
-  engine.mountBranch({ juncture: Group });
+  engine.startService({ juncture: Group });
   const { _, select } = engine.createFrame({
     group: Group
   });

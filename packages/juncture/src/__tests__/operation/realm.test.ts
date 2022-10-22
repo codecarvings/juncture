@@ -48,7 +48,7 @@ describe('Realm', () => {
       const engineMediator: EngineRealmMediator = {
         persistentPath: {
           get: () => undefined!,
-          release: () => { }
+          releaseRequirement: () => { }
         },
         realm: {
           enroll: () => { },
@@ -92,7 +92,7 @@ describe('Realm', () => {
       engineMediator = {
         persistentPath: {
           get: () => undefined!,
-          release: () => { }
+          releaseRequirement: () => { }
         },
         realm: {
           enroll: realmManager.enroll,
@@ -141,7 +141,7 @@ describe('Realm', () => {
 
     describe('after mount', () => {
       beforeEach(() => {
-        realmManager.sync();
+        realmManager.syncMount();
       });
 
       test('should have a "mountCondition" set to "mouted"', () => {
@@ -151,9 +151,9 @@ describe('Realm', () => {
 
     describe('after unmount', () => {
       beforeEach(() => {
-        realmManager.sync();
+        realmManager.syncMount();
         realmManager.dismiss(realm);
-        realmManager.sync();
+        realmManager.syncMount();
       });
 
       test('should have property "mountCondition" set to "unmounted"', () => {

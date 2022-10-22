@@ -99,7 +99,7 @@ test('experiment', () => {
   }
 
   const engine = new Engine();
-  engine.mountBranch({ juncture: App });
+  engine.startService({ juncture: App });
   // const { select, _ } = engine.frame;
 
   engine.stop();
@@ -120,7 +120,7 @@ test('experiment 2', () => {
   }) {}
 
   const engine = new Engine();
-  engine.mountBranch({ juncture: App });
+  engine.startService({ juncture: App });
   const { select, _ } = engine.createFrame({
     app: App,
     prova: { get: '' }

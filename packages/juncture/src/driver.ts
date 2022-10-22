@@ -42,7 +42,7 @@ export interface Driver extends PropertyAssemblerHost, Initializable {
 
   readonly 'selector.path': Selector<Path>;
 
-  readonly 'selector.branchId': Selector<string>;
+  readonly 'selector.serviceId': Selector<string>;
 
   readonly 'selector.isMounted': Selector<boolean>;
 
@@ -65,8 +65,4 @@ export type ValueOf<D extends Driver> = BodyOfSchema<D['schema']>['defaultValue'
 // Use inference to keep type name
 export type CursorOf<D extends Driver> = D extends {
   [junctureSymbols.createCursor](...args : any) : infer C
-} ? C : never;
-
-export type XpCursorOfDriver<D extends Driver> = D extends {
-  [junctureSymbols.createXpCursor](...args : any) : infer C
 } ? C : never;

@@ -11,5 +11,9 @@ const unknwownName = 'unknown';
 export class InjectionToken<T = any> {
   #type: T = undefined!; // Keep the type
 
-  constructor(readonly name = unknwownName) {}
+  constructor(readonly name = unknwownName) { }
+
+  toString() {
+    return `injectionToken:${this.name}`;
+  }
 }

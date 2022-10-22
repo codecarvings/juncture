@@ -7,7 +7,7 @@ import reportWebVitals from './reportWebVitals';
 import { Primary } from './state/primary';
 
 const engine = new Engine();
-engine.mountBranch({ id: 'primary', juncture: Primary });
+engine.startService({ id: 'primary', juncture: Primary });
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

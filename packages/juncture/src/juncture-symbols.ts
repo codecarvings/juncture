@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+const init = Symbol('init');
+const createPropertyAssembler = Symbol('createPropertyAssembler');
 const juncture = Symbol('juncture');
 const payload = Symbol('payload');
-const createPropertyAssembler = Symbol('createPropertyAssembler');
 const createForger = Symbol('createForger');
-const init = Symbol('init');
 const createSetup = Symbol('createSetup');
 const createRealm = Symbol('createRealm');
 const createCursor = Symbol('createCursor');
@@ -21,11 +21,11 @@ const persistent = Symbol('persistent');
 const bitDefault = Symbol('bitDefault');
 
 export interface JunctureSymbols {
+  readonly init: typeof init;
+  readonly createPropertyAssembler: typeof createPropertyAssembler;
   readonly juncture: typeof juncture;
   readonly payload: typeof payload;
-  readonly createPropertyAssembler: typeof createPropertyAssembler;
   readonly createForger: typeof createForger;
-  readonly init: typeof init;
   readonly createSetup: typeof createSetup;
   readonly createRealm: typeof createRealm;
   readonly createCursor: typeof createCursor;
@@ -37,11 +37,11 @@ export interface JunctureSymbols {
 }
 
 export const junctureSymbols: JunctureSymbols = {
+  init,
+  createPropertyAssembler,
   juncture,
   payload,
-  createPropertyAssembler,
   createForger,
-  init,
   createSetup,
   createRealm,
   createCursor,

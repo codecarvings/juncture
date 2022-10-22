@@ -85,7 +85,7 @@ describe('BaseDriver', () => {
     const engineMediator: EngineRealmMediator = {
       persistentPath: {
         get: () => undefined!,
-        release: () => { }
+        releaseRequirement: () => { }
       },
       realm: {
         enroll: () => { },
@@ -132,7 +132,7 @@ describe('BaseDriver', () => {
     const engineMediator: EngineRealmMediator = {
       persistentPath: {
         get: () => undefined!,
-        release: () => { }
+        releaseRequirement: () => { }
       },
       realm: {
         enroll: () => { },
@@ -172,7 +172,7 @@ describe('BaseDriver', () => {
     const engineMediator: EngineRealmMediator = {
       persistentPath: {
         get: () => undefined!,
-        release: () => { }
+        releaseRequirement: () => { }
       },
       realm: {
         enroll: () => { },

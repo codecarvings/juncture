@@ -41,7 +41,7 @@ test('experiment with frames', () => {
     );
   }
   const engine = new Engine();
-  engine.mountBranch({ juncture: J1 });
+  engine.startService({ juncture: J1 });
   const { _, select } = engine.createFrame({
     j1: J1
   });
@@ -112,7 +112,7 @@ test('experiment with frames 2', () => {
 
   jest.useFakeTimers();
   const engine = new Engine();
-  engine.mountBranch({
+  engine.startService({
     id: 'primary',
     juncture: J1,
     initialValue: {
@@ -219,7 +219,7 @@ test('experiment with frames 2', () => {
   }
 
   const engine = new Engine();
-  engine.mountBranch({ juncture: J2 });
+  engine.startService({ juncture: J2 });
   const { _, select, dispatch } = engine.createFrame({
     j2: J2
   });

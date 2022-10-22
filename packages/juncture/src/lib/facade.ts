@@ -50,7 +50,7 @@ export class FacadeRealm extends Realm {
 
   // #region Value stuff
   protected valueDidUpdate() {
-    this.child.detectValueChange();
+    this.child.syncValue();
   }
   // #endregion
 

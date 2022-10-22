@@ -29,7 +29,7 @@ test('tmp test', () => {
   }
 
   const engine = new Engine();
-  engine.mountBranch({ juncture: App });
+  engine.startService({ juncture: App });
   const { _, select, dispatch } = engine.createFrame({
     app: App
   });
@@ -66,7 +66,7 @@ test('tmp test 2', () => {
   }
 
   const engine = new Engine();
-  engine.mountBranch({ juncture: App });
+  engine.startService({ juncture: App });
   const { _, select, dispatch } = engine.createFrame({
     app: App
   });

@@ -9,20 +9,20 @@
 import { junctureSymbols } from '../juncture-symbols';
 
 describe('junctureSymbols', () => {
-  test('should contain the juncture symbol', () => {
-    expect(typeof junctureSymbols.juncture).toBe('symbol');
-  });
-
-  test('should contain the payload symbol', () => {
-    expect(typeof junctureSymbols.payload).toBe('symbol');
-  });
-
   test('should contain the init symbol', () => {
     expect(typeof junctureSymbols.init).toBe('symbol');
   });
 
   test('should contain the propertyAssembler symbol', () => {
     expect(typeof junctureSymbols.createPropertyAssembler).toBe('symbol');
+  });
+
+  test('should contain the juncture symbol', () => {
+    expect(typeof junctureSymbols.juncture).toBe('symbol');
+  });
+
+  test('should contain the payload symbol', () => {
+    expect(typeof junctureSymbols.payload).toBe('symbol');
   });
 
   test('should contain the createForger symbol', () => {

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { pathToString, PersistentPath } from '../operation/path';
 import { Realm } from '../operation/realm';
 
@@ -14,10 +14,15 @@ import { Realm } from '../operation/realm';
 //  1) Mount and unmount realms
 //  2) Emits mutation events
 export class TransactionManager {
-  constructor(protected readonly syncRealms: () => void) {
+  constructor(
+    protected readonly syncRealms: () => void
+  ) {
     this.begin = this.begin.bind(this);
     this.registerAlteredRealm = this.registerAlteredRealm.bind(this);
     this.commit = this.commit.bind(this);
+
+    this.valueMutationAckSubject = new Subject<PersistentPath>();
+    this.valueMutationAck$ = this.valueMutationAckSubject.asObservable();
   }
 
   protected _inProgress = false;
@@ -30,9 +35,9 @@ export class TransactionManager {
 
   protected completedRealms = new Set<Realm>();
 
-  protected readonly valueMutationAckSubject = new Subject<PersistentPath>();
+  protected readonly valueMutationAckSubject: Subject<PersistentPath>;
 
-  readonly valueMutationAck$ = this.valueMutationAckSubject.asObservable();
+  readonly valueMutationAck$: Observable<PersistentPath>;
 
   begin() {
     if (this._inProgress) {
@@ -81,5 +86,9 @@ export class TransactionManager {
     this.completedRealms.clear();
     this.alteredRealms.clear();
     this._inProgress = false;
+  }
+
+  stop() {
+    this.valueMutationAckSubject.complete();
   }
 }

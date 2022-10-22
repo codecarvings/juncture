@@ -108,7 +108,7 @@ export class Realm {
 
   readonly value!: any;
 
-  detectValueChange(): boolean {
+  syncValue(): boolean {
     const value = this.realmMediator.getValue();
     if (value === this._value) {
       return false;
@@ -135,7 +135,7 @@ export class Realm {
       const value = this.getHarmonizedValue(payload);
       if (value !== this._value) {
         this.realmMediator.setValue(value);
-        this.detectValueChange();
+        this.syncValue();
       }
     } else {
       const desc = this.setup.reactors.map[key];
@@ -144,7 +144,7 @@ export class Realm {
           const value = this.getHarmonizedValue(desc[junctureSymbols.payload](this.core.frames.default)(...payload));
           if (value !== this._value) {
             this.realmMediator.setValue(value);
-            this.detectValueChange();
+            this.syncValue();
           }
         } else {
           // SyntReactor
@@ -222,8 +222,10 @@ export class Realm {
     if (this.core.behaviors.started) {
       this.core.behaviors.stop();
     }
-    this.engineMediator.persistentPath.release(this.layout.path);
 
+    this.engineMediator.persistentPath.releaseRequirement(this.layout.path);
+
+    // --- Inhibit further access to Realm methods
     const getRevoked = (desc: string) => () => {
       throw Error(`Cannot access ${desc}: Realm ${pathToString(this.layout.path)} not mounted`);
     };

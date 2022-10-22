@@ -7,9 +7,7 @@
  */
 
 import { AccessModifier } from './access-modifier';
-import {
-  CursorOf, Driver, SchemaOf, ValueOf, XpCursorOfDriver
-} from './driver';
+import { Driver, SchemaOf, ValueOf } from './driver';
 import { EngineRealmMediator } from './engine';
 import { junctureSymbols } from './juncture-symbols';
 import { Realm, RealmLayout, RealmMediator } from './operation/realm';
@@ -57,8 +55,17 @@ export function isJuncture(obj: any): obj is Juncture {
 export type SchemaOfJuncture<J extends Juncture> = SchemaOf<InstanceType<J>>;
 export type ValueOfJuncture<J extends Juncture> = ValueOf<InstanceType<J>>;
 
-export type CursorOfJuncture<J extends Juncture> = CursorOf<InstanceType<J>>;
-export type XpCursorOf<J extends Juncture> = XpCursorOfDriver<InstanceType<J>>;
+// export type CursorOfJuncture<J extends Juncture> = CursorOf<InstanceType<J>>;
+// export type XpCursorOfDriver<D extends Driver> = D extends {
+//   [junctureSymbols.createXpCursor](...args : any) : infer C
+// } ? C : never;
+// export type XpCursorOf<J extends Juncture> = XpCursorOfDriver<InstanceType<J>>;
+
+// Use inference to keep type name
+export type XpCursorOf<J extends Juncture> = InstanceType<J> extends {
+  [junctureSymbols.createXpCursor](...args : any) : infer C
+} ? C : never;
+
 // #endregion
 
 // #region Additional juncture types

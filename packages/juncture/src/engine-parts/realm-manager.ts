@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Observable, Subject } from 'rxjs';
 import { pathToString } from '../operation/path';
 import { ManagedRealm, Realm } from '../operation/realm';
 
@@ -14,10 +15,19 @@ interface RealmSnapshot {
   readonly children: Realm[];
 }
 
+interface SyncMountAckData {
+  readonly unmounted: Realm[];
+  readonly mounted: Realm[];
+}
+
 export class RealmManager {
   constructor() {
     this.enroll = this.enroll.bind(this);
-    this.sync = this.sync.bind(this);
+    this.dismiss = this.dismiss.bind(this);
+    this.syncMount = this.syncMount.bind(this);
+
+    this.syncMountAckSubject = new Subject<SyncMountAckData>();
+    this.syncMountAck$ = this.syncMountAckSubject.asObservable();
   }
 
   protected realmsToMount = new Map<Realm, RealmSnapshot>();
@@ -27,6 +37,10 @@ export class RealmManager {
   protected mountedRealms = new Map<Realm, RealmSnapshot>();
 
   protected syncRequired = false;
+
+  protected readonly syncMountAckSubject: Subject<SyncMountAckData>;
+
+  readonly syncMountAck$: Observable<SyncMountAckData>;
 
   enroll(managedRealm: ManagedRealm) {
     if (this.mountedRealms.has(managedRealm.realm) || this.realmsToMount.has(managedRealm.realm)) {
@@ -71,23 +85,32 @@ export class RealmManager {
     this.syncRequired = true;
   }
 
-  sync() {
+  #SyncMountAckData: SyncMountAckData = {
+    unmounted: [],
+    mounted: []
+  };
+
+  syncMount() {
     if (!this.syncRequired) {
       return;
     }
 
+    const { unmounted, mounted } = this.#SyncMountAckData;
+
     if (this.realmsToUnmount.length > 0) {
-      const allManagedRealms: ManagedRealm[] = [];
+      const managedRealmsToUnmount: ManagedRealm[] = [];
       const iterateRealms = (realms: Realm[]) => {
         realms.forEach(realm => {
+          unmounted.push(realm);
+
           const snapshot = this.mountedRealms.get(realm)!;
-          allManagedRealms.push(snapshot.managedRealm);
+          managedRealmsToUnmount.push(snapshot.managedRealm);
           iterateRealms(snapshot.children);
         });
       };
       iterateRealms(this.realmsToUnmount);
 
-      allManagedRealms.forEach(managedRealm => {
+      managedRealmsToUnmount.forEach(managedRealm => {
         this.mountedRealms.delete(managedRealm.realm);
         managedRealm.unmount();
       });
@@ -97,6 +120,8 @@ export class RealmManager {
 
     if (this.realmsToMount.size > 0) {
       this.realmsToMount.forEach(snapshot => {
+        mounted.push(snapshot.managedRealm.realm);
+
         this.mountedRealms.set(snapshot.managedRealm.realm, snapshot);
         snapshot.managedRealm.mount();
       });
@@ -104,6 +129,15 @@ export class RealmManager {
       this.realmsToMount.clear();
     }
 
+    this.syncMountAckSubject.next(this.#SyncMountAckData);
+
+    unmounted.length = 0;
+    mounted.length = 0;
+
     this.syncRequired = false;
+  }
+
+  stop() {
+    this.syncMountAckSubject.complete();
   }
 }

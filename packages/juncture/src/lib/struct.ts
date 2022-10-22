@@ -78,7 +78,7 @@ export class StructRealm extends Realm {
   // #region Value stuff
   protected valueDidUpdate() {
     this.schema.childKeys.forEach(key => {
-      this.children[key].detectValueChange();
+      this.children[key].syncValue();
     });
   }
 
