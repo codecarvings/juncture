@@ -7,10 +7,50 @@
  */
 
 import { PersistentPath } from '../operation/path';
+import { Realm } from '../operation/realm';
 
-export type ApplicationCassette = Set<PersistentPath>;
+export interface DependencyAddress {
+  readonly realm: Realm;
+  readonly key: string;
+}
 
-// ApplicationRecorder
+export interface XpApplicationCassette {
+  readonly realms: Set<Realm>;
+  readonly values: Set<PersistentPath>;
+
+  clear(): void;
+}
+
+export interface ApplicationCassette extends XpApplicationCassette {
+  readonly deps: Set<DependencyAddress>;
+}
+
+export function createXpApplicationCassette(): XpApplicationCassette {
+  const realms = new Set<Realm>();
+  const values = new Set<PersistentPath>();
+  const clear = () => {
+    realms.clear();
+    values.clear();
+  };
+
+  return { realms, values, clear };
+}
+
+export function createApplicationCassette(): ApplicationCassette {
+  const realms = new Set<Realm>();
+  const values = new Set<PersistentPath>();
+  const deps = new Set<DependencyAddress>();
+  const clear = () => {
+    realms.clear();
+    values.clear();
+    deps.clear();
+  };
+
+  return {
+    realms, values, deps, clear
+  };
+}
+
 export class ApplicationRecorder {
   constructor() {
     this.insertCassette = this.insertCassette.bind(this);
@@ -18,9 +58,9 @@ export class ApplicationRecorder {
     this.registerValueApplication = this.registerValueApplication.bind(this);
   }
 
-  protected currentCassette: ApplicationCassette | null = null;
+  protected currentCassette: XpApplicationCassette | ApplicationCassette | null = null;
 
-  insertCassette(cassette: ApplicationCassette) {
+  insertCassette(cassette: XpApplicationCassette | ApplicationCassette) {
     if (this.currentCassette) {
       throw Error('Cannot insert application cassette: another cassette already present.');
     }
@@ -35,11 +75,27 @@ export class ApplicationRecorder {
     this.currentCassette = null;
   }
 
+  registerRealmApplication(realm: Realm) {
+    if (!this.currentCassette) {
+      return;
+    }
+
+    this.currentCassette!.realms.add(realm);
+  }
+
   registerValueApplication(path: PersistentPath) {
     if (!this.currentCassette) {
       return;
     }
 
-    this.currentCassette!.add(path);
+    this.currentCassette!.values.add(path);
+  }
+
+  registerDependencyApplication(dep: DependencyAddress) {
+    if (!this.currentCassette) {
+      return;
+    }
+
+    (this.currentCassette as any).deps.add(dep);
   }
 }

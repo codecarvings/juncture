@@ -17,7 +17,7 @@ import {
   ActiveQuery, isActiveQueryExplicitRequest, isActiveQueryRequest, isActiveQueryRunRequest
 } from '../query/active-query';
 import { QueryItem } from '../query/query';
-import { ApplicationCassette } from './application-recorder';
+import { createXpApplicationCassette, XpApplicationCassette } from './application-recorder';
 import { ServiceConfig } from './service-manager';
 
 export interface ActiveQueryFrameHandler<Q extends ActiveQuery = ActiveQuery> {
@@ -32,7 +32,7 @@ export class ActiveQueryManager {
     protected readonly startServices: (configs: ServiceConfig[]) => string[],
     protected readonly stopServices: (ids: string[]) => void,
     protected readonly getXpCursorFromQueryItem: (item: QueryItem) => Cursor | undefined,
-    protected readonly insertApplicationCassette: (cassette: ApplicationCassette) => void,
+    protected readonly insertApplicationCassette: (cassette: XpApplicationCassette) => void,
     protected readonly ejectApplicationCassette: () => void,
     protected readonly valueMutationAck$: Observable<PersistentPath>
   ) { }
@@ -98,7 +98,7 @@ export class ActiveQueryManager {
       frame,
       valueMutationAck$: this.valueMutationAck$.pipe(
         takeWhile(() => isActive),
-        filter(path => cassette.has(path))
+        filter(path => cassette.values.has(path))
       ),
       clearApplicationCassette: () => {
         cassette.clear();
@@ -126,7 +126,7 @@ export class ActiveQueryManager {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected createApplicationCassette(): ApplicationCassette {
-    return new Set<PersistentPath>();
+  protected createApplicationCassette(): XpApplicationCassette {
+    return createXpApplicationCassette();
   }
 }
