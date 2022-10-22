@@ -8,33 +8,34 @@
 
 import { PersistentPath } from '../operation/path';
 
-export type ValueUsageCassette = Set<PersistentPath>;
+export type ApplicationCassette = Set<PersistentPath>;
 
-export class ValueUsageRecorder {
+// ApplicationRecorder
+export class ApplicationRecorder {
   constructor() {
-    this.useCassette = this.useCassette.bind(this);
+    this.insertCassette = this.insertCassette.bind(this);
     this.ejectCassette = this.ejectCassette.bind(this);
-    this.registerValueUsage = this.registerValueUsage.bind(this);
+    this.registerValueApplication = this.registerValueApplication.bind(this);
   }
 
-  protected currentCassette: ValueUsageCassette | null = null;
+  protected currentCassette: ApplicationCassette | null = null;
 
-  useCassette(cassette: ValueUsageCassette) {
+  insertCassette(cassette: ApplicationCassette) {
     if (this.currentCassette) {
-      throw Error('Cannot use cassette: another cassette already present.');
+      throw Error('Cannot insert application cassette: another cassette already present.');
     }
     this.currentCassette = cassette;
   }
 
   ejectCassette() {
     if (!this.currentCassette) {
-      throw Error('Cannot eject cassette: no cassette present.');
+      throw Error('Cannot eject application cassette: no cassette present.');
     }
 
     this.currentCassette = null;
   }
 
-  registerValueUsage(path: PersistentPath) {
+  registerValueApplication(path: PersistentPath) {
     if (!this.currentCassette) {
       return;
     }

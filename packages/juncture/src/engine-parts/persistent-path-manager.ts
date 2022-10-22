@@ -67,7 +67,7 @@ export class PersistentPathManager {
   registerRequirement(path: PersistentPath) {
     const data = this.cache.get(path);
     if (!data) {
-      throw Error(`Unable to register persistent path requirement: path ${pathToString(path)} not found`);
+      throw Error(`Unable to register persistent path requirement: path ${pathToString(path)} not found.`);
     }
     data.usageCount += 1;
   }
@@ -75,7 +75,7 @@ export class PersistentPathManager {
   releaseRequirement(path: PersistentPath) {
     const data = this.cache.get(path);
     if (!data) {
-      throw Error(`Unable to release persistent path requirement: path ${pathToString(path)} not found`);
+      throw Error(`Unable to release persistent path requirement: path ${pathToString(path)} not found.`);
     }
 
     data.usageCount -= 1;

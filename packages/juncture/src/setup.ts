@@ -107,7 +107,7 @@ export class Setup {
                 .map((p, i2) => (p === prefix ? types[i2] : null))
                 .filter(s => s !== null) as string[];
               // eslint-disable-next-line max-len
-              throw Error(`Invalid prefix "${prefix}": property "${driverKey}" is not a Descriptor (${filteredTypes.join(', ')})`);
+              throw Error(`Invalid prefix "${prefix}": property "${driverKey}" is not a Descriptor (${filteredTypes.join(', ')}).`);
             }
           }
         }
@@ -119,7 +119,7 @@ export class Setup {
       const prefixLen = prefix.length;
       if (prefixLen > 1) {
         if (driverKey.length < prefixLen || driverKey.substring(0, prefixLen) !== prefix) {
-          throw Error(`Invalid descriptor key: "${driverKey}": Should start with the prefix "${prefix}"`);
+          throw Error(`Invalid descriptor key: "${driverKey}": Should start with the prefix "${prefix}".`);
         }
         key = driverKey.substring(prefixLen);
       }

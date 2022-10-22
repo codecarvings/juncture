@@ -38,7 +38,7 @@ function getReactCurrentOwner(): ReactCurrentOwner {
     }
   }
 
-  throw Error(`Unsupported React Version (${React.version})`);
+  throw Error(`Unsupported React Version: "${React.version}".`);
 }
 
 const useEffectEmptyfn = () => {};
@@ -54,7 +54,7 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
   if (handlerRef.current) {
     // State update
     handler = handlerRef.current as any;
-    handler.clearValueUsageCassette();
+    handler.clearApplicationCassette();
     useEffect(useEffectEmptyfn, useEffectEmptyDeps);
   } else {
     // Initialization
@@ -87,7 +87,7 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
       handler = type[lastHandlerSymbol];
       delete type[lastHandlerSymbol];
       handlerRef.current = handler;
-      handler.clearValueUsageCassette();
+      handler.clearApplicationCassette();
     }
 
     useEffect(() => {
@@ -99,7 +99,7 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
 
       handler.valueMutationAck$.subscribe(() => {
         // Prevent further events before re-rendering
-        handler.clearValueUsageCassette();
+        handler.clearApplicationCassette();
 
         // console.count('State update');
         setState(state => !state);

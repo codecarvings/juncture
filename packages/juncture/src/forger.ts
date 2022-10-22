@@ -135,10 +135,10 @@ export class Forger<D extends Driver> {
             revoke();
           }
           if (parent === undefined) {
-            throw Error(`Unable to override property "${key}" (no parent found)`);
+            throw Error(`Unable to override property "${key}" (no parent found).`);
           }
           if (!isDescriptor(parent)) {
-            throw Error(`Unable to override property "${key}" (parent is not a Descriptor)`);
+            throw Error(`Unable to override property "${key}" (parent is not a Descriptor).`);
           }
           return createDescriptorForOverride({
             key, parent, fnName, fnArgs
@@ -201,7 +201,7 @@ export class Forger<D extends Driver> {
         break;
     }
 
-    throw Error(`Unable to override Descriptor type "${args.parent.type}" for property "${args.key}" with ${args.fnName}(...)`);
+    throw Error(`Unable to override Descriptor type "${args.parent.type}" for property "${args.key}" with ${args.fnName}(...).`);
   }
 
   // eslint-disable-next-line class-methods-use-this

@@ -7,11 +7,11 @@
  */
 
 import { ActiveQueryFrameHandler, ActiveQueryManager } from './engine-parts/active-query-manager';
+import { ApplicationRecorder } from './engine-parts/application-recorder';
 import { PersistentPathManager } from './engine-parts/persistent-path-manager';
 import { RealmManager } from './engine-parts/realm-manager';
 import { ServiceConfig, ServiceManager } from './engine-parts/service-manager';
 import { TransactionManager } from './engine-parts/transaction-manager';
-import { ValueUsageRecorder } from './engine-parts/value-usage-recorder';
 import { isJuncture, Juncture } from './juncture';
 import { Action } from './operation/action';
 import { Cursor } from './operation/frame-equipment/cursor';
@@ -48,7 +48,7 @@ export interface EngineRealmMediator {
   };
 
   readonly selection: {
-    registerValueUsage(path: PersistentPath): void;
+    registerValueApplication(path: PersistentPath): void;
   }
 
   readonly reaction: {
@@ -66,7 +66,7 @@ export class Engine {
 
     this.persistentPathManager = this.createPersistentPathManager();
     this.realmManager = this.createRealmManger();
-    this.valueUsageRecorder = this.createValueUsageRecorder();
+    this.applicationRecorder = this.createApplicationRecorder();
     this.transactionManager = this.createTransactionManager();
     this.serviceManager = this.createServiceManager();
     this.activeQueryManager = this.createActiveQueryManager();
@@ -97,11 +97,11 @@ export class Engine {
     return new RealmManager();
   }
 
-  protected readonly valueUsageRecorder: ValueUsageRecorder;
+  protected readonly applicationRecorder: ApplicationRecorder;
 
   // eslint-disable-next-line class-methods-use-this
-  protected createValueUsageRecorder(): ValueUsageRecorder {
-    return new ValueUsageRecorder();
+  protected createApplicationRecorder(): ApplicationRecorder {
+    return new ApplicationRecorder();
   }
 
   protected readonly transactionManager: TransactionManager;
@@ -131,7 +131,7 @@ export class Engine {
         }
       },
       selection: {
-        registerValueUsage: this.valueUsageRecorder.registerValueUsage
+        registerValueApplication: this.applicationRecorder.registerValueApplication
       },
       reaction: {
         dispatch: this.dispatch,
@@ -149,8 +149,8 @@ export class Engine {
       this.startServices,
       this.stopServices,
       this.getXpCursorFromQueryItem,
-      this.valueUsageRecorder.useCassette,
-      this.valueUsageRecorder.ejectCassette,
+      this.applicationRecorder.insertCassette,
+      this.applicationRecorder.ejectCassette,
       this.transactionManager.valueMutationAck$
     );
   }
@@ -168,7 +168,7 @@ export class Engine {
 
   stop() {
     if (this.condition !== EngineCondition.ready) {
-      throw Error('Cannot stop engine: not ready');
+      throw Error('Cannot stop engine: not ready.');
     }
 
     this._condition.current = EngineCondition.stopping;
@@ -278,16 +278,16 @@ export class Engine {
 
     const pathLen = path.length;
     if (pathLen === 0) {
-      throw Error('Cannot resolve empty path []');
+      throw Error('Cannot resolve empty path [].');
     }
     const serviceId = path[0];
     if (typeof serviceId !== 'string') {
       // eslint-disable-next-line max-len
-      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid service id type (${typeof serviceId}), must be a string`);
+      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid service id type (${typeof serviceId}), must be a string.`);
     }
     const realm = this.serviceManager.getService(path[0] as string);
     if (realm === undefined) {
-      throw Error(`Cannot resolve path ${pathToString(path)}: Service "${typeof serviceId}" not started`);
+      throw Error(`Cannot resolve path ${pathToString(path)}: Service "${typeof serviceId}" not started.`);
     }
     let result = realm;
     for (let i = 1; i < pathLen; i += 1) {
@@ -317,7 +317,7 @@ export class Engine {
       }
     }
 
-    // throw Error('Unable to find a frame for the specified QueryItem');
+    // throw Error('Unable to find a frame for the specified QueryItem.');
     return undefined;
   }
 

@@ -92,7 +92,7 @@ describe('BaseDriver', () => {
         createControlled: () => undefined!
       },
       selection: {
-        registerValueUsage: () => { }
+        registerValueApplication: () => { }
       },
       reaction: {
         dispatch: () => { },
@@ -139,7 +139,7 @@ describe('BaseDriver', () => {
         createControlled: () => undefined!
       },
       selection: {
-        registerValueUsage: () => { }
+        registerValueApplication: () => { }
       },
       reaction: {
         dispatch: () => { },
@@ -179,7 +179,7 @@ describe('BaseDriver', () => {
         createControlled: () => undefined!
       },
       selection: {
-        registerValueUsage: () => { }
+        registerValueApplication: () => { }
       },
       reaction: {
         dispatch: () => { },

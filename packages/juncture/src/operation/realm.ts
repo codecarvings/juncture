@@ -72,12 +72,12 @@ export class Realm {
     this.schema = Juncture.getSchema(driver);
     this.setup = Juncture.getSetup(driver);
 
-    const { registerValueUsage } = engineMediator.selection;
+    const { registerValueApplication } = engineMediator.selection;
     const { path } = layout;
     this._value = realmMediator.getValue();
     Object.defineProperty(this, 'value', {
       get: () => {
-        registerValueUsage(path);
+        registerValueApplication(path);
         return this._value;
       },
       ...revocablePropOptions
@@ -153,27 +153,27 @@ export class Realm {
           if (Array.isArray(instruction_or_instructions)) {
             (instruction_or_instructions as Instruction[]).forEach(instruction => {
               if (comparePaths(this.layout.path, instruction.target.layout.path) < 0) {
-                throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope`);
+                throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope.`);
               }
               instruction.target.excuteInstruction(instruction.key, instruction.payload);
             });
           } else {
             const instruction = (instruction_or_instructions as Instruction);
             if (comparePaths(this.layout.path, instruction.target.layout.path) < 0) {
-              throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope`);
+              throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope.`);
             }
             instruction.target.excuteInstruction(instruction.key, instruction.payload);
           }
         }
       } else {
-        throw Error(`Unable to execute action "${key}": not a reactor`);
+        throw Error(`Unable to execute action "${key}": not a reactor.`);
       }
     }
   }
 
   executeAction(key: string, payload: any) {
     if (typeof key !== 'string') {
-      throw Error(`Unable to execute action: invalid key "${key}"`);
+      throw Error(`Unable to execute action: invalid key "${key}".`);
     }
 
     this.excuteInstruction(key, payload);
@@ -183,7 +183,7 @@ export class Realm {
 
   // #region Children stuff
   getChildRealm(fragment: PathFragment): Realm {
-    throw Error(`Realm ${pathToString(this.layout.path)} cannot resolve path fragment: ${pathFragmentToString(fragment)}`);
+    throw Error(`Realm ${pathToString(this.layout.path)} cannot resolve path fragment: ${pathFragmentToString(fragment)}.`);
   }
   // #endregion
 
@@ -193,14 +193,14 @@ export class Realm {
       realm: this,
       mount: () => {
         if (this._mountCondition !== RealmMountCondition.pending) {
-          throw Error(`Cannot mount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}`);
+          throw Error(`Cannot mount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}.`);
         }
         this._mountCondition = RealmMountCondition.mounted;
         this.realmDidMount();
       },
       unmount: () => {
         if (this._mountCondition !== RealmMountCondition.mounted && this._mountCondition !== RealmMountCondition.pending) {
-          throw Error(`Cannot unmount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}`);
+          throw Error(`Cannot unmount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}.`);
         }
         this.realmWillUnmount();
         this._mountCondition = RealmMountCondition.unmounted;
@@ -227,7 +227,7 @@ export class Realm {
 
     // --- Inhibit further access to Realm methods
     const getRevoked = (desc: string) => () => {
-      throw Error(`Cannot access ${desc}: Realm ${pathToString(this.layout.path)} not mounted`);
+      throw Error(`Cannot access ${desc}: Realm ${pathToString(this.layout.path)} not mounted.`);
     };
 
     const mediatorKeys = Object.keys(this.realmMediator);

@@ -30,11 +30,11 @@ export class BehaviorSupervisor {
 
   start() {
     if (this.started) {
-      throw Error(`Cannot start behaviors of ${pathToString(this.realm.layout.path)}: already started`);
+      throw Error(`Cannot start behaviors of ${pathToString(this.realm.layout.path)}: already started.`);
     }
 
     if (this.realm.mountCondition !== RealmMountCondition.mounted) {
-      throw Error(`Cannot start behaviors of ${pathToString(this.realm.layout.path)}: realm not mouted`);
+      throw Error(`Cannot start behaviors of ${pathToString(this.realm.layout.path)}: realm not mouted.`);
     }
 
     const { keys, map } = this.realm.setup.behaviors;
@@ -47,7 +47,7 @@ export class BehaviorSupervisor {
 
   stop() {
     if (!this.started) {
-      throw Error(`Cannot stop behaviors of ${pathToString(this.realm.layout.path)}: not started`);
+      throw Error(`Cannot stop behaviors of ${pathToString(this.realm.layout.path)}: not started.`);
     }
 
     const { keys } = this.realm.setup.behaviors;

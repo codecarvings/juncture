@@ -53,6 +53,6 @@ export function getDescriptorKeyPrefix(type: DescriptorType) {
     case DescriptorType.behavior:
       return DescriptorKeyPrefix.behavior;
     default:
-      throw Error(`Unable to find prefix for DescriptorType '${type}'`);
+      throw Error(`Unable to find prefix for DescriptorType "${type}".`);
   }
 }

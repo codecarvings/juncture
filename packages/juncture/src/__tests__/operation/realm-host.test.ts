@@ -39,7 +39,7 @@ const engineMediator: EngineRealmMediator = {
     createControlled: () => undefined!
   },
   selection: {
-    registerValueUsage: () => { }
+    registerValueApplication: () => { }
   },
   reaction: {
     dispatch: () => { },

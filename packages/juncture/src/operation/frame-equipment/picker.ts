@@ -18,7 +18,7 @@ export function createInnerPickerFactory(binKey: keyof BinKit): any {
     if (realm === defaultRealm) {
       return bins[binKey];
     }
-    throw Error(`Unable to access bin ${binKey} for path ${pathToString(realm.layout.path)}`);
+    throw Error(`Unable to access bin ${binKey} for path ${pathToString(realm.layout.path)}.`);
   };
 }
 

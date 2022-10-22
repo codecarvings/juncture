@@ -50,7 +50,7 @@ export class Injector {
     // }
 
     if (result === undefined && !isOptional) {
-      throw Error(`Unable to resolve dependency key '${dependencyKeyToString(key)}'`);
+      throw Error(`Unable to resolve dependency key "${dependencyKeyToString(key)}".`);
     }
     return result;
   }

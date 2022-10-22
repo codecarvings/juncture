@@ -41,7 +41,7 @@ export class TransactionManager {
 
   begin() {
     if (this._inProgress) {
-      throw Error('Cannot begin new transaction: already in progress');
+      throw Error('Cannot begin new transaction: already in progress.');
     }
     this._inProgress = true;
   }
@@ -49,7 +49,7 @@ export class TransactionManager {
   registerAlteredRealm(realm: Realm) {
     if (!this._inProgress) {
       // eslint-disable-next-line max-len
-      throw Error(`Cannot register altered realm ${pathToString(realm.layout.path)} for transaction: no transaction in progress`);
+      throw Error(`Cannot register altered realm ${pathToString(realm.layout.path)} for transaction: no transaction in progress.`);
     }
 
     this.alteredRealms.add(realm);

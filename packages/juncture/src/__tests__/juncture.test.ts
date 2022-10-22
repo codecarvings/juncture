@@ -150,7 +150,7 @@ describe('Juncture', () => {
         createControlled: () => undefined!
       },
       selection: {
-        registerValueUsage: () => { }
+        registerValueApplication: () => { }
       },
       reaction: {
         dispatch: () => { },

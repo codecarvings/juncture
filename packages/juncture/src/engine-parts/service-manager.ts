@@ -60,10 +60,10 @@ export class ServiceManager {
     if (config.id) {
       id = config.id;
       if (id.length < 1) {
-        throw Error('Invalid empty service id');
+        throw Error('Invalid empty service id.');
       }
       if (id[0] === anonymousServicePrefix) {
-        throw Error(`Invalid id "${id}" - A named service id cannot start with the prefix ${anonymousServicePrefix}`);
+        throw Error(`Invalid id "${id}" - A named service id cannot start with the prefix ${anonymousServicePrefix}.`);
       }
       if (this.services.has(id)) {
         throw Error(`Duplicated service id "${id}".`);
@@ -90,7 +90,7 @@ export class ServiceManager {
   protected stopService(id: string) {
     const realm = this.services.get(id);
     if (!realm) {
-      throw Error(`Cannot stop service "${id}": not found`);
+      throw Error(`Cannot stop service "${id}": not found.`);
     }
     this.dismissRealm(realm);
     this.state.delete(id);

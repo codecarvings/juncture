@@ -17,13 +17,13 @@ import {
   ActiveQuery, isActiveQueryExplicitRequest, isActiveQueryRequest, isActiveQueryRunRequest
 } from '../query/active-query';
 import { QueryItem } from '../query/query';
+import { ApplicationCassette } from './application-recorder';
 import { ServiceConfig } from './service-manager';
-import { ValueUsageCassette } from './value-usage-recorder';
 
 export interface ActiveQueryFrameHandler<Q extends ActiveQuery = ActiveQuery> {
   readonly frame: ActiveQueryFrame<Q>;
   readonly valueMutationAck$: Observable<PersistentPath>;
-  clearValueUsageCassette(): void;
+  clearApplicationCassette(): void;
   dismiss(): void;
 }
 
@@ -32,8 +32,8 @@ export class ActiveQueryManager {
     protected readonly startServices: (configs: ServiceConfig[]) => string[],
     protected readonly stopServices: (ids: string[]) => void,
     protected readonly getXpCursorFromQueryItem: (item: QueryItem) => Cursor | undefined,
-    protected readonly useValueUsageCassette: (cassette: ValueUsageCassette) => void,
-    protected readonly ejectValueUsageCassette: () => void,
+    protected readonly insertApplicationCassette: (cassette: ApplicationCassette) => void,
+    protected readonly ejectApplicationCassette: () => void,
     protected readonly valueMutationAck$: Observable<PersistentPath>
   ) { }
 
@@ -73,21 +73,21 @@ export class ActiveQueryManager {
       } else if (isActiveQueryRequest(item) || isActiveQueryExplicitRequest(item)) {
         value = this.getXpCursorFromQueryItem(item);
       } else {
-        throw Error(`Unable to find a cursor for the ActiveQueryItem #${index}`);
+        throw Error(`Unable to find a cursor for the ActiveQueryItem #${index}.`);
       }
 
       cursor[key] = value;
     });
 
-    // Step 3: Create the value usage cassette
-    const cassette = this.createValueUsageCassette();
+    // Step 3: Create the application cassette
+    const cassette = this.createApplicationCassette();
 
     // Step 4: Create the frame
     const inspector = (isStart: boolean) => {
       if (isStart) {
-        this.useValueUsageCassette(cassette);
+        this.insertApplicationCassette(cassette);
       } else {
-        this.ejectValueUsageCassette();
+        this.ejectApplicationCassette();
       }
     };
     const frame = createActiveQueryFrame(cursor, inspector);
@@ -100,7 +100,7 @@ export class ActiveQueryManager {
         takeWhile(() => isActive),
         filter(path => cassette.has(path))
       ),
-      clearValueUsageCassette: () => {
+      clearApplicationCassette: () => {
         cassette.clear();
       },
       dismiss: () => {
@@ -126,7 +126,7 @@ export class ActiveQueryManager {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected createValueUsageCassette(): ValueUsageCassette {
+  protected createApplicationCassette(): ApplicationCassette {
     return new Set<PersistentPath>();
   }
 }

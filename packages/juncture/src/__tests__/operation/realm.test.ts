@@ -14,7 +14,7 @@ import { RealmManager } from '../../engine-parts/realm-manager';
 import { Juncture } from '../../juncture';
 import { junctureSymbols } from '../../juncture-symbols';
 import {
-  Realm, RealmLayout, RealmMediator, RealmMountCondition
+    Realm, RealmLayout, RealmMediator, RealmMountCondition
 } from '../../operation/realm';
 import { getRealm, isRealmHost } from '../../operation/realm-host';
 import { JunctureSchema } from '../../schema';
@@ -55,7 +55,7 @@ describe('Realm', () => {
           createControlled: () => undefined!
         },
         selection: {
-          registerValueUsage: () => { }
+          registerValueApplication: () => { }
         },
         reaction: {
           dispatch: () => { },
@@ -99,7 +99,7 @@ describe('Realm', () => {
           createControlled: () => undefined!
         },
         selection: {
-          registerValueUsage: () => { }
+          registerValueApplication: () => { }
         },
         reaction: {
           dispatch: () => { },
