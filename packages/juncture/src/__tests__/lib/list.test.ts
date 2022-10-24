@@ -10,6 +10,8 @@ import { Engine } from '../../engine';
 import { BIT } from '../../lib/bit';
 import { LIST, ListValue } from '../../lib/list';
 import { STRUCT } from '../../lib/struct';
+import { isColdCursor } from '../../operation/frame-equipment/cold-cursor';
+import { isCursor } from '../../operation/frame-equipment/cursor';
 import { Private } from '../../private-juncture';
 
 test('tmp test', () => {
@@ -79,6 +81,34 @@ test('tmp test 2', () => {
   }]);
   expect(select(_.app.list).length).toBe(1);
   expect(select(_.app.list).firstName).toBe('sergio');
+
+  engine.stop();
+});
+
+test('tmp test 3', () => {
+  class Person extends STRUCT.of({
+    name: BIT.settable.string,
+    age: BIT.settable.number
+  }) { }
+
+  class App extends STRUCT.of({
+    list: class extends LIST.of(Person) { }
+  }) {
+  }
+
+  const engine = new Engine();
+  engine.startService({ juncture: App });
+  const { _, select } = engine.createFrame({
+    app: App
+  });
+
+  expect(isCursor(_.app.list)).toBe(true);
+  expect(isColdCursor(_.app.list)).toBe(false);
+  const cold1 = _.app.list.item(999);
+  expect(isColdCursor(cold1)).toBe(true);
+  expect(isColdCursor(cold1.age)).toBe(true);
+
+  expect(() => select(_.app.list.item(10000).age)).toThrow();
 
   engine.stop();
 });

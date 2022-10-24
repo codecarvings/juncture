@@ -11,6 +11,7 @@ import { Selector } from './design/descriptors/selector';
 import { EngineRealmMediator } from './engine';
 import { Juncture } from './juncture';
 import { junctureSymbols } from './juncture-symbols';
+import { ColdCursor } from './operation/frame-equipment/cold-cursor';
 import { Cursor } from './operation/frame-equipment/cursor';
 import { Path } from './operation/path';
 import {
@@ -35,6 +36,8 @@ export interface Driver extends PropertyAssemblerHost, Initializable {
   [junctureSymbols.createCursor](realm: Realm): Cursor<this>;
 
   [junctureSymbols.createXpCursor](realm: Realm): Cursor<this>;
+
+  [junctureSymbols.createXpColdCursor](path: Path): ColdCursor;
 
   readonly schema: Schema<JunctureSchema>;
 

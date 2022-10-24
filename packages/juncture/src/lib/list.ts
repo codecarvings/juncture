@@ -16,8 +16,9 @@ import {
   AlterablePartialJuncture, Juncture, ValueOfJuncture, XpCursorOf
 } from '../juncture';
 import { junctureSymbols } from '../juncture-symbols';
+import { ColdCursor, createColdCursor } from '../operation/frame-equipment/cold-cursor';
 import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
-import { PathFragment } from '../operation/path';
+import { Path, PathFragment } from '../operation/path';
 import {
   ControlledRealm, Realm, RealmLayout, RealmMediator
 } from '../operation/realm';
@@ -115,6 +116,16 @@ export class ListRealm extends Realm {
     }
     return super.getChildRealm(fragment);
   }
+
+  getChildXpCursor(index: number): Cursor | ColdCursor {
+    if (index < 0) {
+      throw Error(`Invalid negative index (${index}).`);
+    }
+    if (index < this.children.length) {
+      return this.children[index].realm.xpCursor;
+    }
+    return Juncture.createXpColdCursor(this.schema.child, [...this.layout.path, index]);
+  }
   // #endregion
 }
 
@@ -154,7 +165,16 @@ export abstract class ListDriver extends ForgeableDriver {
   [junctureSymbols.createXpCursor](realm: ListRealm): ListXpCursor<this> {
     const _: any = createCursor(realm);
     if (realm.schema.childAccess === AccessModifier.public) {
-      _.item = (index: number) => realm.getChildRealm(index).xpCursor;
+      _.item = (index: number) => realm.getChildXpCursor(index);
+    }
+    return _;
+  }
+
+  [junctureSymbols.createXpColdCursor](path: Path): ColdCursor {
+    const _: any = createColdCursor(this, path);
+    const schema = Juncture.getSchema(this);
+    if (schema.childAccess === AccessModifier.public) {
+      _.item = (index: number) => Juncture.createXpColdCursor(schema.child, [...path, index]);
     }
     return _;
   }

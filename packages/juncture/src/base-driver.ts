@@ -12,6 +12,7 @@ import { Driver, ValueOf } from './driver';
 import { EngineRealmMediator } from './engine';
 import { Juncture } from './juncture';
 import { junctureSymbols } from './juncture-symbols';
+import { ColdCursor, createColdCursor } from './operation/frame-equipment/cold-cursor';
 import { createCursor, Cursor } from './operation/frame-equipment/cursor';
 import { Path } from './operation/path';
 import {
@@ -59,6 +60,10 @@ export abstract class BaseDriver implements Driver {
   // eslint-disable-next-line class-methods-use-this
   [junctureSymbols.createXpCursor](realm: Realm): Cursor<this> {
     return createCursor(realm);
+  }
+
+  [junctureSymbols.createXpColdCursor](path: Path): ColdCursor {
+    return createColdCursor(this, path);
   }
   // #endregion
 

@@ -16,8 +16,9 @@ import {
   AlterablePartialJuncture, CursorMapOfJunctureMap, Juncture, JunctureMap, ValueOfJuncture, XpCursorMapOfJunctureMap
 } from '../juncture';
 import { junctureSymbols } from '../juncture-symbols';
+import { ColdCursor, createColdCursor } from '../operation/frame-equipment/cold-cursor';
 import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
-import { PathFragment } from '../operation/path';
+import { Path, PathFragment } from '../operation/path';
 import {
   Realm, RealmLayout, RealmMap, RealmMediator
 } from '../operation/realm';
@@ -166,6 +167,20 @@ export abstract class StructDriver extends ForgeableDriver {
     const _: any = createCursor(realm);
     realm.schema.xpChildKeys.forEach(key => {
       defineLazyProperty(_, key, () => realm.getChildRealm(key).xpCursor, { enumerable: true });
+    });
+    return _;
+  }
+
+  [junctureSymbols.createXpColdCursor](path: Path): ColdCursor {
+    const _: any = createColdCursor(this, path);
+    const schema = Juncture.getSchema(this);
+    schema.xpChildKeys.forEach(key => {
+      defineLazyProperty(
+        _,
+        key,
+        () => Juncture.createXpColdCursor(schema.children[key], [...path, key]),
+        { enumerable: true }
+      );
     });
     return _;
   }
