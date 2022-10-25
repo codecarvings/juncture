@@ -47,8 +47,6 @@ export interface Driver extends PropertyAssemblerHost, Initializable {
 
   readonly 'selector.serviceId': Selector<string>;
 
-  readonly 'selector.isMounted': Selector<boolean>;
-
   readonly 'selector.value': Selector<ValueOf<this>>;
 
   readonly 'selector.juncture': Selector<Juncture<this>>;

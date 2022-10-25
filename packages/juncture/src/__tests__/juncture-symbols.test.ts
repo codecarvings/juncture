@@ -49,20 +49,16 @@ describe('junctureSymbols', () => {
     expect(typeof junctureSymbols.createXpColdCursor).toBe('symbol');
   });
 
-  test('should contain the realm symbol', () => {
-    expect(typeof junctureSymbols.realm).toBe('symbol');
+  test('should contain the cursor symbol', () => {
+    expect(typeof junctureSymbols.cursor).toBe('symbol');
   });
 
   test('should contain the driver symbol', () => {
     expect(typeof junctureSymbols.driver).toBe('symbol');
   });
 
-  test('should contain the cursorDriver symbol', () => {
-    expect(typeof junctureSymbols.cursorDriver).toBe('symbol');
-  });
-
-  test('should contain the path symbol', () => {
-    expect(typeof junctureSymbols.path).toBe('symbol');
+  test('should contain the realm symbol', () => {
+    expect(typeof junctureSymbols.realm).toBe('symbol');
   });
 
   test('should contain the persistent symbol', () => {

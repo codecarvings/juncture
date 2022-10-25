@@ -212,29 +212,36 @@ describe('BaseDriver', () => {
     expect(driver.schema.access).toBe(AccessModifier.public);
   });
 
-  test('should contain a "defaultValue" PubSelector', () => {
+  test('should contain a "defaultValue" public Selector', () => {
     const desc = driver['selector.defaultValue'];
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.selector);
     expect(desc.access).toBe(AccessModifier.public);
   });
 
-  test('should contain a "path" PubSelector', () => {
+  test('should contain a "path" public Selector', () => {
     const desc = driver['selector.path'];
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.selector);
     expect(desc.access).toBe(AccessModifier.public);
   });
 
-  test('should contain a "isMounted" PubSelector', () => {
-    const desc = driver['selector.isMounted'];
+  test('should contain a "serviceId" public Selector', () => {
+    const desc = driver['selector.serviceId'];
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.selector);
     expect(desc.access).toBe(AccessModifier.public);
   });
 
-  test('should contain a "value" Selector', () => {
+  test('should contain a "value" public Selector', () => {
     const desc = driver['selector.value'];
+    expect(isDescriptor(desc)).toBe(true);
+    expect(desc.type).toBe(DescriptorType.selector);
+    expect(desc.access).toBe(AccessModifier.public);
+  });
+
+  test('should contain a "juncture" public Selector', () => {
+    const desc = driver['selector.juncture'];
     expect(isDescriptor(desc)).toBe(true);
     expect(desc.type).toBe(DescriptorType.selector);
     expect(desc.access).toBe(AccessModifier.public);

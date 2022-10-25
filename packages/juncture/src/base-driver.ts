@@ -16,7 +16,7 @@ import { ColdCursor, createColdCursor } from './operation/frame-equipment/cold-c
 import { createCursor, Cursor } from './operation/frame-equipment/cursor';
 import { Path } from './operation/path';
 import {
-  Realm, RealmLayout, RealmMediator, RealmMountCondition
+  Realm, RealmLayout, RealmMediator
 } from './operation/realm';
 import { getRealm } from './operation/realm-host';
 import { JunctureSchema } from './schema';
@@ -85,11 +85,6 @@ export abstract class BaseDriver implements Driver {
         frame: any
       ) => getRealm(frame._).layout.path[0] as string));
 
-    this['selector.isMounted'] = assembler
-      .registerStaticProperty(createSelector((
-        frame: any
-      ) => getRealm(frame._).mountCondition === RealmMountCondition.mounted));
-
     this['selector.value'] = assembler
       .registerStaticProperty(createSelector((
         frame: any
@@ -107,8 +102,6 @@ export abstract class BaseDriver implements Driver {
   readonly 'selector.path': Selector<Path>;
 
   readonly 'selector.serviceId': Selector<string>;
-
-  readonly 'selector.isMounted': Selector<boolean>;
 
   readonly 'selector.value': Selector<ValueOf<this>>;
 

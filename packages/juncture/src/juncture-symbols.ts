@@ -15,12 +15,10 @@ const createSetup = Symbol('createSetup');
 const createRealm = Symbol('createRealm');
 const createCursor = Symbol('createCursor');
 const createXpCursor = Symbol('createXpCursor');
-const createColdCursor = Symbol('createColdCursor');
 const createXpColdCursor = Symbol('createXpColdCursor');
-const realm = Symbol('realm');
+const cursor = Symbol('cursor');
 const driver = Symbol('driver');
-const cursorDriver = Symbol('cursorDriver');
-const path = Symbol('path');
+const realm = Symbol('realm');
 const persistent = Symbol('persistent');
 const bitDefault = Symbol('bitDefault');
 
@@ -35,10 +33,9 @@ export interface JunctureSymbols {
   readonly createCursor: typeof createCursor;
   readonly createXpCursor: typeof createXpCursor;
   readonly createXpColdCursor: typeof createXpColdCursor;
-  readonly realm: typeof realm;
+  readonly cursor: typeof cursor;
   readonly driver: typeof driver;
-  readonly cursorDriver: typeof cursorDriver;
-  readonly path: typeof path;
+  readonly realm: typeof realm;
   readonly persistent: typeof persistent;
   readonly bitDefault: typeof bitDefault;
 }
@@ -54,10 +51,9 @@ export const junctureSymbols: JunctureSymbols = {
   createCursor,
   createXpCursor,
   createXpColdCursor,
-  realm,
+  cursor,
   driver,
-  cursorDriver,
-  path,
+  realm,
   persistent,
   bitDefault
 };

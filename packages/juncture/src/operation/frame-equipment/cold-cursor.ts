@@ -12,15 +12,18 @@ import { isObject } from '../../utilities/object';
 import { Path } from '../path';
 import { Cursor } from './cursor';
 
+// A cold cursor is a cursor not suitable to be used with pickers
+// but that can be used to check if a Realm is mounted.
+// eg: if (isMounted(_.myList.item(999))) ...
 export interface ColdCursor extends Cursor {
-  readonly [junctureSymbols.path]: Path;
+  readonly [junctureSymbols.realm]: any; // realm contains a Path
 }
 
 export function createColdCursor(driver: Driver, path: Path): ColdCursor {
   return {
-    [junctureSymbols.cursorDriver]: driver,
-    [junctureSymbols.realm]: undefined!,
-    [junctureSymbols.path]: path
+    [junctureSymbols.cursor]: true,
+    [junctureSymbols.driver]: driver,
+    [junctureSymbols.realm]: path
   };
 }
 
@@ -28,8 +31,11 @@ export function isColdCursor(obj: any): obj is ColdCursor {
   if (!isObject(obj)) {
     return false;
   }
-  if (!isDriver((obj as any)[junctureSymbols.cursorDriver])) {
+  if (!(obj as any)[junctureSymbols.cursor] === true) {
     return false;
   }
-  return Array.isArray((obj as any)[junctureSymbols.path]);
+  if (!isDriver((obj as any)[junctureSymbols.driver])) {
+    return false;
+  }
+  return Array.isArray((obj as any)[junctureSymbols.realm]);
 }
