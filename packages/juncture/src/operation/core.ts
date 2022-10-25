@@ -17,10 +17,9 @@ import {
   BinKit, prepareBinKit, prepareXpBinKit, XpBinKit
 } from './kits/bin-kit';
 import { FrameKit, prepareFrameKit } from './kits/frame-kit';
-import { InstrumentKit, prepareInstrumentKit } from './kits/instrument-kit';
 import {
-  PickerKit, preparePickerKit, prepareXpPickerKit, XpPickerKit
-} from './kits/picker-kit';
+  InstrumentKit, prepareInstrumentKit, prepareXpInstrumentKit, XpInstrumentKit
+} from './kits/instrument-kit';
 import { Realm } from './realm';
 
 export class Core {
@@ -32,24 +31,21 @@ export class Core {
 
   readonly instruments: InstrumentKit = {} as any;
 
-  readonly pickers: PickerKit = {} as any;
-
   readonly xpCursor!: Cursor;
 
   readonly xpBins: XpBinKit = {} as any;
 
-  readonly xpPickers: XpPickerKit = {} as any;
+  readonly xpInstruments: XpInstrumentKit = {} as any;
 
   constructor(protected readonly realm: Realm, dispatcher: Dispatcher) {
     defineLazyProperty(this, 'cursor', () => realm.driver[junctureSymbols.createCursor](realm));
-    prepareFrameKit(this.frames, this, this.instruments, this.pickers);
+    prepareFrameKit(this.frames, this, this.instruments);
     prepareBinKit(this.bins, realm, this.frames, dispatcher);
-    prepareInstrumentKit(this.instruments, realm);
-    preparePickerKit(this.pickers, realm, this.bins);
+    prepareInstrumentKit(this.instruments, realm, this.bins);
 
     defineLazyProperty(this, 'xpCursor', () => realm.driver[junctureSymbols.createXpCursor](realm));
     prepareXpBinKit(this.xpBins, realm, this.frames, dispatcher);
-    prepareXpPickerKit(this.xpPickers, realm);
+    prepareXpInstrumentKit(this.xpInstruments, realm);
 
     this.behaviors = this.createBehaviorSupervisor();
   }

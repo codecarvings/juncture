@@ -6,10 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CursorOf, Driver } from '../../../../driver';
-import { Juncture } from '../../../../juncture';
-import { MutationDetectBin, XpMutationDetectBin } from '../../../bins/detect/mutation-detect-bin';
-import { Cursor, DriverOfCursor } from '../../cursor';
+import { CursorOf, Driver } from '../../../../../driver';
+import { Juncture } from '../../../../../juncture';
+import { MutationDetectBin, XpMutationDetectBin } from '../../../../bins/detect/mutation-detect-bin';
+import { Cursor, DriverOfCursor } from '../../../cursor';
 
 // #region UnboundMutationDetectPicker
 export interface UnboundMutationDetectPicker {

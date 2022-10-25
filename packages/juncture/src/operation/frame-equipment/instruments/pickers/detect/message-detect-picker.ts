@@ -6,10 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CursorOf, Driver } from '../../../../driver';
-import { Juncture } from '../../../../juncture';
-import { MessageDetectBin, XpMessageDetectBin } from '../../../bins/detect/message-detect-bin';
-import { Cursor, DriverOfCursor } from '../../cursor';
+import { CursorOf, Driver } from '../../../../../driver';
+import { Juncture } from '../../../../../juncture';
+import { MessageDetectBin, XpMessageDetectBin } from '../../../../bins/detect/message-detect-bin';
+import { Cursor, DriverOfCursor } from '../../../cursor';
 
 // #region UnboundMessageDetectPicker
 export interface UnboundMessageDetectPicker {

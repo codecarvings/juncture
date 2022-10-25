@@ -6,10 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CursorOf, Driver } from '../../../driver';
-import { EmitBin, EmitBinHost } from '../../bins/emit-bin';
-import { Realm } from '../../realm';
-import { createRestrictedPickerFactory } from '../picker';
+import { CursorOf, Driver } from '../../../../driver';
+import { EmitBin, EmitBinHost } from '../../../bins/emit-bin';
+import { Realm } from '../../../realm';
+import { createRestrictedPickerFactory } from '../../picker';
 
 export interface EmitPicker<D extends Driver> {
   (): EmitBin<D>;

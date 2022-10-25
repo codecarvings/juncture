@@ -9,10 +9,10 @@
 import { Driver } from '../../../driver';
 import {
   MessageDetectPicker, UnboundMessageDetectPicker
-} from '../pickers/detect/message-detect-picker';
+} from './pickers/detect/message-detect-picker';
 import {
   MutationDetectPicker, UnboundMutationDetectPicker
-} from '../pickers/detect/mutation-detect-picker';
+} from './pickers/detect/mutation-detect-picker';
 
 // #region UnboundDetectInstrument
 export interface UnboundDetectInstrument {

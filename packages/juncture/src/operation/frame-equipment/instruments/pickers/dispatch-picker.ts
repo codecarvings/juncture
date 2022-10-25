@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CursorOf, Driver } from '../../../driver';
-import { DispatchBin, DispatchBinHost, XpDispatchBin } from '../../bins/dispatch-bin';
-import { Realm } from '../../realm';
-import { getRealm } from '../../realm-host';
-import { Cursor, DriverOfCursor } from '../cursor';
-import { createPickerFactory, createXpPickerFactory } from '../picker';
+import { CursorOf, Driver } from '../../../../driver';
+import { DispatchBin, DispatchBinHost, XpDispatchBin } from '../../../bins/dispatch-bin';
+import { Realm } from '../../../realm';
+import { getRealm } from '../../../realm-host';
+import { Cursor, DriverOfCursor } from '../../cursor';
+import { createPickerFactory, createXpPickerFactory } from '../../picker';
 
 // #region UnboundDispatchPicker
 export interface UnboundDispatchPicker {

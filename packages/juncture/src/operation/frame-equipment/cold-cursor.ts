@@ -12,7 +12,7 @@ import { isObject } from '../../utilities/object';
 import { Path } from '../path';
 import { Cursor } from './cursor';
 
-// A cold cursor is a cursor not suitable to be used with pickers
+// A cold cursor is a cursor not suitable to be used with instruments
 // but that can be used to check if a Realm is mounted.
 // eg: if (isMounted(_.myList.item(999))) ...
 export interface ColdCursor extends Cursor {

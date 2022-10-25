@@ -9,10 +9,9 @@
 import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../utilities/object';
 import { CursorHost } from '../frame-equipment/cursor';
+import { ApplyPicker } from '../frame-equipment/instruments/pickers/apply-picker';
 import { SetInstrument } from '../frame-equipment/instruments/set-instrument';
-import { ApplyPicker } from '../frame-equipment/pickers/apply-picker';
 import { InstrumentKit } from '../kits/instrument-kit';
-import { PickerKit } from '../kits/picker-kit';
 import { createFrame, Frame } from './frame';
 
 export interface SynthReactorFrame<D extends Driver> extends Frame<D> {
@@ -27,12 +26,11 @@ export interface SynthReactorFrameHost<D extends Driver> {
 
 export function createSynthReactorFrame<D extends Driver>(
   cursorHost: CursorHost<D>,
-  instruments: InstrumentKit<D>,
-  pickers: PickerKit<D>
+  instruments: InstrumentKit<D>
 ): Frame<D> {
-  const frame: any = createFrame(cursorHost, instruments, pickers);
+  const frame: any = createFrame(cursorHost, instruments);
   defineLazyProperty(frame, 'set', () => instruments.set);
-  defineLazyProperty(frame, 'apply', () => pickers.apply);
+  defineLazyProperty(frame, 'apply', () => instruments.apply);
   return frame;
 }
 
