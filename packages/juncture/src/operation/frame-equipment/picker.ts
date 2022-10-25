@@ -12,7 +12,8 @@ import { Realm } from '../realm';
 import { getRealm } from '../realm-host';
 import { Cursor } from './cursor';
 
-export function createInnerPickerFactory(binKey: keyof BinKit): any {
+// For pickers that accept: no cursor -OR- only the cursor of the current Realm
+export function createRestrictedPickerFactory(binKey: keyof BinKit): any {
   return (defaultRealm: Realm, bins: any) => (_?: Cursor) => {
     const realm = typeof _ !== 'undefined' ? getRealm(_) : defaultRealm;
     if (realm === defaultRealm) {

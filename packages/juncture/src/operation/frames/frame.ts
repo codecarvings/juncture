@@ -6,14 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CursorOf, Driver, ValueOf } from '../../driver';
+import { CursorOf, Driver } from '../../driver';
 import { defineLazyProperty } from '../../utilities/object';
 import { DepsBin } from '../bins/deps-bin';
-import { SelectBin, XpSelectBin } from '../bins/select-bin';
-import {
-  Cursor, CursorHost, DriverOfCursor, ValueOfCursor
-} from '../frame-equipment/cursor';
-import { ValueAccessorHost } from '../frame-equipment/value-accessor';
+import { CursorHost } from '../frame-equipment/cursor';
+import { ValueInstrument } from '../frame-equipment/instruments/value-instrument';
+import { SelectPicker } from '../frame-equipment/pickers/select-picker';
+import { InstrumentKit } from '../kits/instrument-kit';
 import { PickerKit } from '../kits/picker-kit';
 
 // #region Private Symbols
@@ -39,12 +38,9 @@ export interface Frame<D extends Driver> extends FrameMark {
 
   readonly $: DepsBin<D>;
 
-  value(): ValueOf<D>;
-  value<C extends Cursor>(_: C): ValueOfCursor<C>;
+  readonly value: ValueInstrument<D>;
 
-  select(): SelectBin<D>;
-  select(_: CursorOf<D>): SelectBin<D>;
-  select<C extends Cursor>(_: C): XpSelectBin<DriverOfCursor<C>>;
+  readonly select: SelectPicker<D>;
 }
 
 export interface DefaultFrameHost<D extends Driver> {
@@ -53,12 +49,12 @@ export interface DefaultFrameHost<D extends Driver> {
 
 export function createFrame<D extends Driver>(
   cursorHost: CursorHost<D>,
-  valueAccessorHost: ValueAccessorHost<D>,
+  instruments: InstrumentKit<D>,
   pickers: PickerKit<D>
 ): Frame<D> {
   const frame: any = { };
   defineLazyProperty(frame, '_', () => cursorHost.cursor);
-  defineLazyProperty(frame, 'value', () => valueAccessorHost.value.get);
+  defineLazyProperty(frame, 'value', () => instruments.value);
   defineLazyProperty(frame, 'select', () => pickers.select);
   return frame;
 }

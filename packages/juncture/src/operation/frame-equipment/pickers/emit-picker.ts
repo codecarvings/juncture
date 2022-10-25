@@ -9,7 +9,7 @@
 import { CursorOf, Driver } from '../../../driver';
 import { EmitBin, EmitBinHost } from '../../bins/emit-bin';
 import { Realm } from '../../realm';
-import { createInnerPickerFactory } from '../picker';
+import { createRestrictedPickerFactory } from '../picker';
 
 export interface EmitPicker<D extends Driver> {
   (): EmitBin<D>;
@@ -19,4 +19,4 @@ export interface EmitPicker<D extends Driver> {
 export const createEmitPicker: <D extends Driver>(
   defaultRealm: Realm,
   emitBinHost: EmitBinHost<D>
-) => EmitPicker<D> = createInnerPickerFactory('emit');
+) => EmitPicker<D> = createRestrictedPickerFactory('emit');

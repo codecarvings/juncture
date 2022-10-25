@@ -6,24 +6,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CursorOf, Driver, ValueOf } from '../../driver';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../utilities/object';
-import { ApplyBin, XpApplyBin } from '../bins/apply-bin';
-import {
-    Cursor, CursorHost, DriverOfCursor, ValueOfCursor
-} from '../frame-equipment/cursor';
-import { ValueAccessorHost } from '../frame-equipment/value-accessor';
-import { Instruction } from '../instruction';
+import { CursorHost } from '../frame-equipment/cursor';
+import { SetInstrument } from '../frame-equipment/instruments/set-instrument';
+import { ApplyPicker } from '../frame-equipment/pickers/apply-picker';
+import { InstrumentKit } from '../kits/instrument-kit';
 import { PickerKit } from '../kits/picker-kit';
 import { createFrame, Frame } from './frame';
 
 export interface SynthReactorFrame<D extends Driver> extends Frame<D> {
-  set(value: ValueOf<D>): Instruction;
-  set<C extends Cursor>(_: C, value: ValueOfCursor<C>): Instruction;
+  readonly set: SetInstrument<D>;
 
-  apply(): ApplyBin<D>;
-  apply(_: CursorOf<D>): ApplyBin<D>;
-  apply<C extends Cursor>(_: C): XpApplyBin<DriverOfCursor<C>>;
+  readonly apply: ApplyPicker<D>;
 }
 
 export interface SynthReactorFrameHost<D extends Driver> {
@@ -32,11 +27,11 @@ export interface SynthReactorFrameHost<D extends Driver> {
 
 export function createSynthReactorFrame<D extends Driver>(
   cursorHost: CursorHost<D>,
-  valueAccessorHost: ValueAccessorHost<D>,
+  instruments: InstrumentKit<D>,
   pickers: PickerKit<D>
 ): Frame<D> {
-  const frame: any = createFrame(cursorHost, valueAccessorHost, pickers);
-  defineLazyProperty(frame, 'set', () => valueAccessorHost.value.set);
+  const frame: any = createFrame(cursorHost, instruments, pickers);
+  defineLazyProperty(frame, 'set', () => instruments.set);
   defineLazyProperty(frame, 'apply', () => pickers.apply);
   return frame;
 }

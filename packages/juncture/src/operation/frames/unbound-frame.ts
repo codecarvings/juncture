@@ -6,37 +6,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { XpDispatchBin } from '../bins/dispatch-bin';
-import { XpExecBin } from '../bins/exec-bin';
-import { XpSelectBin } from '../bins/select-bin';
-import {
-  Cursor, DriverOfCursor, ValueOfCursor
-} from '../frame-equipment/cursor';
-import { UnboundDetectPack } from '../frame-equipment/detect-pack';
-import { unboundDispatchPicker } from '../frame-equipment/pickers/dispatch-picker';
-import { unboundExecPicker } from '../frame-equipment/pickers/exec-picker';
-import { unboundSelectPicker } from '../frame-equipment/pickers/select-picker';
-import { unboundValueGetter } from '../frame-equipment/value-accessor';
+import { UnboundDetectInstrument } from '../frame-equipment/instruments/detect-instrument';
+import { unboundValueInstrument, UnboundValueInstrument } from '../frame-equipment/instruments/value-instrument';
+import { UnboundDispatchPicker, unboundDispatchPicker } from '../frame-equipment/pickers/dispatch-picker';
+import { UnboundExecPicker, unboundExecPicker } from '../frame-equipment/pickers/exec-picker';
+import { UnboundSelectPicker, unboundSelectPicker } from '../frame-equipment/pickers/select-picker';
 
 export interface UnboundFrame {
   readonly _: any;
 
-  readonly detect: UnboundDetectPack;
+  readonly value: UnboundValueInstrument;
+  readonly detect: UnboundDetectInstrument;
 
-  value<C extends Cursor>(_: C): ValueOfCursor<C>;
-
-  select<C extends Cursor>(_: C): XpSelectBin<DriverOfCursor<C>>;
-
-  dispatch<C extends Cursor>(_: C): XpDispatchBin<DriverOfCursor<C>>;
-
-  exec<C extends Cursor>(_: C): XpExecBin<DriverOfCursor<C>>;
+  readonly select: UnboundSelectPicker;
+  readonly dispatch: UnboundDispatchPicker;
+  readonly exec: UnboundExecPicker;
 }
 
 export function createUnboundFrame(cursor: any): UnboundFrame {
   return {
     _: cursor,
+    value: unboundValueInstrument,
     detect: undefined!,
-    value: unboundValueGetter,
     select: unboundSelectPicker,
     dispatch: unboundDispatchPicker,
     exec: unboundExecPicker

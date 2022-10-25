@@ -6,30 +6,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CursorOf, Driver } from '../../driver';
+import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../utilities/object';
-import { DispatchBin, XpDispatchBin } from '../bins/dispatch-bin';
-import { EmitBin } from '../bins/emit-bin';
-import { ExecBin, XpExecBin } from '../bins/exec-bin';
-import { Cursor, CursorHost, DriverOfCursor } from '../frame-equipment/cursor';
-import { DetectPack } from '../frame-equipment/detect-pack';
-import { ValueAccessorHost } from '../frame-equipment/value-accessor';
+import { CursorHost } from '../frame-equipment/cursor';
+import { DetectInstrument } from '../frame-equipment/instruments/detect-instrument';
+import { DispatchPicker } from '../frame-equipment/pickers/dispatch-picker';
+import { EmitPicker } from '../frame-equipment/pickers/emit-picker';
+import { ExecPicker } from '../frame-equipment/pickers/exec-picker';
+import { InstrumentKit } from '../kits/instrument-kit';
 import { PickerKit } from '../kits/picker-kit';
 import { createFrame, Frame } from './frame';
 
 export interface BehaviorFrame<D extends Driver> extends Frame<D> {
-  readonly detect: DetectPack<D>;
+  readonly detect: DetectInstrument<D>;
 
-  dispatch(): DispatchBin<D>;
-  dispatch(_: CursorOf<D>): DispatchBin<D>;
-  dispatch<C extends Cursor>(_: C): XpDispatchBin<DriverOfCursor<C>>;
-
-  emit(): EmitBin<D>;
-  emit(_: CursorOf<D>): EmitBin<D>;
-
-  exec(): ExecBin<D>;
-  exec(_: CursorOf<D>): ExecBin<D>;
-  exec<C extends Cursor>(_: C): XpExecBin<DriverOfCursor<C>>;
+  readonly dispatch: DispatchPicker<D>;
+  readonly emit: EmitPicker<D>;
+  readonly exec: ExecPicker<D>;
 }
 
 export interface BehaviorFrameHost<D extends Driver> {
@@ -38,10 +31,10 @@ export interface BehaviorFrameHost<D extends Driver> {
 
 export function createBehaviorFrame<D extends Driver>(
   cursorHost: CursorHost<D>,
-  valueAccessorHost: ValueAccessorHost<D>,
+  instruments: InstrumentKit<D>,
   pickers: PickerKit<D>
 ): BehaviorFrame<D> {
-  const frame: any = createFrame(cursorHost, valueAccessorHost, pickers);
+  const frame: any = createFrame(cursorHost, instruments, pickers);
   defineLazyProperty(frame, 'dispatch', () => pickers.dispatch);
   defineLazyProperty(frame, 'emit', () => pickers.emit);
   defineLazyProperty(frame, 'exec', () => pickers.exec);
