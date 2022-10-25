@@ -14,7 +14,7 @@ class Comp2Driver extends STRUCT.of({
   'behavior.clockUpdate' = this.FORGE.behavior(({ dispatch, _ }) => {
     const intervalId = setInterval(() => {
       dispatch(_.clock).inc();
-    }, 333);
+    }, 3333);
 
     return () => clearInterval(intervalId);
   });

@@ -18,7 +18,7 @@ export interface XpApplicationCassette {
   readonly realms: Set<Realm>;
   readonly values: Set<PersistentPath>;
 
-  clear(): void;
+  erase(): void;
 }
 
 export interface ApplicationCassette extends XpApplicationCassette {
@@ -28,26 +28,26 @@ export interface ApplicationCassette extends XpApplicationCassette {
 export function createXpApplicationCassette(): XpApplicationCassette {
   const realms = new Set<Realm>();
   const values = new Set<PersistentPath>();
-  const clear = () => {
+  const erase = () => {
     realms.clear();
     values.clear();
   };
 
-  return { realms, values, clear };
+  return { realms, values, erase };
 }
 
 export function createApplicationCassette(): ApplicationCassette {
   const realms = new Set<Realm>();
   const values = new Set<PersistentPath>();
   const deps = new Set<DependencyAddress>();
-  const clear = () => {
+  const erase = () => {
     realms.clear();
     values.clear();
     deps.clear();
   };
 
   return {
-    realms, values, deps, clear
+    realms, values, deps, erase
   };
 }
 
@@ -61,17 +61,10 @@ export class ApplicationRecorder {
   protected currentCassette: XpApplicationCassette | ApplicationCassette | null = null;
 
   insertCassette(cassette: XpApplicationCassette | ApplicationCassette) {
-    if (this.currentCassette) {
-      throw Error('Cannot insert application cassette: another cassette already present.');
-    }
     this.currentCassette = cassette;
   }
 
   ejectCassette() {
-    if (!this.currentCassette) {
-      throw Error('Cannot eject application cassette: no cassette present.');
-    }
-
     this.currentCassette = null;
   }
 

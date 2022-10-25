@@ -23,7 +23,9 @@ import { ServiceConfig } from './service-manager';
 export interface ActiveQueryFrameHandler<Q extends ActiveQuery = ActiveQuery> {
   readonly frame: ActiveQueryFrame<Q>;
   readonly valueMutationAck$: Observable<PersistentPath>;
-  clearApplicationCassette(): void;
+  insertCassette(): void;
+  ejectCassette(): void;
+  eraseCassette(): void;
   dismiss(): void;
 }
 
@@ -83,16 +85,9 @@ export class ActiveQueryManager {
     const cassette = this.createApplicationCassette();
 
     // Step 4: Create the frame
-    const inspector = (isStart: boolean) => {
-      if (isStart) {
-        this.insertApplicationCassette(cassette);
-      } else {
-        this.ejectApplicationCassette();
-      }
-    };
-    const frame = createActiveQueryFrame(cursor, inspector);
+    const frame = createActiveQueryFrame(cursor);
 
-    // Step 6: Create the handler and register it
+    // Step 5: Create the handler and register it
     let isActive = true;
     const handler: ActiveQueryFrameHandler = {
       frame,
@@ -100,15 +95,19 @@ export class ActiveQueryManager {
         takeWhile(() => isActive),
         filter(path => cassette.values.has(path))
       ),
-      clearApplicationCassette: () => {
-        cassette.clear();
+      insertCassette: () => {
+        this.insertApplicationCassette(cassette);
+      },
+      ejectCassette: this.ejectApplicationCassette,
+      eraseCassette: () => {
+        cassette.erase();
       },
       dismiss: () => {
         if (!isActive) {
           return;
         }
         isActive = false;
-        cassette.clear();
+        cassette.erase();
         this.stopServices(tempServiceIds);
         this.handlers.delete(handler);
       }

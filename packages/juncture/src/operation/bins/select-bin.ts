@@ -12,7 +12,6 @@ import { GenericParamSelector } from '../../design/descriptors/param-selector';
 import { GenericSelector } from '../../design/descriptors/selector';
 import { Driver } from '../../driver';
 import { junctureSymbols } from '../../juncture-symbols';
-import { ActiveQuerySelectionInspector } from '../frames/active-query-frame';
 import { DefaultFrameHost } from '../frames/frame';
 import { Realm } from '../realm';
 
@@ -73,34 +72,3 @@ export function createXpSelectBin<D extends Driver>(
   return createSelectBinBase(realm, frameHost, true);
 }
 // #endregion
-
-export function createActiveQuerySelectBin<D extends Driver>(
-  realm: Realm,
-  frameHost: DefaultFrameHost<D>,
-  inspector: ActiveQuerySelectionInspector
-): XpSelectBin<D> {
-  const { map, xpKeys } = realm.setup.selectors;
-  const bin: any = {};
-  xpKeys.forEach(key => {
-    const desc = map[key];
-    if (desc.type === DescriptorType.selector) {
-      Object.defineProperty(bin, key, {
-        get: () => {
-          inspector(true);
-          const result = desc[junctureSymbols.payload](frameHost.default);
-          inspector(false);
-          return result;
-        }
-      });
-    } else {
-      // ParamSelector
-      bin[key] = (...args: any) => {
-        inspector(true);
-        const result = desc[junctureSymbols.payload](frameHost.default)(...args);
-        inspector(false);
-        return result;
-      };
-    }
-  });
-  return bin;
-}

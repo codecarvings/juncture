@@ -54,7 +54,7 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
   if (handlerRef.current) {
     // State update
     handler = handlerRef.current as any;
-    handler.clearApplicationCassette();
+    handler.eraseCassette();
     useEffect(useEffectEmptyfn, useEffectEmptyDeps);
   } else {
     // Initialization
@@ -87,7 +87,7 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
       handler = type[lastHandlerSymbol];
       delete type[lastHandlerSymbol];
       handlerRef.current = handler;
-      handler.clearApplicationCassette();
+      handler.eraseCassette();
     }
 
     useEffect(() => {
@@ -99,7 +99,7 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
 
       handler.valueMutationAck$.subscribe(() => {
         // Prevent further events before re-rendering
-        handler.clearApplicationCassette();
+        handler.eraseCassette();
 
         // console.count('State update');
         setState(state => !state);
@@ -111,6 +111,9 @@ export function useJuncture<Q extends ActiveQuery>(query: Q): ActiveQueryFrame<Q
       };
     }, []);
   }
+
+  handler.insertCassette();
+  useEffect(handler.ejectCassette);
 
   return handler.frame;
 }

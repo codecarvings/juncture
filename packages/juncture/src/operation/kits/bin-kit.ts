@@ -20,10 +20,8 @@ import {
   createExecBin, createXpExecBin, ExecBin, XpExecBin
 } from '../bins/exec-bin';
 import {
-  createActiveQuerySelectBin,
   createSelectBin, createXpSelectBin, SelectBin, XpSelectBin
 } from '../bins/select-bin';
-import { ActiveQuerySelectionInspector } from '../frames/active-query-frame';
 import { Realm } from '../realm';
 import { FrameKit } from './frame-kit';
 
@@ -51,8 +49,6 @@ export interface XpBinKit<D extends Driver = Driver> {
   readonly apply: XpApplyBin<D>;
   readonly dispatch: XpDispatchBin<D>;
   readonly exec: XpExecBin<D>;
-
-  createActiveQuerySelectBin(monitorFn: ActiveQuerySelectionInspector): XpSelectBin<D>;
 }
 
 export function prepareXpBinKit(bins: any, realm: Realm, frames: FrameKit, dispatcher: Dispatcher) {
@@ -60,10 +56,5 @@ export function prepareXpBinKit(bins: any, realm: Realm, frames: FrameKit, dispa
   defineLazyProperty(bins, 'apply', () => createXpApplyBin(realm));
   defineLazyProperty(bins, 'dispatch', () => createXpDispatchBin(realm, dispatcher));
   defineLazyProperty(bins, 'exec', () => createXpExecBin(realm));
-
-  // eslint-disable-next-line no-param-reassign
-  bins.createActiveQuerySelectBin = (
-    inspector: ActiveQuerySelectionInspector
-  ) => createActiveQuerySelectBin(realm, frames, inspector);
 }
 // #endregion
