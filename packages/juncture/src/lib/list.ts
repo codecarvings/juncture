@@ -184,7 +184,7 @@ export abstract class ListDriver extends ForgeableDriver {
   abstract readonly schema: Schema<ListSchema>;
 
   'selector.length' = this.FORGE.selector(
-    ({ value }) => value().length
+    ({ get }) => get().length
   );
 }
 

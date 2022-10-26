@@ -9,7 +9,7 @@ class Comp2Driver extends STRUCT.of({
   counter: BIT.settable.number,
   clock: BIT.settable.number
 }) {
-  'selector.titleLen' = this.FORGE.selector(({ value, _ }) => value(_.title).length);
+  'selector.titleLen' = this.FORGE.selector(({ get, _ }) => get(_.title).length);
 
   'behavior.clockUpdate' = this.FORGE.behavior(({ dispatch, _ }) => {
     const intervalId = setInterval(() => {
@@ -22,7 +22,7 @@ class Comp2Driver extends STRUCT.of({
 
 function Comp2() {
   const {
-    select, dispatch, value, _
+    select, dispatch, get, _
   } = useJuncture({
     myState: { run: Comp2Driver }
   });
@@ -32,7 +32,7 @@ function Comp2() {
       <div>
         Temp 2:
         {' '}
-        { value(_.myState.title) }
+        { get(_.myState.title) }
         {' '}
         (
         { select(_.myState).titleLen }
@@ -45,7 +45,7 @@ function Comp2() {
       <div>
         Clock 2:
         {' '}
-        { value(_.myState.clock) }
+        { get(_.myState.clock) }
       </div>
       <div>
         Timestamp 2:

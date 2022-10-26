@@ -10,8 +10,8 @@ import { CursorOf, Driver } from '../../driver';
 import { defineLazyProperty } from '../../utilities/object';
 import { DepsBin } from '../bins/deps-bin';
 import { CursorHost } from '../frame-equipment/cursor';
+import { GetInstrument } from '../frame-equipment/instruments/get-instrument';
 import { SelectPicker } from '../frame-equipment/instruments/pickers/select-picker';
-import { ValueInstrument } from '../frame-equipment/instruments/value-instrument';
 import { InstrumentKit } from '../kits/instrument-kit';
 
 // #region Private Symbols
@@ -37,7 +37,7 @@ export interface Frame<D extends Driver> extends FrameMark {
 
   readonly $: DepsBin<D>;
 
-  readonly value: ValueInstrument<D>;
+  readonly get: GetInstrument<D>;
 
   readonly select: SelectPicker<D>;
 }
@@ -52,7 +52,7 @@ export function createFrame<D extends Driver>(
 ): Frame<D> {
   const frame: any = { };
   defineLazyProperty(frame, '_', () => cursorHost.cursor);
-  defineLazyProperty(frame, 'value', () => instruments.value);
+  defineLazyProperty(frame, 'get', () => instruments.get);
   defineLazyProperty(frame, 'select', () => instruments.select);
   return frame;
 }

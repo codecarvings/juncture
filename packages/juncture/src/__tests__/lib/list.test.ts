@@ -56,7 +56,7 @@ test('tmp test 2', () => {
   class App extends STRUCT.of({
     list: class extends LIST.of(Private(Person)) {
       'selector.firstName' = this.FORGE.selector(
-        ({ value, _ }) => value(_.item(0).name)
+        ({ get, _ }) => get(_.item(0).name)
       );
     }
   }) {

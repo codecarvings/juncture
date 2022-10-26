@@ -9,6 +9,7 @@
 import { Driver } from '../../driver';
 import { defineLazyProperty } from '../../utilities/object';
 import { DetectInstrument } from '../frame-equipment/instruments/detect-instrument';
+import { createGetInstrument, GetInstrument } from '../frame-equipment/instruments/get-instrument';
 import {
   ApplyPicker, createApplyPicker, createXpApplyPicker, XpApplyPicker
 } from '../frame-equipment/instruments/pickers/apply-picker';
@@ -23,13 +24,12 @@ import {
   createSelectPicker, createXpSelectPicker, SelectPicker, XpSelectPicker
 } from '../frame-equipment/instruments/pickers/select-picker';
 import { createSetInstrument, SetInstrument } from '../frame-equipment/instruments/set-instrument';
-import { createValueInstrument, ValueInstrument } from '../frame-equipment/instruments/value-instrument';
 import { Realm } from '../realm';
 import { BinKit } from './bin-kit';
 
 // #region InstrumentKit
 export interface InstrumentKit<D extends Driver = Driver> {
-  readonly value: ValueInstrument<D>;
+  readonly get: GetInstrument<D>;
   readonly set: SetInstrument<D>;
   readonly detect: DetectInstrument<D>;
 
@@ -41,7 +41,7 @@ export interface InstrumentKit<D extends Driver = Driver> {
 }
 
 export function prepareInstrumentKit(instruments: any, realm: Realm, bins: BinKit) {
-  defineLazyProperty(instruments, 'value', () => createValueInstrument(realm));
+  defineLazyProperty(instruments, 'get', () => createGetInstrument(realm));
   defineLazyProperty(instruments, 'set', () => createSetInstrument(realm));
 
   defineLazyProperty(instruments, 'select', () => createSelectPicker(realm, bins));
@@ -54,7 +54,7 @@ export function prepareInstrumentKit(instruments: any, realm: Realm, bins: BinKi
 
 // #region XpInstrumentKit
 export interface XpInstrumentKit<D extends Driver = Driver> {
-  readonly value: ValueInstrument<D>;
+  readonly get: GetInstrument<D>;
   readonly set: SetInstrument<D>;
   readonly detect: DetectInstrument<D>;
 
@@ -65,7 +65,7 @@ export interface XpInstrumentKit<D extends Driver = Driver> {
 }
 
 export function prepareXpInstrumentKit(instruments: any, realm: Realm) {
-  defineLazyProperty(instruments, 'value', () => createValueInstrument(realm));
+  defineLazyProperty(instruments, 'get', () => createGetInstrument(realm));
   defineLazyProperty(instruments, 'set', () => createSetInstrument(realm));
 
   defineLazyProperty(instruments, 'select', () => createXpSelectPicker(realm));

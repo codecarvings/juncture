@@ -106,15 +106,15 @@ export abstract class SettableNumberBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<number>>;
 
   'reactor.add' = this.FORGE.reactor(
-    ({ value }) => (num: number) => value() + num
+    ({ get }) => (num: number) => get() + num
   );
 
   'reactor.inc' = this.FORGE.reactor(
-    ({ value }) => () => value() + 1
+    ({ get }) => () => get() + 1
   );
 
   'reactor.dec' = this.FORGE.reactor(
-    ({ value }) => () => value() - 1
+    ({ get }) => () => get() - 1
   );
 }
 
@@ -122,7 +122,7 @@ export abstract class SettableBooleanBitDriver extends SettableBitDriver {
   abstract schema: Schema<BitSchema<boolean>>;
 
   'reactor.switch' = this.FORGE.reactor(
-    ({ value }) => () => !value()
+    ({ get }) => () => !get()
   );
 }
 

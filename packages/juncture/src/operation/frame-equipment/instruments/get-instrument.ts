@@ -12,25 +12,25 @@ import { getRealm } from '../../realm-host';
 import { Cursor, ValueOfCursor } from '../cursor';
 
 // #region UnboundValueInstrument
-export interface UnboundValueInstrument {
+export interface UnboundGetInstrument {
   <C extends Cursor>(_: C): ValueOfCursor<C>;
 }
 
-export function unboundValueInstrument<C extends Cursor>(_: C): ValueOfCursor<C> {
+export function unboundGetInstrument<C extends Cursor>(_: C): ValueOfCursor<C> {
   return getRealm(_).value;
 }
 // #endregion
 
 // #region ValueInstrument
-export interface ValueInstrument<D extends Driver = Driver> extends UnboundValueInstrument {
+export interface GetInstrument<D extends Driver = Driver> extends UnboundGetInstrument {
   (): ValueOf<D>;
 }
 
-export interface ValueInstrumentHost<D extends Driver = Driver> {
-  readonly value: ValueInstrument<D>;
+export interface GetInstrumentHost<D extends Driver = Driver> {
+  readonly get: GetInstrument<D>;
 }
 
-export function createValueInstrument<D extends Driver>(realm: Realm): ValueInstrument<D> {
+export function createGetInstrument<D extends Driver>(realm: Realm): GetInstrument<D> {
   return (_?: Cursor) => {
     if (typeof _ !== 'undefined') {
       return getRealm(_).value;

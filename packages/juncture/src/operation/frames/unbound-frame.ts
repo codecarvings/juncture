@@ -7,15 +7,15 @@
  */
 
 import { UnboundDetectInstrument } from '../frame-equipment/instruments/detect-instrument';
+import { UnboundGetInstrument, unboundGetInstrument } from '../frame-equipment/instruments/get-instrument';
 import { UnboundDispatchPicker, unboundDispatchPicker } from '../frame-equipment/instruments/pickers/dispatch-picker';
 import { UnboundExecPicker, unboundExecPicker } from '../frame-equipment/instruments/pickers/exec-picker';
 import { UnboundSelectPicker, unboundSelectPicker } from '../frame-equipment/instruments/pickers/select-picker';
-import { unboundValueInstrument, UnboundValueInstrument } from '../frame-equipment/instruments/value-instrument';
 
 export interface UnboundFrame {
   readonly _: any;
 
-  readonly value: UnboundValueInstrument;
+  readonly get: UnboundGetInstrument;
   readonly detect: UnboundDetectInstrument;
 
   readonly select: UnboundSelectPicker;
@@ -26,7 +26,7 @@ export interface UnboundFrame {
 export function createUnboundFrame(cursor: any): UnboundFrame {
   return {
     _: cursor,
-    value: unboundValueInstrument,
+    get: unboundGetInstrument,
     detect: undefined!,
     select: unboundSelectPicker,
     dispatch: unboundDispatchPicker,

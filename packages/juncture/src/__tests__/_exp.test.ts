@@ -32,7 +32,7 @@ test('experiment', () => {
     'dependency.string' = this.FORGE.dependency(stringToken);
 
     'selector.prova' = this.FORGE.selector(
-      ({ value }) => value().num1
+      ({ get }) => get().num1
     );
 
     'selector.paramSel' = this.FORGE.paramSelector(
@@ -111,7 +111,7 @@ test('experiment 2', () => {
     description: Private(BIT.string)
   }) {
     'selector.description' = this.FORGE.selector(
-      ({ value, _ }) => value(_.description)
+      ({ get, _ }) => get(_.description)
     );
   }
 

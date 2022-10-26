@@ -107,7 +107,7 @@ test('temp test', () => {
     age: BIT.of(1)
   }) {
     'selector.fullName' = this.FORGE.selector(
-      ({ value, _ }) => `${value(_.firstName)} ${value(_.lastName)}`
+      ({ get, _ }) => `${get(_.firstName)} ${get(_.lastName)}`
     );
   }
 
@@ -116,11 +116,11 @@ test('temp test', () => {
     mother: Person2
   }) {
     'selector.totAge' = this.FORGE.selector(
-      ({ value, _ }) => value(_.father.age) + value(_.mother.age)
+      ({ get, _ }) => get(_.father.age) + get(_.mother.age)
     );
 
     'selector.motherAge' = this.FORGE.selector(
-      ({ value, _ }) => value(_.mother.age)
+      ({ get, _ }) => get(_.mother.age)
     );
   }
 

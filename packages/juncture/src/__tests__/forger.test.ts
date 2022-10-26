@@ -54,7 +54,7 @@ describe('PrivateForger', () => {
       });
 
       test('should create, after property wiring, a PrivateSelector, by passing a selector function', () => {
-        container.myDesc = forger.selector(({ value }) => value());
+        container.myDesc = forger.selector(({ get }) => get());
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
         expect(container.myDesc.type).toBe(DescriptorType.selector);
@@ -96,7 +96,7 @@ describe('PrivateForger', () => {
       });
 
       test('should create, after property wiring, a PrivateReactor, by passing a reactor function', () => {
-        container.myDesc = forger.reactor(({ value }) => () => value());
+        container.myDesc = forger.reactor(({ get }) => () => get());
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
         expect(container.myDesc.type).toBe(DescriptorType.reactor);
@@ -139,7 +139,7 @@ describe('Forger', () => {
       });
 
       test('should create, after property wiring, a Selector, by passing a selector function', () => {
-        container.myDesc = forger.selector(({ value }) => value());
+        container.myDesc = forger.selector(({ get }) => get());
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
         expect(container.myDesc.type).toBe(DescriptorType.selector);
@@ -181,7 +181,7 @@ describe('Forger', () => {
       });
 
       test('should create, after property wiring, a Reactor, by passing a reactor function', () => {
-        container.myDesc = forger.reactor(({ value }) => () => value());
+        container.myDesc = forger.reactor(({ get }) => () => get());
         assembler.wire();
         expect(isDescriptor(container.myDesc)).toBe(true);
         expect(container.myDesc.type).toBe(DescriptorType.reactor);
@@ -199,7 +199,7 @@ describe('Forger', () => {
           const myOriginalDesc = forger.selector(() => 'original with different key');
           container.myOriginalDesc = myOriginalDesc;
           const proxy = forger.override(myOriginalDesc);
-          container.myNewDesc = proxy.selector(({ value }) => value());
+          container.myNewDesc = proxy.selector(({ get }) => get());
           expect(() => {
             assembler.wire();
           }).toThrow();
@@ -210,7 +210,7 @@ describe('Forger', () => {
           container.myOriginalDesc = myOriginalDesc;
           container.myNewDesc = assembler.registerStaticProperty('This is not a Descriptor');
           const proxy = forger.override(myOriginalDesc);
-          container.myNewDesc = proxy.selector(({ value }) => value());
+          container.myNewDesc = proxy.selector(({ get }) => get());
           expect(() => {
             assembler.wire();
           }).toThrow();
@@ -233,7 +233,7 @@ describe('Forger', () => {
 
           test('should create, after property wiring, a new Selector assignable to the parent, by passing a selector function', () => {
             const proxy = forger.override(myOriginalDesc);
-            let myNewDesc: Selector<string> = container.myDesc = proxy.selector(({ value }) => value());
+            let myNewDesc: Selector<string> = container.myDesc = proxy.selector(({ get }) => get());
             assembler.wire();
             myNewDesc = container.myDesc;
             expect(isDescriptor(myNewDesc)).toBe(true);
@@ -251,7 +251,7 @@ describe('Forger', () => {
 
           test('should return a  Selector if the parent is public', () => {
             const proxy = forger.override(myOriginalDesc);
-            let myNewDesc = container.myDesc = proxy.selector(({ value }) => value());
+            let myNewDesc = container.myDesc = proxy.selector(({ get }) => get());
             assembler.wire();
             myNewDesc = container.myDesc;
             expect(myOriginalDesc.access).toBe(AccessModifier.public);
@@ -264,7 +264,7 @@ describe('Forger', () => {
             myOriginalPrivateDesc = container.myPrivateSelector;
 
             const proxy = forger.override(myOriginalPrivateDesc);
-            let myNewPrivateDesc: PrivateSelector<string> = container.myPrivateSelector = proxy.selector(({ value }) => value());
+            let myNewPrivateDesc: PrivateSelector<string> = container.myPrivateSelector = proxy.selector(({ get }) => get());
             assembler.wire();
             myNewPrivateDesc = container.myPrivateSelector;
             expect(myOriginalPrivateDesc.access).toBe(AccessModifier.private);

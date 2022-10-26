@@ -197,10 +197,10 @@ test('experiment with frames 2', () => {
     );
 
     'selector.fullValue' = this.FORGE.selector(
-      ({ value }) => ({
-        ...value(),
-        name: value().name,
-        age: value().age
+      ({ get }) => ({
+        ...get(),
+        name: get().name,
+        age: get().age
       })
     );
   }
