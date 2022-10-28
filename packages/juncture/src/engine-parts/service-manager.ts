@@ -90,7 +90,7 @@ export class ServiceManager {
   protected stopService(id: string) {
     const realm = this.services.get(id);
     if (!realm) {
-      throw Error(`Cannot stop service "${id}": not found.`);
+      throw Error(`Cannot stop service "${id}": Not found.`);
     }
     this.dismissRealm(realm);
     this.state.delete(id);

@@ -43,7 +43,8 @@ export class FacadeForger<D extends FacadeDriver> extends Forger<D> { }
 // #endregion
 
 // #region Operation
-const childKey = 'inner';
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const CHILD_KEY = 'inner';
 
 export class FacadeRealm extends Realm {
   readonly schema!: FacadeSchema;
@@ -59,7 +60,7 @@ export class FacadeRealm extends Realm {
     const { setValue } = this.realmMediator;
 
     const layout: RealmLayout = {
-      path: this.engineMediator.persistentPath.get([...this.layout.path, childKey]),
+      path: this.engineMediator.persistentPath.get([...this.layout.path, CHILD_KEY]),
       parent: this,
       isUnivocal: this.layout.isUnivocal,
       isDivergent: false
@@ -76,11 +77,11 @@ export class FacadeRealm extends Realm {
 
   protected readonly child: Realm = this.createChild();
 
-  getChildRealm(fragment: PathFragment): Realm {
-    if (fragment === childKey) {
-      return this.child;
+  getChildRealm(childKey: PathFragment) {
+    if (childKey !== CHILD_KEY) {
+      return this.throwGetChildRealmError(childKey, 'Invalid Facade child key.');
     }
-    return super.getChildRealm(fragment);
+    return this.child;
   }
   // #endregion
 }
@@ -110,7 +111,7 @@ export abstract class FacadeDriver extends ForgeableDriver {
   // eslint-disable-next-line class-methods-use-this
   [junctureSymbols.createCursor](realm: FacadeRealm): FacadeCursor<this> {
     const _: any = createCursor(realm);
-    defineLazyProperty(_, childKey, () => realm.getChildRealm(childKey).xpCursor, { enumerable: true });
+    defineLazyProperty(_, CHILD_KEY, () => realm.getChildRealm(CHILD_KEY)!.xpCursor, { enumerable: true });
     return _;
   }
 

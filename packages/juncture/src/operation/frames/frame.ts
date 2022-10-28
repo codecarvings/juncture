@@ -10,6 +10,7 @@ import { CursorOf, Driver } from '../../driver';
 import { defineLazyProperty } from '../../utilities/object';
 import { DepsBin } from '../bins/deps-bin';
 import { CursorHost } from '../frame-equipment/cursor';
+import { UniCheckInstrument } from '../frame-equipment/instruments/check-instrument';
 import { GetInstrument } from '../frame-equipment/instruments/get-instrument';
 import { SelectPicker } from '../frame-equipment/instruments/pickers/select-picker';
 import { InstrumentKit } from '../kits/instrument-kit';
@@ -37,6 +38,7 @@ export interface Frame<D extends Driver> extends FrameMark {
 
   readonly $: DepsBin<D>;
 
+  readonly check: UniCheckInstrument;
   readonly get: GetInstrument<D>;
 
   readonly select: SelectPicker<D>;

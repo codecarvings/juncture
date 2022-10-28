@@ -107,7 +107,7 @@ export class Setup {
                 .map((p, i2) => (p === prefix ? types[i2] : null))
                 .filter(s => s !== null) as string[];
               // eslint-disable-next-line max-len
-              throw Error(`Invalid prefix "${prefix}": property "${driverKey}" is not a Descriptor (${filteredTypes.join(', ')}).`);
+              throw Error(`Invalid prefix "${prefix}": Property "${driverKey}" is not a Descriptor (${filteredTypes.join(', ')}).`);
             }
           }
         }

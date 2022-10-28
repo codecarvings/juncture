@@ -8,12 +8,12 @@
 
 import { ActiveQuery } from '../../query/active-query';
 import { ActiveQueryCursor } from '../frame-equipment/active-query-cursor';
-import { createUnboundFrame, UnboundFrame } from './unbound-frame';
+import { createUniFrame, UniFrame } from './uni-frame';
 
-export interface ActiveQueryFrame<Q extends ActiveQuery> extends UnboundFrame {
+export interface ActiveQueryFrame<Q extends ActiveQuery> extends UniFrame {
   readonly _: ActiveQueryCursor<Q>;
 }
 
 export const createActiveQueryFrame: <Q extends ActiveQuery>(
   cursor: ActiveQueryCursor<Q>
-) => ActiveQueryFrame<Q> = createUnboundFrame;
+) => ActiveQueryFrame<Q> = createUniFrame;

@@ -13,18 +13,18 @@ import { getRealm } from '../../../realm-host';
 import { Cursor, DriverOfCursor } from '../../cursor';
 import { createPickerFactory, createXpPickerFactory } from '../../picker';
 
-// #region UnboundExecPicker
-export interface UnboundExecPicker {
+// #region UniExecPicker
+export interface UniExecPicker {
   <C extends Cursor>(_: C): XpExecBin<DriverOfCursor<C>>;
 }
 
-export function unboundExecPicker<C extends Cursor>(_: C): XpExecBin<DriverOfCursor<C>> {
+export function uniExecPicker<C extends Cursor>(_: C): XpExecBin<DriverOfCursor<C>> {
   return getRealm(_).xpBins.exec;
 }
 // #endregion
 
 // #region ExecPicker
-export interface ExecPicker<D extends Driver> extends UnboundExecPicker {
+export interface ExecPicker<D extends Driver> extends UniExecPicker {
   (): ExecBin<D>;
   (_: CursorOf<D>): ExecBin<D>;
 }
@@ -36,7 +36,7 @@ export const createExecPicker: <D extends Driver>(
 // #endregion
 
 // #region XpExecPicker
-export interface XpExecPicker<D extends Driver> extends UnboundExecPicker {
+export interface XpExecPicker<D extends Driver> extends UniExecPicker {
   (): XpExecBin<D>;
 }
 

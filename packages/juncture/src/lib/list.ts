@@ -16,14 +16,28 @@ import {
   AlterablePartialJuncture, Juncture, ValueOfJuncture, XpCursorOf
 } from '../juncture';
 import { junctureSymbols } from '../juncture-symbols';
-import { ColdCursor, createColdCursor } from '../operation/frame-equipment/cold-cursor';
 import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
-import { Path, PathFragment } from '../operation/path';
+import {
+  createDetachedCursor,
+  DetachedCursor,
+  DetachedCursorParent
+} from '../operation/frame-equipment/detached-cursor';
+import { PathFragment } from '../operation/path';
 import {
   ControlledRealm, Realm, RealmLayout, RealmMediator
 } from '../operation/realm';
 import { PrivateJunctureAnnex } from '../private-juncture';
 import { SingleChildSchema } from '../schema';
+
+// #region Private Symbols
+const getChildCursorSymbol = Symbol('getChildCursor');
+interface PrvSymbols {
+  readonly getChildCursor: typeof getChildCursorSymbol;
+}
+const prvSymbols: PrvSymbols = {
+  getChildCursor: getChildCursorSymbol
+};
+// #endregion
 
 // #region Value & Schema
 export type ListValue<J extends Juncture> = ReadonlyArray<ValueOfJuncture<J>>;
@@ -108,23 +122,29 @@ export class ListRealm extends Realm {
     }
   }
 
-  getChildRealm(fragment: PathFragment): Realm {
-    if (typeof fragment === 'number') {
-      if (fragment >= 0 && fragment < this.children.length) {
-        return this.children[fragment].realm;
-      }
+  getChildRealm(childKey: PathFragment) {
+    const fragmentType = typeof childKey;
+    if (fragmentType !== 'number') {
+      return this.throwGetChildRealmError(childKey, `Invalid List child key type (${fragmentType}).`);
     }
-    return super.getChildRealm(fragment);
+    if (childKey < 0) {
+      return this.throwGetChildRealmError(childKey, 'Invalid List child key (negative).');
+    }
+
+    if (childKey < this.children.length) {
+      return this.children[childKey as number].realm;
+    }
+    return undefined;
   }
 
-  getChildXpCursor(index: number): Cursor | ColdCursor {
+  [prvSymbols.getChildCursor](index: number): Cursor | DetachedCursor {
     if (index < 0) {
-      throw Error(`Invalid negative index (${index}).`);
+      throw Error(`Invalid negative index: ${index}.`);
     }
     if (index < this.children.length) {
       return this.children[index].realm.xpCursor;
     }
-    return Juncture.createXpColdCursor(this.schema.child, [...this.layout.path, index]);
+    return Juncture.createDetachedXpCursor(this.schema.child, this, index);
   }
   // #endregion
 }
@@ -157,7 +177,7 @@ export abstract class ListDriver extends ForgeableDriver {
   // eslint-disable-next-line class-methods-use-this
   [junctureSymbols.createCursor](realm: ListRealm): ListCursor<this> {
     const _: any = createCursor(realm);
-    _.item = (index: number) => realm.getChildRealm(index).xpCursor;
+    _.item = (index: number) => realm[prvSymbols.getChildCursor](index);
     return _;
   }
 
@@ -165,16 +185,16 @@ export abstract class ListDriver extends ForgeableDriver {
   [junctureSymbols.createXpCursor](realm: ListRealm): ListXpCursor<this> {
     const _: any = createCursor(realm);
     if (realm.schema.childAccess === AccessModifier.public) {
-      _.item = (index: number) => realm.getChildXpCursor(index);
+      _.item = (index: number) => realm[prvSymbols.getChildCursor](index);
     }
     return _;
   }
 
-  [junctureSymbols.createXpColdCursor](path: Path): ColdCursor {
-    const _: any = createColdCursor(this, path);
+  [junctureSymbols.createDetachedXpCursor](parent: DetachedCursorParent, key: PathFragment): DetachedCursor {
+    const _: any = createDetachedCursor(this, parent, key);
     const schema = Juncture.getSchema(this);
     if (schema.childAccess === AccessModifier.public) {
-      _.item = (index: number) => Juncture.createXpColdCursor(schema.child, [...path, index]);
+      _.item = (index: number) => Juncture.createDetachedXpCursor(schema.child, _, index);
     }
     return _;
   }

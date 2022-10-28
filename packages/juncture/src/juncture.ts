@@ -10,8 +10,8 @@ import { AccessModifier } from './access-modifier';
 import { Driver, SchemaOf, ValueOf } from './driver';
 import { EngineRealmMediator } from './engine';
 import { junctureSymbols } from './juncture-symbols';
-import { ColdCursor } from './operation/frame-equipment/cold-cursor';
-import { Path } from './operation/path';
+import { DetachedCursor, DetachedCursorParent } from './operation/frame-equipment/detached-cursor';
+import { PathFragment } from './operation/path';
 import { Realm, RealmLayout, RealmMediator } from './operation/realm';
 import { PrivateJunctureAnnex } from './private-juncture';
 import { Setup } from './setup';
@@ -111,10 +111,11 @@ interface JunctureHelper {
     engineMediator: EngineRealmMediator
   ): Realm;
 
-  createXpColdCursor(
+  createDetachedXpCursor(
     juncture: Juncture,
-    path: Path
-  ): ColdCursor;
+    parent: DetachedCursorParent,
+    key: PathFragment,
+  ): DetachedCursor;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -143,12 +144,13 @@ export const Juncture: JunctureHelper = {
     return driver[junctureSymbols.createRealm](layout, realmMediator, engineMediator);
   },
 
-  createXpColdCursor(
+  createDetachedXpCursor(
     juncture: Juncture,
-    path: Path
-  ): ColdCursor {
+    parent: DetachedCursorParent,
+    key: PathFragment
+  ): DetachedCursor {
     const driver = Singleton.get(juncture).instance;
-    return driver[junctureSymbols.createXpColdCursor](path);
+    return driver[junctureSymbols.createDetachedXpCursor](parent, key);
   }
 };
 // #endregion

@@ -12,9 +12,13 @@ import { Driver, ValueOf } from './driver';
 import { EngineRealmMediator } from './engine';
 import { Juncture } from './juncture';
 import { junctureSymbols } from './juncture-symbols';
-import { ColdCursor, createColdCursor } from './operation/frame-equipment/cold-cursor';
 import { createCursor, Cursor } from './operation/frame-equipment/cursor';
-import { Path } from './operation/path';
+import {
+  createDetachedCursor,
+  DetachedCursor,
+  DetachedCursorParent
+} from './operation/frame-equipment/detached-cursor';
+import { Path, PathFragment } from './operation/path';
 import {
   Realm, RealmLayout, RealmMediator
 } from './operation/realm';
@@ -62,8 +66,8 @@ export abstract class BaseDriver implements Driver {
     return createCursor(realm);
   }
 
-  [junctureSymbols.createXpColdCursor](path: Path): ColdCursor {
-    return createColdCursor(this, path);
+  [junctureSymbols.createDetachedXpCursor](parent: DetachedCursorParent, key: PathFragment): DetachedCursor {
+    return createDetachedCursor(this, parent, key);
   }
   // #endregion
 

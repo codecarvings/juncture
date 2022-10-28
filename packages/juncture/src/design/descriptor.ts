@@ -18,11 +18,6 @@ export interface Descriptor<T extends DescriptorType = any, V = any, A extends A
   readonly access: A;
 }
 
-export interface DescriptorLink {
-  readonly key: string;
-  readonly driverKey: string;
-}
-
 export function createDescriptor<T extends DescriptorType, V, A extends AccessModifier>(
   type: T,
   payload: V,

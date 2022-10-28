@@ -16,9 +16,13 @@ import {
   AlterablePartialJuncture, CursorMapOfJunctureMap, Juncture, JunctureMap, ValueOfJuncture, XpCursorMapOfJunctureMap
 } from '../juncture';
 import { junctureSymbols } from '../juncture-symbols';
-import { ColdCursor, createColdCursor } from '../operation/frame-equipment/cold-cursor';
 import { createCursor, Cursor } from '../operation/frame-equipment/cursor';
-import { Path, PathFragment } from '../operation/path';
+import {
+  createDetachedCursor,
+  DetachedCursor,
+  DetachedCursorParent
+} from '../operation/frame-equipment/detached-cursor';
+import { PathFragment } from '../operation/path';
 import {
   Realm, RealmLayout, RealmMap, RealmMediator
 } from '../operation/realm';
@@ -125,12 +129,12 @@ export class StructRealm extends Realm {
 
   protected readonly children: RealmMap = this.createChildren();
 
-  getChildRealm(fragment: PathFragment): Realm {
-    const result = this.children[fragment as any];
+  getChildRealm(childKey: PathFragment) {
+    const result = this.children[childKey as any];
     if (result) {
       return result;
     }
-    return super.getChildRealm(fragment);
+    return this.throwGetChildRealmError(childKey, 'Invalid Struct child key.');
   }
   // #endregion
 }
@@ -157,7 +161,7 @@ export abstract class StructDriver extends ForgeableDriver {
   [junctureSymbols.createCursor](realm: StructRealm): StructCursor<this> {
     const _: any = createCursor(realm);
     realm.schema.childKeys.forEach(key => {
-      defineLazyProperty(_, key, () => realm.getChildRealm(key).xpCursor, { enumerable: true });
+      defineLazyProperty(_, key, () => realm.getChildRealm(key)!.xpCursor, { enumerable: true });
     });
     return _;
   }
@@ -166,19 +170,19 @@ export abstract class StructDriver extends ForgeableDriver {
   [junctureSymbols.createXpCursor](realm: StructRealm): StructXpCursor<this> {
     const _: any = createCursor(realm);
     realm.schema.xpChildKeys.forEach(key => {
-      defineLazyProperty(_, key, () => realm.getChildRealm(key).xpCursor, { enumerable: true });
+      defineLazyProperty(_, key, () => realm.getChildRealm(key)!.xpCursor, { enumerable: true });
     });
     return _;
   }
 
-  [junctureSymbols.createXpColdCursor](path: Path): ColdCursor {
-    const _: any = createColdCursor(this, path);
+  [junctureSymbols.createDetachedXpCursor](parent: DetachedCursorParent, key: PathFragment): DetachedCursor {
+    const _: any = createDetachedCursor(this, parent, key);
     const schema = Juncture.getSchema(this);
-    schema.xpChildKeys.forEach(key => {
+    schema.xpChildKeys.forEach(childKey => {
       defineLazyProperty(
         _,
-        key,
-        () => Juncture.createXpColdCursor(schema.children[key], [...path, key]),
+        childKey,
+        () => Juncture.createDetachedXpCursor(schema.children[childKey], _, childKey),
         { enumerable: true }
       );
     });

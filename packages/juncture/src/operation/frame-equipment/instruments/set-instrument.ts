@@ -12,14 +12,9 @@ import { Realm } from '../../realm';
 import { getRealm } from '../../realm-host';
 import { Cursor, ValueOfCursor } from '../cursor';
 
-// #region SetInstrument
 export interface SetInstrument<D extends Driver = Driver> {
   (value: ValueOf<D>): Instruction;
   <C extends Cursor>(_: C, value: ValueOfCursor<C>): Instruction;
-}
-
-export interface SetInstrumentHost<D extends Driver = Driver> {
-  readonly set: SetInstrument<D>;
 }
 
 export function createSetInstrument<D extends Driver>(realm: Realm): SetInstrument<D> {
@@ -31,4 +26,3 @@ export function createSetInstrument<D extends Driver>(realm: Realm): SetInstrume
   };
   return result as any;
 }
-// #endregion

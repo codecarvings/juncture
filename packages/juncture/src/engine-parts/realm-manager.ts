@@ -45,7 +45,7 @@ export class RealmManager {
   enroll(managedRealm: ManagedRealm) {
     if (this.mountedRealms.has(managedRealm.realm) || this.realmsToMount.has(managedRealm.realm)) {
       // eslint-disable-next-line max-len
-      throw Error(`Realm manager cannot enroll realm ${pathToString(managedRealm.realm.layout.path)}: already been enrolled.`);
+      throw Error(`Realm manager cannot enroll Realm ${pathToString(managedRealm.realm.layout.path)}: Already been enrolled.`);
     }
 
     const { parent } = managedRealm.realm.layout;
@@ -59,7 +59,7 @@ export class RealmManager {
           parentSnapshot.children.push(managedRealm.realm);
         } else {
           // eslint-disable-next-line max-len
-          throw Error(`Realm manager cannot enroll realm ${pathToString(managedRealm.realm.layout.path)}: cannot find parent realm ${pathToString(parent.layout.path)}.`);
+          throw Error(`Realm manager cannot enroll Realm ${pathToString(managedRealm.realm.layout.path)}: Cannot find parent realm ${pathToString(parent.layout.path)}.`);
         }
       }
     }
@@ -75,9 +75,9 @@ export class RealmManager {
   dismiss(realm: Realm) {
     if (!this.mountedRealms.has(realm)) {
       if (this.realmsToMount.has(realm)) {
-        throw Error(`Realm manager cannot unmount realm ${pathToString(realm.layout.path)}: not yet mounted.`);
+        throw Error(`Realm manager cannot unmount Realm ${pathToString(realm.layout.path)}: Not yet mounted.`);
       } else {
-        throw Error(`Realm manager cannot unmount realm ${pathToString(realm.layout.path)}: not found.`);
+        throw Error(`Realm manager cannot unmount Realm ${pathToString(realm.layout.path)}: Not found.`);
       }
     }
 

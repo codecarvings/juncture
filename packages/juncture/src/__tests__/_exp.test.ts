@@ -35,6 +35,10 @@ test('experiment', () => {
       ({ get }) => get().num1
     );
 
+    'selector.prova2' = this.FORGE.selector(
+      ({ check, _ }) => check(_.num1)
+    );
+
     'selector.paramSel' = this.FORGE.paramSelector(
       () => (abc: string) => abc
     );

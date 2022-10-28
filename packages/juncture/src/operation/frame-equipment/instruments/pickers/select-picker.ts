@@ -13,18 +13,18 @@ import { getRealm } from '../../../realm-host';
 import { Cursor, DriverOfCursor } from '../../cursor';
 import { createPickerFactory, createXpPickerFactory } from '../../picker';
 
-// #region UnboundSelectPicker
-export interface UnboundSelectPicker {
+// #region UniSelectPicker
+export interface UniSelectPicker {
   <C extends Cursor>(_: C): XpSelectBin<DriverOfCursor<C>>;
 }
 
-export function unboundSelectPicker<C extends Cursor>(_: C): XpSelectBin<DriverOfCursor<C>> {
+export function uniSelectPicker<C extends Cursor>(_: C): XpSelectBin<DriverOfCursor<C>> {
   return getRealm(_).xpBins.select;
 }
 // #endregion
 
 // #region SelectPicker
-export interface SelectPicker<D extends Driver> extends UnboundSelectPicker {
+export interface SelectPicker<D extends Driver> extends UniSelectPicker {
   (): SelectBin<D>;
   (_: CursorOf<D>): SelectBin<D>;
 }
@@ -36,7 +36,7 @@ export const createSelectPicker : <D extends Driver>(
 // #endregion
 
 // #region XpSelectPicker
-export interface XpSelectPicker<D extends Driver> extends UnboundSelectPicker {
+export interface XpSelectPicker<D extends Driver> extends UniSelectPicker {
   (): XpSelectBin<D>;
 }
 

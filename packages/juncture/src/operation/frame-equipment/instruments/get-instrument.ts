@@ -11,23 +11,19 @@ import { Realm } from '../../realm';
 import { getRealm } from '../../realm-host';
 import { Cursor, ValueOfCursor } from '../cursor';
 
-// #region UnboundValueInstrument
-export interface UnboundGetInstrument {
+// #region UniGetInstrument
+export interface UniGetInstrument {
   <C extends Cursor>(_: C): ValueOfCursor<C>;
 }
 
-export function unboundGetInstrument<C extends Cursor>(_: C): ValueOfCursor<C> {
+export function uniGetInstrument<C extends Cursor>(_: C): ValueOfCursor<C> {
   return getRealm(_).value;
 }
 // #endregion
 
-// #region ValueInstrument
-export interface GetInstrument<D extends Driver = Driver> extends UnboundGetInstrument {
+// #region GetInstrument
+export interface GetInstrument<D extends Driver = Driver> extends UniGetInstrument {
   (): ValueOf<D>;
-}
-
-export interface GetInstrumentHost<D extends Driver = Driver> {
-  readonly get: GetInstrument<D>;
 }
 
 export function createGetInstrument<D extends Driver>(realm: Realm): GetInstrument<D> {

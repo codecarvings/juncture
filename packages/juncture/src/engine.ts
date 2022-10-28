@@ -16,8 +16,11 @@ import { isJuncture, Juncture } from './juncture';
 import { Action } from './operation/action';
 import { Cursor } from './operation/frame-equipment/cursor';
 import { QueryFrame } from './operation/frames/query-frame';
-import { createUnboundFrame } from './operation/frames/unbound-frame';
-import { Path, pathToString, PersistentPath } from './operation/path';
+import { createUniFrame } from './operation/frames/uni-frame';
+import { prepareUniInstrumentKit, UniInstrumentKit } from './operation/kits/instrument-kit';
+import {
+  Path, pathFragmentToString, pathToString, PersistentPath
+} from './operation/path';
 import {
   ControlledRealm, ManagedRealm, Realm, RealmLayout, RealmMediator, RealmMountCondition
 } from './operation/realm';
@@ -64,6 +67,8 @@ export class Engine {
     this.stopServices = this.stopServices.bind(this);
     this.getXpCursorFromQueryItem = this.getXpCursorFromQueryItem.bind(this);
 
+    this.uniInstruments = this.createUniInstruments();
+
     this.persistentPathManager = this.createPersistentPathManager();
     this.realmManager = this.createRealmManger();
     this.applicationRecorder = this.createApplicationRecorder();
@@ -72,15 +77,16 @@ export class Engine {
     this.activeQueryManager = this.createActiveQueryManager();
   }
 
-  protected readonly state = new Map<string, any>();
+  // #region Core stuff
+  protected uniInstruments: UniInstrumentKit;
 
-  getState(): any {
-    const result: any = {};
-    this.state.forEach((value, key) => {
-      result[key] = value;
-    });
-    return result;
+  // eslint-disable-next-line class-methods-use-this
+  protected createUniInstruments(): UniInstrumentKit {
+    const uniInstruments: any = {};
+    prepareUniInstrumentKit(uniInstruments);
+    return uniInstruments;
   }
+  // #endregion
 
   // #region Engine Parts
   protected readonly persistentPathManager: PersistentPathManager;
@@ -168,7 +174,7 @@ export class Engine {
 
   stop() {
     if (this.condition !== EngineCondition.ready) {
-      throw Error('Cannot stop engine: not ready.');
+      throw Error('Cannot stop engine: Not ready.');
     }
 
     this._condition.current = EngineCondition.stopping;
@@ -179,6 +185,87 @@ export class Engine {
     this.realmManager.stop();
 
     this._condition.current = EngineCondition.stopped;
+  }
+  // #endregion
+
+  // #region Service stuff
+  protected readonly state = new Map<string, any>();
+
+  getState(): any {
+    const result: any = {};
+    this.state.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+
+  startService<J extends Juncture>(juncture: J): string;
+  startService<J extends Juncture>(config: ServiceConfig<J>): string;
+  startService(juncture_or_config: Juncture | ServiceConfig) {
+    let config: ServiceConfig;
+    if (typeof juncture_or_config === 'function') {
+      config = { juncture: juncture_or_config };
+    } else {
+      config = juncture_or_config;
+    }
+    return this.serviceManager.startServices([config])[0];
+  }
+
+  startServices(junctures: (Juncture | ServiceConfig)[]): string[] {
+    const configs = junctures.map(request => {
+      let config: ServiceConfig;
+      if (typeof request === 'function') {
+        config = { juncture: request };
+      } else {
+        config = request;
+      }
+      return config;
+    });
+
+    return this.serviceManager.startServices(configs);
+  }
+
+  stopService(id: string) {
+    this.serviceManager.stopServices([id]);
+  }
+
+  stopServices(ids: string[]) {
+    this.serviceManager.stopServices(ids);
+  }
+  // #endregion
+
+  // #region Realm staff
+  protected getRealm(path: Path): Realm {
+    if (isRealmHost(path)) {
+      const result = getRealm(path);
+      if (result.mountCondition !== RealmMountCondition.unmounted) {
+        return result;
+      }
+    }
+
+    const pathLen = path.length;
+    if (pathLen === 0) {
+      throw Error('Unable to get Realm: Invalid empty path [].');
+    }
+    const serviceId = path[0];
+    if (typeof serviceId !== 'string') {
+      // eslint-disable-next-line max-len
+      throw Error(`Unable to get Realm: Invalid path ${pathToString(path)}: Invalid service id type (${typeof serviceId}), must be a string.`);
+    }
+    const realm = this.serviceManager.getService(path[0] as string);
+    if (realm === undefined) {
+      throw Error(`Unable to get Realm: Service "${typeof serviceId}" not started.`);
+    }
+    let current = realm;
+    for (let i = 1; i < pathLen; i += 1) {
+      const next = current.getChildRealm(path[i]);
+      if (!next) {
+        // eslint-disable-next-line max-len
+        throw Error(`Unable to get Realm: Realm ${pathToString(current.layout.path)} cannot resolve path fragment ${pathFragmentToString(path[i])} - Not mounted ?`);
+      }
+      current = next;
+    }
+    return current;
   }
   // #endregion
 
@@ -233,70 +320,18 @@ export class Engine {
   }
   // #endregion
 
-  // #region Service stuff
-  startService<J extends Juncture>(juncture: J): string;
-  startService<J extends Juncture>(config: ServiceConfig<J>): string;
-  startService(juncture_or_config: Juncture | ServiceConfig) {
-    let config: ServiceConfig;
-    if (typeof juncture_or_config === 'function') {
-      config = { juncture: juncture_or_config };
-    } else {
-      config = juncture_or_config;
-    }
-    return this.serviceManager.startServices([config])[0];
-  }
-
-  startServices(junctures: (Juncture | ServiceConfig)[]): string[] {
-    const configs = junctures.map(request => {
-      let config: ServiceConfig;
-      if (typeof request === 'function') {
-        config = { juncture: request };
-      } else {
-        config = request;
-      }
-      return config;
-    });
-
-    return this.serviceManager.startServices(configs);
-  }
-
-  stopService(id: string) {
-    this.serviceManager.stopServices([id]);
-  }
-
-  stopServices(ids: string[]) {
-    this.serviceManager.stopServices(ids);
-  }
-
-  protected getRealm(path: Path): Realm {
-    if (isRealmHost(path)) {
-      const result = getRealm(path);
-      if (result.mountCondition !== RealmMountCondition.unmounted) {
-        return result;
-      }
-    }
-
-    const pathLen = path.length;
-    if (pathLen === 0) {
-      throw Error('Cannot resolve empty path [].');
-    }
-    const serviceId = path[0];
-    if (typeof serviceId !== 'string') {
-      // eslint-disable-next-line max-len
-      throw Error(`Cannot resolve path ${pathToString(path)}: Invalid service id type (${typeof serviceId}), must be a string.`);
-    }
-    const realm = this.serviceManager.getService(path[0] as string);
-    if (realm === undefined) {
-      throw Error(`Cannot resolve path ${pathToString(path)}: Service "${typeof serviceId}" not started.`);
-    }
-    let result = realm;
-    for (let i = 1; i < pathLen; i += 1) {
-      result = result.getChildRealm(path[i]);
-    }
-    return result;
-  }
-
+  // #region Query staff
   // TODO: Implement this
+  createFrame<Q extends Query>(query: Q): QueryFrame<Q> {
+    const keys = Object.keys(query);
+    const cursor = mappedAssign({}, keys, key => this.getXpCursorFromQueryItem(query[key]));
+    return createUniFrame(cursor);
+  }
+
+  createAciveFrameHandler<Q extends ActiveQuery>(query: Q): ActiveQueryFrameHandler<Q> {
+    return this.activeQueryManager.createHandler(query);
+  }
+
   protected getXpCursorFromQueryItem(item: QueryItem): Cursor | undefined {
     const request = typeof item === 'function' ? item : item.get;
     if (request) {
@@ -319,16 +354,6 @@ export class Engine {
 
     // throw Error('Unable to find a frame for the specified QueryItem.');
     return undefined;
-  }
-
-  createFrame<Q extends Query>(query: Q): QueryFrame<Q> {
-    const keys = Object.keys(query);
-    const cursor = mappedAssign({}, keys, key => this.getXpCursorFromQueryItem(query[key]));
-    return createUnboundFrame(cursor);
-  }
-
-  createAciveFrameHandler<Q extends ActiveQuery>(query: Q): ActiveQueryFrameHandler<Q> {
-    return this.activeQueryManager.createHandler(query);
   }
   // #endregion
 }

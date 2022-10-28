@@ -10,8 +10,8 @@ import { Engine } from '../../engine';
 import { BIT } from '../../lib/bit';
 import { LIST, ListValue } from '../../lib/list';
 import { STRUCT } from '../../lib/struct';
-import { isColdCursor } from '../../operation/frame-equipment/cold-cursor';
 import { isCursor } from '../../operation/frame-equipment/cursor';
+import { isDetachedCursor } from '../../operation/frame-equipment/detached-cursor';
 import { Private } from '../../private-juncture';
 
 test('tmp test', () => {
@@ -103,10 +103,10 @@ test('tmp test 3', () => {
   });
 
   expect(isCursor(_.app.list)).toBe(true);
-  expect(isColdCursor(_.app.list)).toBe(false);
-  const cold1 = _.app.list.item(999);
-  expect(isColdCursor(cold1)).toBe(true);
-  expect(isColdCursor(cold1.age)).toBe(true);
+  expect(isDetachedCursor(_.app.list)).toBe(false);
+  const detached1 = _.app.list.item(999);
+  expect(isDetachedCursor(detached1)).toBe(true);
+  expect(isDetachedCursor(detached1.age)).toBe(true);
 
   expect(() => select(_.app.list.item(10000).age)).toThrow();
 

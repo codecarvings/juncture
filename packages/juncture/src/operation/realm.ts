@@ -18,6 +18,7 @@ import { Setup } from '../setup';
 import { defineLazyProperty } from '../utilities/object';
 import { Core } from './core';
 import { Cursor } from './frame-equipment/cursor';
+import { DetachedCursor } from './frame-equipment/detached-cursor';
 import { Instruction } from './instruction';
 import { XpBinKit } from './kits/bin-kit';
 import {
@@ -153,27 +154,27 @@ export class Realm {
           if (Array.isArray(instruction_or_instructions)) {
             (instruction_or_instructions as Instruction[]).forEach(instruction => {
               if (comparePaths(this.layout.path, instruction.target.layout.path) < 0) {
-                throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope.`);
+                throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: Out of scope.`);
               }
               instruction.target.excuteInstruction(instruction.key, instruction.payload);
             });
           } else {
             const instruction = (instruction_or_instructions as Instruction);
             if (comparePaths(this.layout.path, instruction.target.layout.path) < 0) {
-              throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: out of scope.`);
+              throw Error(`Realm ${pathToString(this.layout.path)} cannot execute instruction ${pathToString(instruction.target.layout.path)}: Out of scope.`);
             }
             instruction.target.excuteInstruction(instruction.key, instruction.payload);
           }
         }
       } else {
-        throw Error(`Unable to execute action "${key}": not a reactor.`);
+        throw Error(`Unable to execute action "${key}": Not a reactor.`);
       }
     }
   }
 
   executeAction(key: string, payload: any) {
     if (typeof key !== 'string') {
-      throw Error(`Unable to execute action: invalid key "${key}".`);
+      throw Error(`Unable to execute Action: Invalid key "${key}".`);
     }
 
     this.excuteInstruction(key, payload);
@@ -182,8 +183,14 @@ export class Realm {
   // #endregion
 
   // #region Children stuff
-  getChildRealm(fragment: PathFragment): Realm {
-    throw Error(`Realm ${pathToString(this.layout.path)} cannot resolve path fragment: ${pathFragmentToString(fragment)}.`);
+  protected throwGetChildRealmError(fragment: PathFragment, cause?: string): undefined {
+    throw Error(`Realm ${pathToString(this.layout.path)} cannot handle path fragment ${pathFragmentToString(fragment)}${
+      cause && cause.length ? `: ${cause}` : ''
+    }`);
+  }
+
+  getChildRealm(fragment: PathFragment): Realm | undefined {
+    return this.throwGetChildRealmError(fragment);
   }
   // #endregion
 
@@ -193,14 +200,14 @@ export class Realm {
       realm: this,
       mount: () => {
         if (this._mountCondition !== RealmMountCondition.pending) {
-          throw Error(`Cannot mount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}.`);
+          throw Error(`Cannot mount Realm ${pathToString(this.layout.path)}: Current mount condition: ${this._mountCondition}.`);
         }
         this._mountCondition = RealmMountCondition.mounted;
         this.realmDidMount();
       },
       unmount: () => {
         if (this._mountCondition !== RealmMountCondition.mounted && this._mountCondition !== RealmMountCondition.pending) {
-          throw Error(`Cannot unmount Realm ${pathToString(this.layout.path)}: current mount condition: ${this._mountCondition}.`);
+          throw Error(`Cannot unmount Realm ${pathToString(this.layout.path)}: Current mount condition: ${this._mountCondition}.`);
         }
         this.realmWillUnmount();
         this._mountCondition = RealmMountCondition.unmounted;
@@ -238,6 +245,51 @@ export class Realm {
     defineLazyProperty(this, 'value', getRevoked('value'));
     defineLazyProperty(this, 'xpCursor', getRevoked('xpCursor'));
     defineLazyProperty(this, 'xpBins', getRevoked('xpBins'));
+  }
+  // #endregion
+
+  // #region Static
+  static getFromDetachedCursor(detachedCursor: DetachedCursor): Realm | undefined {
+    // Step 1: Find the Realm (always exists)
+    let current = detachedCursor;
+    let realm: Realm | undefined;
+    const keys: PathFragment[] = [];
+
+    while (realm === undefined) {
+      keys.push(current[junctureSymbols.key]);
+
+      const parent = current[junctureSymbols.parent];
+      if (parent instanceof Realm) {
+        realm = parent;
+      } else {
+        current = parent;
+      }
+    }
+
+    // If the Realm is not mounted, stop
+    if (realm!.mountCondition !== RealmMountCondition.mounted) {
+      return undefined;
+    }
+
+    // Step 2: Iterate in reverse order - starting from the lower Detached cursor - to check if everything is mounted
+    for (let i = keys.length - 1; i >= 0; i -= 1) {
+      const childRealm: Realm | undefined = realm!.getChildRealm(keys[i]);
+      if (childRealm) {
+        // If child realm exists and is not mounted, stop
+        if (childRealm!.mountCondition !== RealmMountCondition.mounted) {
+          return undefined;
+        }
+
+        // Continue with the nexe level
+        realm = childRealm;
+      } else {
+        // If child realm does not exists, stop
+        return undefined;
+      }
+    }
+
+    // Return the last one
+    return realm;
   }
   // #endregion
 }

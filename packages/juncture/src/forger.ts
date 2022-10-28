@@ -135,10 +135,10 @@ export class Forger<D extends Driver> {
             revoke();
           }
           if (parent === undefined) {
-            throw Error(`Unable to override property "${key}" (no parent found).`);
+            throw Error(`Unable to override property "${key}": No parent found.`);
           }
           if (!isDescriptor(parent)) {
-            throw Error(`Unable to override property "${key}" (parent is not a Descriptor).`);
+            throw Error(`Unable to override property "${key}": Parent is not a Descriptor.`);
           }
           return createDescriptorForOverride({
             key, parent, fnName, fnArgs

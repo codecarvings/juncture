@@ -18,7 +18,7 @@ import {
 } from './kits/bin-kit';
 import { FrameKit, prepareFrameKit } from './kits/frame-kit';
 import {
-  InstrumentKit, prepareInstrumentKit, prepareXpInstrumentKit, XpInstrumentKit
+  InstrumentKit, prepareInstrumentKit
 } from './kits/instrument-kit';
 import { Realm } from './realm';
 
@@ -35,8 +35,6 @@ export class Core {
 
   readonly xpBins: XpBinKit = {} as any;
 
-  readonly xpInstruments: XpInstrumentKit = {} as any;
-
   constructor(protected readonly realm: Realm, dispatcher: Dispatcher) {
     defineLazyProperty(this, 'cursor', () => realm.driver[junctureSymbols.createCursor](realm));
     prepareFrameKit(this.frames, this, this.instruments);
@@ -45,7 +43,6 @@ export class Core {
 
     defineLazyProperty(this, 'xpCursor', () => realm.driver[junctureSymbols.createXpCursor](realm));
     prepareXpBinKit(this.xpBins, realm, this.frames, dispatcher);
-    prepareXpInstrumentKit(this.xpInstruments, realm);
 
     this.behaviors = this.createBehaviorSupervisor();
   }

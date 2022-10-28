@@ -96,7 +96,7 @@ export class PropertyAssembler {
       this.valueCache.set(key, newValue);
     } else if (totPropertyKeys === 0) {
       // eslint-disable-next-line max-len
-      throw Error(`Unable to wire assemblable property: value not found in the container - placeholder: "${property.placeholder.toString()}".`);
+      throw Error(`Unable to wire assemblable property: Value not found in the container - placeholder: "${property.placeholder.toString()}".`);
     } else {
       // eslint-disable-next-line max-len
       throw Error(`Unable to wire assemblable property: The same value has been used multiple times (${totPropertyKeys}) in the container: [${propertyKeys.join(', ')}] - placeholder: "${property.placeholder.toString()}".`);

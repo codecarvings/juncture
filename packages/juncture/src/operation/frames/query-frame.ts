@@ -8,8 +8,8 @@
 
 import { Query } from '../../query/query';
 import { QueryCursor } from '../frame-equipment/query-cursor';
-import { UnboundFrame } from './unbound-frame';
+import { UniFrame } from './uni-frame';
 
-export interface QueryFrame<Q extends Query> extends UnboundFrame {
+export interface QueryFrame<Q extends Query> extends UniFrame {
   readonly _: QueryCursor<Q>;
 }

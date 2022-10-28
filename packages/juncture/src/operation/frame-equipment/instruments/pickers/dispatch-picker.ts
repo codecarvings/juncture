@@ -13,18 +13,18 @@ import { getRealm } from '../../../realm-host';
 import { Cursor, DriverOfCursor } from '../../cursor';
 import { createPickerFactory, createXpPickerFactory } from '../../picker';
 
-// #region UnboundDispatchPicker
-export interface UnboundDispatchPicker {
+// #region UniDispatchPicker
+export interface UniDispatchPicker {
   <C extends Cursor>(_: C): XpDispatchBin<DriverOfCursor<C>>;
 }
 
-export function unboundDispatchPicker<C extends Cursor>(_: C): XpDispatchBin<DriverOfCursor<C>> {
+export function uniDispatchPicker<C extends Cursor>(_: C): XpDispatchBin<DriverOfCursor<C>> {
   return getRealm(_).xpBins.dispatch;
 }
 // #endregion
 
 // #region DispatchPicker
-export interface DispatchPicker<D extends Driver> extends UnboundDispatchPicker {
+export interface DispatchPicker<D extends Driver> extends UniDispatchPicker {
   (): DispatchBin<D>;
   (_: CursorOf<D>): DispatchBin<D>;
 }
@@ -36,7 +36,7 @@ export const createDispatchPicker: <D extends Driver>(
 // #endregion
 
 // #region XpDispatchPicker
-export interface XpDispatchPicker<D extends Driver> extends UnboundDispatchPicker {
+export interface XpDispatchPicker<D extends Driver> extends UniDispatchPicker {
   (): XpDispatchBin<D>;
 }
 

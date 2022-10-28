@@ -11,8 +11,8 @@ import { Juncture } from '../../../../../juncture';
 import { MessageDetectBin, XpMessageDetectBin } from '../../../../bins/detect/message-detect-bin';
 import { Cursor, DriverOfCursor } from '../../../cursor';
 
-// #region UnboundMessageDetectPicker
-export interface UnboundMessageDetectPicker {
+// #region UniMessageDetectPicker
+export interface UniMessageDetectPicker {
   <C extends Cursor>(_: C): XpMessageDetectBin<DriverOfCursor<C>>;
   <J extends Juncture>(juncture: J): XpMessageDetectBin<InstanceType<J>>;
   <C extends Cursor, J extends Juncture>(_: C, juncture: J): XpMessageDetectBin<InstanceType<J>>;
@@ -20,14 +20,14 @@ export interface UnboundMessageDetectPicker {
 // #endregion
 
 // #region MessageDetectPicker
-export interface MessageDetectPicker<D extends Driver> extends UnboundMessageDetectPicker {
+export interface MessageDetectPicker<D extends Driver> extends UniMessageDetectPicker {
   (): MessageDetectBin<D>;
   (_: CursorOf<D>): MessageDetectBin<D>;
 }
 // #endregion
 
 // #region XpMessageDetectPicker
-export interface XpMessageDetectPicker<D extends Driver> extends UnboundMessageDetectPicker {
+export interface XpMessageDetectPicker<D extends Driver> extends UniMessageDetectPicker {
   (): XpMessageDetectBin<D>;
 }
 // #endregion
